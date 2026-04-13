@@ -118,16 +118,21 @@
     "model": "Yaris",
     "year": 2012,
     "km": 176500,
-    "price": 5000,
+    "price": 4500,
     "fuel": "Diesel",
     "source": "PiscaPisca",
-    "status": "to-contact",
+    "status": "negotiating",
     "notes": "",
     "priceHistory": [
       {
         "date": "2026-04-12T22:22:45.040Z",
         "price": 5000,
         "note": "Initial price"
+      },
+      {
+        "date": "2026-04-13T15:58:37.381Z",
+        "price": 4500,
+        "note": "Price changed from €5000 to €4500"
       }
     ]
   },
@@ -150,6 +155,33 @@
         "date": "2026-04-12T22:25:18.577Z",
         "price": 4850,
         "note": "Initial price"
+      }
+    ]
+  },
+  {
+    "id": "1776102652111",
+    "addedAt": "2026-04-13T17:50:52.112Z",
+    "url": "https://www.standvirtual.com/carros/anuncio/opel-corsa-ID8PZbab.html",
+    "title": "Opel Corsa",
+    "make": "Opel",
+    "model": "Corsa",
+    "year": 2013,
+    "km": 107793,
+    "price": 5000,
+    "fuel": "Diesel",
+    "source": "StandVirtual",
+    "status": "negotiating",
+    "notes": "",
+    "priceHistory": [
+      {
+        "date": "2026-04-13T17:50:52.112Z",
+        "price": 6000,
+        "note": "Initial price"
+      },
+      {
+        "date": "2026-04-13T17:51:02.451Z",
+        "price": 5000,
+        "note": "Price changed from €6000 to €5000"
       }
     ]
   }
