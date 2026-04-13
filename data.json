@@ -19,7 +19,9 @@
         "price": 1500,
         "note": "Initial price"
       }
-    ]
+    ],
+    "location": "Setúbal",
+    "contactedAt": "2026-04-13T18:39:36.649Z"
   },
   {
     "id": "1776031575553",
@@ -41,7 +43,9 @@
         "price": 5150,
         "note": "Initial price"
       }
-    ]
+    ],
+    "location": "Sesimbra, Setúbal",
+    "contactedAt": "2026-04-13T18:39:25.983Z"
   },
   {
     "id": "1776031660140",
@@ -63,7 +67,9 @@
         "price": 5890,
         "note": "Initial price"
       }
-    ]
+    ],
+    "location": "Porto",
+    "contactedAt": "2026-04-13T18:39:01.063Z"
   },
   {
     "id": "1776031724821",
@@ -85,7 +91,9 @@
         "price": 5250,
         "note": "Initial price"
       }
-    ]
+    ],
+    "location": "Vila Franca de Xira, Lisboa",
+    "contactedAt": null
   },
   {
     "id": "1776032321973",
@@ -107,7 +115,9 @@
         "price": 5000,
         "note": "Initial price"
       }
-    ]
+    ],
+    "location": "Setúbal",
+    "contactedAt": null
   },
   {
     "id": "1776032565040",
@@ -134,7 +144,9 @@
         "price": 4500,
         "note": "Price changed from €5000 to €4500"
       }
-    ]
+    ],
+    "location": "Braga",
+    "contactedAt": null
   },
   {
     "id": "1776032718577",
@@ -156,7 +168,9 @@
         "price": 4850,
         "note": "Initial price"
       }
-    ]
+    ],
+    "location": "Mealhada, Aveiro",
+    "contactedAt": null
   },
   {
     "id": "1776102652111",
@@ -183,7 +197,9 @@
         "price": 5000,
         "note": "Price changed from €6000 to €5000"
       }
-    ]
+    ],
+    "location": "Estremoz, Évora",
+    "contactedAt": null
   },
   {
     "id": "1776103711568",
@@ -619,7 +635,9 @@
         "price": 5299,
         "note": "Initial price"
       }
-    ]
+    ],
+    "location": "Amadora, Lisboa",
+    "contactedAt": null
   },
   {
     "id": "1776104623741",
@@ -641,6 +659,8 @@
         "price": 4900,
         "note": "Initial price"
       }
-    ]
+    ],
+    "location": "Santa Clara e Castelo Viegas, Coimbra",
+    "contactedAt": null
   }
 ]

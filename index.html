@@ -442,8 +442,13 @@ input, select, textarea { font-family: inherit; }
 .icon-btn:hover { background: var(--bg-warm); color: var(--text); }
 .icon-btn svg { width: 14px; height: 14px; pointer-events: none; }
 
-/* Status badge inactive color */
+/* Status badge colors */
+.status-badge.to-contact { background: var(--bg-warm); color: var(--text-muted); }
+.status-badge.contacted { background: var(--blue-bg); color: var(--blue); }
 .status-badge.inactive { background: var(--yellow-bg); color: var(--yellow); }
+.status-badge.negotiating { background: #FFF0E5; color: #E8873A; }
+.status-badge.rejected { background: var(--red-bg); color: var(--red); }
+.status-badge.bought { background: var(--green-bg); color: var(--green); }
 
 /* Inferred field highlight */
 .field-inferred { border-left: 2px solid var(--accent) !important; }
@@ -753,11 +758,42 @@ function updateModelDatalist(make) {
 }
 
 // --- Score ---
+const LOCATION_DISTANCES = {
+  'viana do castelo': 0, 'viana': 0,
+  'braga': 50, 'barcelos': 35, 'guimarães': 65, 'guimaraes': 65, 'famalicão': 55, 'famalicao': 55,
+  'porto': 75, 'gaia': 80, 'vila nova de gaia': 80, 'maia': 70, 'matosinhos': 75, 'gondomar': 85,
+  'vila real': 100, 'chaves': 130,
+  'bragança': 200, 'braganca': 200,
+  'aveiro': 140, 'espinho': 110,
+  'viseu': 180,
+  'guarda': 260,
+  'coimbra': 220,
+  'leiria': 280,
+  'castelo branco': 350,
+  'santarém': 340, 'santarem': 340,
+  'lisboa': 390, 'sintra': 400, 'cascais': 410, 'amadora': 390, 'loures': 385, 'almada': 400,
+  'portalegre': 420,
+  'setúbal': 410, 'setubal': 410,
+  'évora': 450, 'evora': 450,
+  'beja': 500,
+  'faro': 550, 'portimão': 560, 'portimao': 560, 'albufeira': 555, 'loulé': 550, 'loule': 550
+};
+
+function locationScore(location) {
+  if (!location) return 50;
+  const loc = location.toLowerCase().trim();
+  for (const [place, dist] of Object.entries(LOCATION_DISTANCES)) {
+    if (loc.includes(place)) return Math.max(0, Math.round(100 - (dist / 600) * 100));
+  }
+  return 50;
+}
+
 function computeScore(car) {
   const kmScore = Math.max(0, 100 - (car.km / 200000) * 100);
   const priceScore = Math.max(0, 100 - (car.price / 10000) * 100);
   const yearScore = Math.min(100, Math.max(0, ((car.year - 2000) / 15) * 100));
-  const total = kmScore * 0.35 + priceScore * 0.35 + yearScore * 0.20;
+  const locScore = locationScore(car.location);
+  const total = kmScore * 0.30 + priceScore * 0.30 + yearScore * 0.20 + locScore * 0.20;
   return Math.round(total);
 }
 
@@ -828,7 +864,6 @@ function cardHTML(car) {
     ${notesPreview ? `<div class="card-notes">${esc(notesPreview)}</div>` : ''}
     <div class="card-actions">
       <button class="card-btn" onclick="event.stopPropagation();openModal('${car.id}')">Edit</button>
-      <button class="card-btn${compareActive}" onclick="event.stopPropagation();toggleCompare('${car.id}')">Compare</button>
     </div>
   </div>`;
 }
@@ -909,7 +944,6 @@ function renderList() {
     const score = computeScore(car);
     const sc = scoreClass(score);
     const compareActive = selectedForCompare.has(car.id) ? ' compare-active' : '';
-    const statusClass = car.status === 'inactive' ? ' inactive' : '';
     const urlBtn = car.url ? `<a href="${esc(car.url)}" target="_blank" rel="noopener noreferrer"
         onclick="event.stopPropagation()" class="icon-btn" title="Open listing">
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
@@ -923,16 +957,11 @@ function renderList() {
       <td class="td-mono">${car.km ? car.km.toLocaleString() : '\u2014'}</td>
       <td class="td-price">${car.price ? '\u20AC' + car.price.toLocaleString() : '\u2014'}</td>
       <td>${car.fuel || '\u2014'}</td>
-      <td><span class="status-badge${statusClass}">${STATUS_LABELS[car.status] || car.status}</span></td>
+      <td><span class="status-badge ${car.status}">${STATUS_LABELS[car.status] || car.status}</span></td>
       <td><span class="chip chip-score ${sc}">${score}</span></td>
       <td class="td-actions" onclick="event.stopPropagation()">
         ${urlBtn}
-        <button class="icon-btn${compareActive}" onclick="toggleCompare('${car.id}')" title="Compare">
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M3 8h10M9 4l4 4-4 4"/>
-          </svg>
-        </button>
-        <button class="icon-btn" onclick="openModal('${car.id}')" title="Edit">
+<button class="icon-btn" onclick="openModal('${car.id}')" title="Edit">
           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8">
             <path d="M11 2l3 3-8 8H3v-3L11 2z"/>
           </svg>
@@ -1014,12 +1043,10 @@ function openDetail(id) {
   if (!car) return;
   const score = computeScore(car);
   const sc = scoreClass(score);
-  const statusBadgeClass = car.status === 'inactive' ? ' inactive' : '';
-
   document.getElementById('detail-content').innerHTML = `
     <div class="detail-title">${esc(car.title)}</div>
     <div class="detail-badges">
-      <span class="status-badge${statusBadgeClass}">${STATUS_LABELS[car.status] || car.status}</span>
+      <span class="status-badge ${car.status}">${STATUS_LABELS[car.status] || car.status}</span>
       ${car.source ? `<span class="source-tag">${esc(car.source)}</span>` : ''}
     </div>
     <div class="detail-score"><span class="chip chip-score ${sc}" style="font-size:1.1rem;padding:5px 16px;">${score}</span></div>

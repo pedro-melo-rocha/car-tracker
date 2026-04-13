@@ -24,7 +24,7 @@ There are no tests, linter, or build step.
 
 ## Key Domain Concepts
 
-- **Car Score (0-100):** Computed client-side from km (35%), price (35%), year (20%), status bonus (10%). Reference ranges: 0-200k km, €0-€10k price, 2000-2015+ year.
+- **Car Score (0-100):** Computed client-side from km (30%), price (30%), year (20%), location proximity (20%). Reference ranges: 0-200k km, €0-€10k price, 2000-2015+ year, 0-600km from Viana do Castelo. Cars without a location get a neutral 50/100 location score.
 - **Status pipeline:** `to-contact → contacted → negotiating → rejected → bought`. Auto-generated: `inactive` (contacted with no response for 3+ days). `rejected` cars are hidden from List and Compare views (visible only in Pipeline).
 - **Price history:** Appended on PUT when price changes. The `priceNote` field is accepted in requests but stripped from the stored object.
 - **`contactedAt` and staleness clock:** Set automatically when status becomes `contacted`. Reset if status is rolled back to `contacted` (e.g., from `inactive`). Cleared when status moves outside the staleness chain (`contacted`/`inactive`).
