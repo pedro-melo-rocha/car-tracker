@@ -422,8 +422,7 @@ input, select, textarea { font-family: inherit; }
 /* Status-specific column accents */
 .pipeline-col[data-status="to-contact"] .pipeline-col-header { border-left: 3px solid var(--text-muted); padding-left: 13px; }
 .pipeline-col[data-status="contacted"] .pipeline-col-header { border-left: 3px solid var(--blue); padding-left: 13px; }
-.pipeline-col[data-status="sem-resposta"] .pipeline-col-header { border-left: 3px solid var(--yellow); padding-left: 13px; }
-.pipeline-col[data-status="inativo"] .pipeline-col-header { border-left: 3px solid #8B3A2A; padding-left: 13px; }
+.pipeline-col[data-status="inactive"] .pipeline-col-header { border-left: 3px solid var(--yellow); padding-left: 13px; }
 .pipeline-col[data-status="negotiating"] .pipeline-col-header { border-left: 3px solid #E8873A; padding-left: 13px; }
 .pipeline-col[data-status="rejected"] .pipeline-col-header { border-left: 3px solid var(--red); padding-left: 13px; }
 .pipeline-col[data-status="bought"] .pipeline-col-header { border-left: 3px solid var(--green); padding-left: 13px; }
@@ -443,9 +442,8 @@ input, select, textarea { font-family: inherit; }
 .icon-btn:hover { background: var(--bg-warm); color: var(--text); }
 .icon-btn svg { width: 14px; height: 14px; pointer-events: none; }
 
-/* Status badge staleness colors */
-.status-badge.sem-resposta { background: var(--yellow-bg); color: var(--yellow); }
-.status-badge.inativo { background: var(--red-bg); color: #8B3A2A; }
+/* Status badge inactive color */
+.status-badge.inactive { background: var(--yellow-bg); color: var(--yellow); }
 
 /* Inferred field highlight */
 .field-inferred { border-left: 2px solid var(--accent) !important; }
@@ -505,6 +503,7 @@ input, select, textarea { font-family: inherit; }
     <option value="OLX">OLX</option>
     <option value="Facebook Marketplace">Facebook Marketplace</option>
     <option value="PiscaPisca">PiscaPisca</option>
+    <option value="CustoJusto">CustoJusto</option>
     <option value="Other">Other</option>
   </select>
 </div>
@@ -524,17 +523,16 @@ input, select, textarea { font-family: inherit; }
     <option value="OLX">OLX</option>
     <option value="Facebook Marketplace">Facebook Marketplace</option>
     <option value="PiscaPisca">PiscaPisca</option>
+    <option value="CustoJusto">CustoJusto</option>
     <option value="Other">Other</option>
   </select>
   <select id="list-status-filter">
     <option value="">All Statuses</option>
     <option value="to-contact">To Contact</option>
     <option value="contacted">Contacted</option>
-    <option value="sem-resposta">Sem Resposta</option>
-    <option value="inativo">Inativo</option>
-    <option value="negotiating">Negociação</option>
-    <option value="rejected">Rejeitado</option>
-    <option value="bought">Comprado</option>
+    <option value="inactive">Inactive</option>
+    <option value="negotiating">Negotiating</option>
+    <option value="bought">Bought</option>
   </select>
   <select id="list-make-filter">
     <option value="">All Makes</option>
@@ -626,6 +624,7 @@ input, select, textarea { font-family: inherit; }
             <option value="OLX">OLX</option>
             <option value="Facebook Marketplace">Facebook Marketplace</option>
             <option value="PiscaPisca">PiscaPisca</option>
+            <option value="CustoJusto">CustoJusto</option>
             <option value="Other">Other</option>
           </select>
         </div>
@@ -634,11 +633,10 @@ input, select, textarea { font-family: inherit; }
           <select id="form-status">
             <option value="to-contact">To Contact</option>
             <option value="contacted">Contacted</option>
-            <option value="sem-resposta">Sem Resposta</option>
-            <option value="inativo">Inativo</option>
-            <option value="negotiating">Negociação</option>
-            <option value="rejected">Rejeitado</option>
-            <option value="bought">Comprado</option>
+            <option value="inactive">Inactive</option>
+            <option value="negotiating">Negotiating</option>
+            <option value="rejected">Rejected</option>
+            <option value="bought">Bought</option>
           </select>
         </div>
       </div>
@@ -673,11 +671,10 @@ let editingOriginalPrice = null;
 const STATUSES = [
   { key: 'to-contact', label: 'To Contact' },
   { key: 'contacted', label: 'Contacted' },
-  { key: 'sem-resposta', label: 'Sem Resposta' },
-  { key: 'inativo', label: 'Inativo' },
-  { key: 'negotiating', label: 'Negociação' },
-  { key: 'rejected', label: 'Rejeitado' },
-  { key: 'bought', label: 'Comprado' }
+  { key: 'inactive', label: 'Inactive' },
+  { key: 'negotiating', label: 'Negotiating' },
+  { key: 'rejected', label: 'Rejected' },
+  { key: 'bought', label: 'Bought' }
 ];
 
 const STATUS_LABELS = Object.fromEntries(STATUSES.map(s => [s.key, s.label]));
@@ -688,7 +685,8 @@ const SOURCE_MAP = {
   'autoscout24.pt': 'AutoScout24',
   'olx.pt': 'OLX',
   'facebook.com': 'Facebook Marketplace',
-  'piscapisca.pt': 'PiscaPisca'
+  'piscapisca.pt': 'PiscaPisca',
+  'custojusto.pt': 'CustoJusto'
 };
 
 function capitalize(s) {
@@ -759,9 +757,7 @@ function computeScore(car) {
   const kmScore = Math.max(0, 100 - (car.km / 200000) * 100);
   const priceScore = Math.max(0, 100 - (car.price / 10000) * 100);
   const yearScore = Math.min(100, Math.max(0, ((car.year - 2000) / 15) * 100));
-  let statusScore = 0;
-  if (car.status === 'negotiating') statusScore = 100;
-  const total = kmScore * 0.35 + priceScore * 0.35 + yearScore * 0.20 + statusScore * 0.10;
+  const total = kmScore * 0.35 + priceScore * 0.35 + yearScore * 0.20;
   return Math.round(total);
 }
 
@@ -879,7 +875,7 @@ function renderList() {
   const source = document.getElementById('list-source-filter').value;
   const status = document.getElementById('list-status-filter').value;
   const make = document.getElementById('list-make-filter').value;
-  let filtered = filterCars(cars, 'list-search', fuel, source, status, make);
+  let filtered = filterCars(cars, 'list-search', fuel, source, status, make).filter(c => c.status !== 'rejected');
 
   // Sort
   filtered.sort((a, b) => {
@@ -913,7 +909,7 @@ function renderList() {
     const score = computeScore(car);
     const sc = scoreClass(score);
     const compareActive = selectedForCompare.has(car.id) ? ' compare-active' : '';
-    const statusClass = ['sem-resposta', 'inativo'].includes(car.status) ? ` ${car.status}` : '';
+    const statusClass = car.status === 'inactive' ? ' inactive' : '';
     const urlBtn = car.url ? `<a href="${esc(car.url)}" target="_blank" rel="noopener noreferrer"
         onclick="event.stopPropagation()" class="icon-btn" title="Open listing">
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
@@ -956,7 +952,8 @@ function renderList() {
 
 function renderCompare() {
   const selEl = document.getElementById('compare-selectors');
-  selEl.innerHTML = cars.map(c => {
+  const comparableCars = cars.filter(c => c.status !== 'rejected');
+  selEl.innerHTML = comparableCars.map(c => {
     const active = selectedForCompare.has(c.id) ? ' active' : '';
     return `<button class="compare-toggle${active}" onclick="toggleCompare('${c.id}')">${esc(c.title)}</button>`;
   }).join('');
@@ -1017,7 +1014,7 @@ function openDetail(id) {
   if (!car) return;
   const score = computeScore(car);
   const sc = scoreClass(score);
-  const statusBadgeClass = ['sem-resposta', 'inativo'].includes(car.status) ? ` ${car.status}` : '';
+  const statusBadgeClass = car.status === 'inactive' ? ' inactive' : '';
 
   document.getElementById('detail-content').innerHTML = `
     <div class="detail-title">${esc(car.title)}</div>

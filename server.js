@@ -23,18 +23,18 @@ app.get('/api/cars', (req, res) => {
   let dirty = false;
 
   cars.forEach(car => {
+    // Migrate legacy status values
+    if (car.status === 'sem-resposta' || car.status === 'inativo') {
+      car.status = 'inactive';
+      dirty = true;
+    }
+
     if (!car.contactedAt) return;
     const contactedMs = new Date(car.contactedAt).getTime();
     const daysSinceContact = (now - contactedMs) / (1000 * 60 * 60 * 24);
 
-    // Two separate ifs intentionally: a car unseen for 5+ days skips
-    // 'sem-resposta' and lands directly in 'inativo' on first load.
     if (car.status === 'contacted' && daysSinceContact >= 3) {
-      car.status = 'sem-resposta';
-      dirty = true;
-    }
-    if (car.status === 'sem-resposta' && daysSinceContact >= 5) {
-      car.status = 'inativo';
+      car.status = 'inactive';
       dirty = true;
     }
   });
@@ -101,7 +101,7 @@ app.put('/api/cars/:id', (req, res) => {
   }
 
   // Clear contactedAt if status is manually moved out of the staleness chain
-  if (req.body.status && !['contacted', 'sem-resposta', 'inativo'].includes(req.body.status)) {
+  if (req.body.status && !['contacted', 'inactive'].includes(req.body.status)) {
     car.contactedAt = null;
   }
 

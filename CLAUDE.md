@@ -17,7 +17,7 @@ There are no tests, linter, or build step.
 
 ## Architecture
 
-- **`server.js`** — Express REST API with CRUD endpoints (`/api/cars`). Reads/writes `data.json` synchronously. Includes automatic status staleness logic: cars in `contacted` status auto-transition to `sem-resposta` after 3 days, then to `inativo` after 5 days (evaluated on GET).
+- **`server.js`** — Express REST API with CRUD endpoints (`/api/cars`). Reads/writes `data.json` synchronously. Includes automatic status staleness logic: cars in `contacted` status auto-transition to `inactive` after 3 days (evaluated on GET). Also migrates legacy `sem-resposta`/`inativo` values to `inactive` on read.
 - **`index.html`** — Single-file SPA with all CSS and JS inline. Three views: Pipeline (Kanban), List (grid with sort/filter), Compare (side-by-side table). Includes a detail side panel and add/edit modal.
 - **`data.json`** — Array of car objects. Each car tracks price history as an array of `{date, price, note}` entries.
 - **`car-tracker-prompt.md`** — Original specification document. Refer to this for the data model, scoring formula, and UI design intent.
@@ -25,9 +25,9 @@ There are no tests, linter, or build step.
 ## Key Domain Concepts
 
 - **Car Score (0-100):** Computed client-side from km (35%), price (35%), year (20%), status bonus (10%). Reference ranges: 0-200k km, €0-€10k price, 2000-2015+ year.
-- **Status pipeline:** `to-contact → contacted → visit-scheduled → visited → negotiating → rejected → bought`. Plus auto-generated: `sem-resposta`, `inativo`.
+- **Status pipeline:** `to-contact → contacted → negotiating → rejected → bought`. Auto-generated: `inactive` (contacted with no response for 3+ days). `rejected` cars are hidden from List and Compare views (visible only in Pipeline).
 - **Price history:** Appended on PUT when price changes. The `priceNote` field is accepted in requests but stripped from the stored object.
-- **`contactedAt` and staleness clock:** Set automatically when status becomes `contacted`. Reset if status is rolled back to `contacted` (e.g., from `sem-resposta`). Cleared when status moves outside the staleness chain (`contacted`/`sem-resposta`/`inativo`).
+- **`contactedAt` and staleness clock:** Set automatically when status becomes `contacted`. Reset if status is rolled back to `contacted` (e.g., from `inactive`). Cleared when status moves outside the staleness chain (`contacted`/`inactive`).
 - **Sources:** StandVirtual, AutoScout24, OLX, Facebook Marketplace, PiscaPisca, Other.
 - **Fuel types:** Diesel, Gasolina.
 
@@ -35,7 +35,7 @@ There are no tests, linter, or build step.
 
 - Dark theme with CSS variables for all colors.
 - No external frontend dependencies — everything is inline in `index.html`.
-- Portuguese-market context: prices in euros, Portuguese car listing sources, status labels mix English and Portuguese (`sem-resposta`, `inativo`).
+- Portuguese-market context: prices in euros, Portuguese car listing sources. All status labels are in English.
 
 ## Gotchas
 
