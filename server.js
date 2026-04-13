@@ -121,4 +121,18 @@ app.delete('/api/cars/:id', (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Car Tracker running on http://localhost:${PORT}`));
+const HOST = '0.0.0.0';
+app.listen(PORT, HOST, () => {
+  const os = require('os');
+  const interfaces = os.networkInterfaces();
+  let localIP = 'localhost';
+  for (const name of Object.keys(interfaces)) {
+    for (const iface of interfaces[name]) {
+      if (iface.family === 'IPv4' && !iface.internal) {
+        localIP = iface.address;
+        break;
+      }
+    }
+  }
+  console.log(`Car Tracker running on http://${localIP}:${PORT}`);
+});

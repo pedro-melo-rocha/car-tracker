@@ -1206,10 +1206,6 @@ document.querySelectorAll('.sort-btn').forEach(btn => {
   });
 });
 
-document.getElementById('modal-overlay').addEventListener('click', (e) => {
-  if (e.target === document.getElementById('modal-overlay')) closeModal();
-});
-
 // --- Init ---
 // URL inference
 document.getElementById('form-url').addEventListener('blur', e => inferFromUrl(e.target.value));

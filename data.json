@@ -184,5 +184,463 @@
         "note": "Price changed from €6000 to €5000"
       }
     ]
+  },
+  {
+    "id": "1776103711568",
+    "addedAt": "2026-04-13T18:08:31.567Z",
+    "url": "https://www.standvirtual.com/carros/anuncio/ford-fiesta-ver-1-4-tdci-titanium-ID8Px1R6.html",
+    "title": "Ford Fiesta 1.4 TDCI Titanium",
+    "make": "Ford",
+    "model": "Fiesta",
+    "year": 2009,
+    "km": 152630,
+    "price": 5900,
+    "fuel": "Diesel",
+    "source": "StandVirtual",
+    "status": "to-contact",
+    "notes": "68cv, 1399cc",
+    "priceHistory": [
+      {
+        "date": "2026-04-13T18:08:31.567Z",
+        "price": 5900,
+        "note": "Initial price"
+      }
+    ],
+    "location": "Alvalade, Lisboa"
+  },
+  {
+    "id": "1776103711569",
+    "addedAt": "2026-04-13T18:08:31.567Z",
+    "url": "https://www.standvirtual.com/carros/anuncio/opel-astra-ver-1-3-cdti-cosmo-ID8PXDDq.html",
+    "title": "Opel Astra 1.3 CDTI Cosmo",
+    "make": "Opel",
+    "model": "Astra",
+    "year": 2006,
+    "km": 160000,
+    "price": 4990,
+    "fuel": "Diesel",
+    "source": "StandVirtual",
+    "status": "to-contact",
+    "notes": "90cv, 1248cc",
+    "priceHistory": [
+      {
+        "date": "2026-04-13T18:08:31.567Z",
+        "price": 4990,
+        "note": "Initial price"
+      }
+    ],
+    "location": "Loures, Lisboa"
+  },
+  {
+    "id": "1776103711570",
+    "addedAt": "2026-04-13T18:08:31.567Z",
+    "url": "https://www.standvirtual.com/carros/anuncio/hyundai-i30-ver-1-6-crdi-blue-classic-ID8PZ2VR.html",
+    "title": "Hyundai i30 1.6 CRDI Blue Classic",
+    "make": "Hyundai",
+    "model": "i30",
+    "year": 2010,
+    "km": 142000,
+    "price": 5999,
+    "fuel": "Diesel",
+    "source": "StandVirtual",
+    "status": "to-contact",
+    "notes": "90cv, 1582cc",
+    "priceHistory": [
+      {
+        "date": "2026-04-13T18:08:31.567Z",
+        "price": 5999,
+        "note": "Initial price"
+      }
+    ],
+    "location": "Vila Nova de Famalicão, Braga"
+  },
+  {
+    "id": "1776103711571",
+    "addedAt": "2026-04-13T18:08:31.567Z",
+    "url": "https://www.standvirtual.com/carros/anuncio/volvo-c30-ver-1-6-d-drive-momentum-start-stop-ID8PZ47Z.html",
+    "title": "Volvo C30 1.6 D Drive Momentum Start/Stop",
+    "make": "Volvo",
+    "model": "C30",
+    "year": 2010,
+    "km": 145500,
+    "price": 5500,
+    "fuel": "Diesel",
+    "source": "StandVirtual",
+    "status": "to-contact",
+    "notes": "110cv, 1560cc",
+    "priceHistory": [
+      {
+        "date": "2026-04-13T18:08:31.567Z",
+        "price": 5500,
+        "note": "Initial price"
+      }
+    ],
+    "location": "Coimbra, Coimbra"
+  },
+  {
+    "id": "1776103711572",
+    "addedAt": "2026-04-13T18:08:31.567Z",
+    "url": "https://www.standvirtual.com/carros/anuncio/mazda-3-ver-mzr-1-6-cd-sport-ID8PZEBm.html",
+    "title": "Mazda 3 MZR 1.6 CD Sport",
+    "make": "Mazda",
+    "model": "3",
+    "year": 2006,
+    "km": 132711,
+    "price": 5990,
+    "fuel": "Diesel",
+    "source": "StandVirtual",
+    "status": "to-contact",
+    "notes": "109cv, 1560cc",
+    "priceHistory": [
+      {
+        "date": "2026-04-13T18:08:31.567Z",
+        "price": 5990,
+        "note": "Initial price"
+      }
+    ],
+    "location": "Gondomar, Porto"
+  },
+  {
+    "id": "1776103711573",
+    "addedAt": "2026-04-13T18:08:31.567Z",
+    "url": "https://www.standvirtual.com/carros/anuncio/alfa-romeo-mito-ver-1-3-jtdm-eco-ID8PZKfb.html",
+    "title": "Alfa Romeo MiTo 1.3 JTDM ECO",
+    "make": "Alfa Romeo",
+    "model": "MiTo",
+    "year": 2012,
+    "km": 155000,
+    "price": 5250,
+    "fuel": "Diesel",
+    "source": "StandVirtual",
+    "status": "to-contact",
+    "notes": "85cv, 1248cc",
+    "priceHistory": [
+      {
+        "date": "2026-04-13T18:08:31.567Z",
+        "price": 5250,
+        "note": "Initial price"
+      }
+    ],
+    "location": "Faro, Faro"
+  },
+  {
+    "id": "1776103711574",
+    "addedAt": "2026-04-13T18:08:31.567Z",
+    "url": "https://www.standvirtual.com/carros/anuncio/fiat-punto-ver-1-3-m-jet-easy-s-s-ID8PZR8O.html",
+    "title": "Fiat Punto 1.3 M-Jet Easy S&S",
+    "make": "Fiat",
+    "model": "Punto",
+    "year": 2015,
+    "km": 114000,
+    "price": 5990,
+    "fuel": "Diesel",
+    "source": "StandVirtual",
+    "status": "to-contact",
+    "notes": "85cv, 1248cc",
+    "priceHistory": [
+      {
+        "date": "2026-04-13T18:08:31.567Z",
+        "price": 5990,
+        "note": "Initial price"
+      }
+    ],
+    "location": "Matosinhos, Porto"
+  },
+  {
+    "id": "1776103711575",
+    "addedAt": "2026-04-13T18:08:31.567Z",
+    "url": "https://www.standvirtual.com/carros/anuncio/fiat-linea-ver-1-3-m-jet-emotion-ID8PZTcg.html",
+    "title": "Fiat Linea 1.3 M-Jet Emotion",
+    "make": "Fiat",
+    "model": "Linea",
+    "year": 2009,
+    "km": 134224,
+    "price": 5500,
+    "fuel": "Diesel",
+    "source": "StandVirtual",
+    "status": "to-contact",
+    "notes": "90cv, 1248cc",
+    "priceHistory": [
+      {
+        "date": "2026-04-13T18:08:31.567Z",
+        "price": 5500,
+        "note": "Initial price"
+      }
+    ],
+    "location": "Leiria, Leiria"
+  },
+  {
+    "id": "1776103711576",
+    "addedAt": "2026-04-13T18:08:31.567Z",
+    "url": "https://www.standvirtual.com/carros/anuncio/renault-clio-ID8PZUju.html",
+    "title": "Renault Clio",
+    "make": "Renault",
+    "model": "Clio",
+    "year": 2007,
+    "km": 155683,
+    "price": 4000,
+    "fuel": "Diesel",
+    "source": "StandVirtual",
+    "status": "to-contact",
+    "notes": "85cv, 1461cc",
+    "priceHistory": [
+      {
+        "date": "2026-04-13T18:08:31.567Z",
+        "price": 4000,
+        "note": "Initial price"
+      }
+    ],
+    "location": "Lousado, Braga"
+  },
+  {
+    "id": "1776103711577",
+    "addedAt": "2026-04-13T18:08:31.567Z",
+    "url": "https://www.standvirtual.com/carros/anuncio/seat-ibiza-st-ver-1-2-tdi-cr-ecomotive-style-ID8PZW3U.html",
+    "title": "SEAT Ibiza ST 1.2 TDI CR Ecomotive Style",
+    "make": "SEAT",
+    "model": "Ibiza ST",
+    "year": 2011,
+    "km": 150000,
+    "price": 4990,
+    "fuel": "Diesel",
+    "source": "StandVirtual",
+    "status": "to-contact",
+    "notes": "75cv, 1199cc",
+    "priceHistory": [
+      {
+        "date": "2026-04-13T18:08:31.567Z",
+        "price": 4990,
+        "note": "Initial price"
+      }
+    ],
+    "location": "Braga, Braga"
+  },
+  {
+    "id": "1776103711578",
+    "addedAt": "2026-04-13T18:08:31.567Z",
+    "url": "https://www.standvirtual.com/carros/anuncio/vw-polo-ver-1-2-tdi-confortline-ID8PZVme.html",
+    "title": "VW Polo 1.2 TDi Confortline",
+    "make": "VW",
+    "model": "Polo",
+    "year": 2011,
+    "km": 143224,
+    "price": 5900,
+    "fuel": "Diesel",
+    "source": "StandVirtual",
+    "status": "to-contact",
+    "notes": "75cv, 1199cc",
+    "priceHistory": [
+      {
+        "date": "2026-04-13T18:08:31.567Z",
+        "price": 5900,
+        "note": "Initial price"
+      }
+    ],
+    "location": "Ramalde, Porto"
+  },
+  {
+    "id": "1776104138626",
+    "addedAt": "2026-04-13T18:15:38.625Z",
+    "url": "https://www.standvirtual.com/carros/anuncio/fiat-punto-ver-1-3-m-jet-easy-s-s-ID8PZVve.html",
+    "title": "Fiat Punto 1.3 M-Jet Easy S&S",
+    "make": "Fiat",
+    "model": "Punto",
+    "year": 2013,
+    "km": 127240,
+    "price": 5900,
+    "fuel": "Diesel",
+    "source": "StandVirtual",
+    "status": "to-contact",
+    "location": "Penha de França, Lisboa",
+    "notes": "85cv, 1248cc",
+    "priceHistory": [
+      {
+        "date": "2026-04-13T18:15:38.625Z",
+        "price": 5900,
+        "note": "Initial price"
+      }
+    ]
+  },
+  {
+    "id": "1776104138627",
+    "addedAt": "2026-04-13T18:15:38.625Z",
+    "url": "https://www.standvirtual.com/carros/anuncio/seat-ibiza-ver-1-2-tdi-cr-ecomotive-style-ID8Q0afn.html",
+    "title": "SEAT Ibiza 1.2 TDI CR Ecomotive Style",
+    "make": "SEAT",
+    "model": "Ibiza",
+    "year": 2006,
+    "km": 155873,
+    "price": 5000,
+    "fuel": "Diesel",
+    "source": "StandVirtual",
+    "status": "to-contact",
+    "location": "Cidade de Maia, Porto",
+    "notes": "75cv, 1199cc",
+    "priceHistory": [
+      {
+        "date": "2026-04-13T18:15:38.625Z",
+        "price": 5000,
+        "note": "Initial price"
+      }
+    ]
+  },
+  {
+    "id": "1776104138628",
+    "addedAt": "2026-04-13T18:15:38.625Z",
+    "url": "https://www.standvirtual.com/carros/anuncio/renault-clio-ver-1-5-dci-dynamique-s-ID8Q06WM.html",
+    "title": "Renault Clio 1.5 dCi Dynamique S",
+    "make": "Renault",
+    "model": "Clio",
+    "year": 2006,
+    "km": 151000,
+    "price": 3500,
+    "fuel": "Diesel",
+    "source": "StandVirtual",
+    "status": "to-contact",
+    "location": "Almada, Setúbal",
+    "notes": "1500cc",
+    "priceHistory": [
+      {
+        "date": "2026-04-13T18:15:38.625Z",
+        "price": 3500,
+        "note": "Initial price"
+      }
+    ]
+  },
+  {
+    "id": "1776104138629",
+    "addedAt": "2026-04-13T18:15:38.625Z",
+    "url": "https://www.standvirtual.com/carros/anuncio/seat-ibiza-ver-1-2-tdi-eco-reference-dpf-ID8PZcg0.html",
+    "title": "SEAT Ibiza 1.2 TDI Eco Reference DPF",
+    "make": "SEAT",
+    "model": "Ibiza",
+    "year": 2012,
+    "km": 142600,
+    "price": 4500,
+    "fuel": "Diesel",
+    "source": "StandVirtual",
+    "status": "to-contact",
+    "location": "Campanhã, Porto",
+    "notes": "75cv, 1199cc",
+    "priceHistory": [
+      {
+        "date": "2026-04-13T18:15:38.625Z",
+        "price": 4500,
+        "note": "Initial price"
+      }
+    ]
+  },
+  {
+    "id": "1776104138630",
+    "addedAt": "2026-04-13T18:15:38.625Z",
+    "url": "https://www.standvirtual.com/carros/anuncio/ford-focus-ver-1-6-tdci-connection-cvt-ID8PZW40.html",
+    "title": "Ford Focus 1.6 TDCI Connection CVT",
+    "make": "Ford",
+    "model": "Focus",
+    "year": 2007,
+    "km": 140000,
+    "price": 4999,
+    "fuel": "Diesel",
+    "source": "StandVirtual",
+    "status": "to-contact",
+    "location": "Brás, Brás",
+    "notes": "109cv, 1560cc",
+    "priceHistory": [
+      {
+        "date": "2026-04-13T18:15:38.625Z",
+        "price": 4999,
+        "note": "Initial price"
+      }
+    ]
+  },
+  {
+    "id": "1776104138631",
+    "addedAt": "2026-04-13T18:15:38.625Z",
+    "url": "https://www.standvirtual.com/carros/anuncio/vw-passat-variant-ver-2-0-tdi-confortline-ID8PWJMc.html",
+    "title": "VW Passat Variant 2.0 TDI Confortline",
+    "make": "VW",
+    "model": "Passat Variant",
+    "year": 2007,
+    "km": 140000,
+    "price": 4200,
+    "fuel": "Diesel",
+    "source": "StandVirtual",
+    "status": "to-contact",
+    "location": "Elvas, Portalegre",
+    "notes": "140cv, 1968cc",
+    "priceHistory": [
+      {
+        "date": "2026-04-13T18:15:38.625Z",
+        "price": 4200,
+        "note": "Initial price"
+      }
+    ]
+  },
+  {
+    "id": "1776104138632",
+    "addedAt": "2026-04-13T18:15:38.625Z",
+    "url": "https://www.standvirtual.com/carros/anuncio/vw-polo-ver-1-4-tdi-confortline-ID8PZWsp.html",
+    "title": "VW Polo 1.4 TDI Confortline",
+    "make": "VW",
+    "model": "Polo",
+    "year": 2007,
+    "km": 120537,
+    "price": 4995,
+    "fuel": "Diesel",
+    "source": "StandVirtual",
+    "status": "to-contact",
+    "location": "Mafra, Lisboa",
+    "notes": "80cv, 1422cc",
+    "priceHistory": [
+      {
+        "date": "2026-04-13T18:15:38.625Z",
+        "price": 4995,
+        "note": "Initial price"
+      }
+    ]
+  },
+  {
+    "id": "1776104309938",
+    "addedAt": "2026-04-13T18:18:29.938Z",
+    "url": "https://www.standvirtual.com/carros/anuncio/opel-corsa-ver-1-3-cdti-enjoy-ecoflex-ID8Q0dcv.html",
+    "title": "Opel Corsa 1.3 CDTI Enjoy EcoFLEX",
+    "make": "Opel",
+    "model": "Corsa",
+    "year": 2011,
+    "km": 118567,
+    "price": 5299,
+    "fuel": "Diesel",
+    "source": "StandVirtual",
+    "status": "to-contact",
+    "notes": "",
+    "priceHistory": [
+      {
+        "date": "2026-04-13T18:18:29.938Z",
+        "price": 5299,
+        "note": "Initial price"
+      }
+    ]
+  },
+  {
+    "id": "1776104623741",
+    "addedAt": "2026-04-13T18:23:43.741Z",
+    "url": "https://www.custojusto.pt/coimbra/veiculos/carros-usados/citadino/alfa-romeo-alfa-6-mito-44904073",
+    "title": "Alfa Romeo Alfa 6 Mito - 10",
+    "make": "Alfa Romeo",
+    "model": "MiTo",
+    "year": 2010,
+    "km": 155000,
+    "price": 4900,
+    "fuel": "Diesel",
+    "source": "CustoJusto",
+    "status": "to-contact",
+    "notes": "",
+    "priceHistory": [
+      {
+        "date": "2026-04-13T18:23:43.741Z",
+        "price": 4900,
+        "note": "Initial price"
+      }
+    ]
   }
 ]
