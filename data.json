@@ -11,7 +11,7 @@
     "price": 1500,
     "fuel": "Diesel",
     "source": "PiscaPisca",
-    "status": "contacted",
+    "status": "inactive",
     "notes": "75cv",
     "priceHistory": [
       {
@@ -35,7 +35,7 @@
     "price": 5150,
     "fuel": "Diesel",
     "source": "PiscaPisca",
-    "status": "contacted",
+    "status": "inactive",
     "notes": "90cv",
     "priceHistory": [
       {
@@ -59,7 +59,7 @@
     "price": 5890,
     "fuel": "Diesel",
     "source": "OLX",
-    "status": "contacted",
+    "status": "inactive",
     "notes": "",
     "priceHistory": [
       {
@@ -160,7 +160,7 @@
     "price": 4850,
     "fuel": "Diesel",
     "source": "PiscaPisca",
-    "status": "to-contact",
+    "status": "negotiating",
     "notes": "",
     "priceHistory": [
       {
@@ -662,5 +662,63 @@
     ],
     "location": "Santa Clara e Castelo Viegas, Coimbra",
     "contactedAt": null
+  },
+  {
+    "id": "1776117531225",
+    "addedAt": "2026-04-13T21:58:51.225Z",
+    "url": "https://www.piscapisca.pt/carros/usados/renault-clio-0-9-90cv-gasolina/Bvv1y",
+    "title": "Renault Clio 0.9 90CV, 90cv",
+    "make": "Renault",
+    "model": "Clio",
+    "year": 2012,
+    "km": 94266,
+    "price": 4200,
+    "fuel": "Gasolina",
+    "source": "PiscaPisca",
+    "status": "negotiating",
+    "location": "Porto",
+    "contactedAt": null,
+    "notes": "O senhor é antipático",
+    "priceHistory": [
+      {
+        "date": "2026-04-13T21:58:51.226Z",
+        "price": 4500,
+        "note": "Initial price"
+      },
+      {
+        "date": "2026-04-13T21:59:11.153Z",
+        "price": 4200,
+        "note": "Negociação"
+      }
+    ]
+  },
+  {
+    "id": "1776117727573",
+    "addedAt": "2026-04-13T22:02:07.573Z",
+    "url": "https://www.facebook.com/marketplace/item/940193998388171/",
+    "title": "Seat Ibiza 1.2",
+    "make": "Seat",
+    "model": "Ibiza",
+    "year": 2015,
+    "km": 110,
+    "price": 4000,
+    "fuel": "Gasolina",
+    "source": "Facebook Marketplace",
+    "status": "negotiating",
+    "location": "Vila do Conde",
+    "contactedAt": null,
+    "notes": "",
+    "priceHistory": [
+      {
+        "date": "2026-04-13T22:02:07.575Z",
+        "price": 4999,
+        "note": "Initial price"
+      },
+      {
+        "date": "2026-04-13T22:02:38.333Z",
+        "price": 4000,
+        "note": "Negociação"
+      }
+    ]
   }
 ]
