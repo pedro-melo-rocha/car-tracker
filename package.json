@@ -1,0 +1,12 @@
+{
+  "name": "car-organizer",
+  "version": "1.0.0",
+  "description": "Local car search tracker",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0"
+  }
+}

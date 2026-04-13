@@ -1,0 +1,1229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Car Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #F6F5F1;
+  --bg-warm: #EDECEA;
+  --bg-card: #FFFFFF;
+  --bg-overlay: rgba(30,28,24,0.4);
+  --text: #1E1C18;
+  --text-secondary: #6B6760;
+  --text-muted: #A09B93;
+  --accent: #0C6E5D;
+  --accent-light: #E8F5F1;
+  --accent-hover: #0A5C4E;
+  --green: #2D8B6F;
+  --green-bg: #E8F5F1;
+  --yellow: #C4930A;
+  --yellow-bg: #FFF8E1;
+  --red: #C0503A;
+  --red-bg: #FDEEEA;
+  --blue: #3B7DD8;
+  --blue-bg: #EBF2FC;
+  --border: rgba(0,0,0,0.06);
+  --border-strong: rgba(0,0,0,0.1);
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+  --shadow: 0 2px 8px rgba(0,0,0,0.06);
+  --shadow-lg: 0 8px 30px rgba(0,0,0,0.1);
+  --shadow-xl: 0 20px 60px rgba(0,0,0,0.12);
+  --radius: 12px;
+  --radius-sm: 6px;
+  --radius-lg: 16px;
+  --font: 'Plus Jakarta Sans', -apple-system, sans-serif;
+  --mono: 'DM Mono', 'SF Mono', monospace;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; -webkit-font-smoothing: antialiased; }
+button { cursor: pointer; font-family: inherit; }
+input, select, textarea { font-family: inherit; }
+
+/* Animations */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.97); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* Header */
+.header {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(246,245,241,0.85);
+  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 32px;
+  display: flex; align-items: center; gap: 32px;
+  height: 64px;
+}
+.header h1 {
+  font-size: 1.05rem; font-weight: 800; letter-spacing: -0.03em;
+  color: var(--text); white-space: nowrap;
+}
+.header h1 span { color: var(--accent); }
+.nav-tabs { display: flex; gap: 2px; background: var(--bg-warm); border-radius: 10px; padding: 3px; }
+.nav-tab {
+  background: transparent; border: none;
+  color: var(--text-muted); padding: 7px 18px;
+  border-radius: 8px; font-size: 0.82rem; font-weight: 600;
+  transition: all 0.2s ease; letter-spacing: -0.01em;
+}
+.nav-tab:hover { color: var(--text-secondary); }
+.nav-tab.active { background: var(--bg-card); color: var(--text); box-shadow: var(--shadow-sm); }
+.header-right { margin-left: auto; }
+.btn-add {
+  background: var(--accent); border: none; color: #fff;
+  padding: 0 16px; height: 36px; border-radius: 10px;
+  font-size: 0.84rem; font-weight: 700; letter-spacing: -0.01em;
+  display: inline-flex; align-items: center; gap: 6px;
+  transition: all 0.2s ease; box-shadow: 0 2px 8px rgba(12,110,93,0.25);
+  white-space: nowrap;
+}
+.btn-add:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(12,110,93,0.3); }
+
+/* Filter bar */
+.filter-bar {
+  padding: 14px 32px; display: flex; flex-wrap: wrap; gap: 8px;
+  align-items: center; background: var(--bg);
+}
+.filter-bar input[type="text"] {
+  background: var(--bg-card); border: 1px solid var(--border-strong);
+  color: var(--text); padding: 8px 14px; border-radius: var(--radius-sm);
+  font-size: 0.82rem; min-width: 220px; outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.filter-bar input[type="text"]:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(12,110,93,0.08); }
+.filter-bar input[type="text"]::placeholder { color: var(--text-muted); }
+.filter-bar select {
+  background: var(--bg-card); border: 1px solid var(--border-strong);
+  color: var(--text-secondary); padding: 8px 12px; border-radius: var(--radius-sm);
+  font-size: 0.82rem; outline: none; cursor: pointer;
+  transition: border-color 0.2s;
+}
+.filter-bar select:focus { border-color: var(--accent); }
+.sort-btn {
+  background: var(--bg-card); border: 1px solid var(--border-strong);
+  color: var(--text-muted); padding: 6px 12px; border-radius: var(--radius-sm);
+  font-size: 0.78rem; font-weight: 600; transition: all 0.2s;
+  letter-spacing: -0.01em;
+}
+.sort-btn:hover { border-color: var(--accent); color: var(--accent); }
+.sort-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+.fuel-toggle { display: flex; gap: 0; }
+.fuel-toggle button {
+  background: var(--bg-card); border: 1px solid var(--border-strong);
+  color: var(--text-muted); padding: 6px 14px; font-size: 0.78rem; font-weight: 600;
+  transition: all 0.15s;
+}
+.fuel-toggle button:first-child { border-radius: var(--radius-sm) 0 0 var(--radius-sm); }
+.fuel-toggle button:last-child { border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
+.fuel-toggle button:not(:first-child) { border-left: none; }
+.fuel-toggle button.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+/* Pipeline */
+.pipeline {
+  display: flex; gap: 14px; padding: 20px 32px;
+  overflow-x: auto; min-height: calc(100vh - 140px); align-items: flex-start;
+}
+.pipeline::-webkit-scrollbar { height: 6px; }
+.pipeline::-webkit-scrollbar-track { background: transparent; }
+.pipeline::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
+.pipeline-col {
+  background: var(--bg-warm); border-radius: var(--radius-lg);
+  min-width: 270px; max-width: 310px; flex: 1;
+  animation: fadeUp 0.4s ease both;
+}
+.pipeline-col:nth-child(2) { animation-delay: 0.04s; }
+.pipeline-col:nth-child(3) { animation-delay: 0.08s; }
+.pipeline-col:nth-child(4) { animation-delay: 0.12s; }
+.pipeline-col:nth-child(5) { animation-delay: 0.16s; }
+.pipeline-col:nth-child(6) { animation-delay: 0.20s; }
+.pipeline-col:nth-child(7) { animation-delay: 0.24s; }
+.pipeline-col-header {
+  padding: 14px 16px 10px;
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 0.78rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--text-secondary);
+}
+.count-badge {
+  background: var(--bg-card); color: var(--text-muted);
+  padding: 2px 9px; border-radius: 20px; font-size: 0.72rem;
+  font-weight: 600; font-family: var(--mono);
+  box-shadow: var(--shadow-sm);
+}
+.pipeline-col-body {
+  padding: 4px 8px 8px; display: flex; flex-direction: column; gap: 8px;
+  max-height: calc(100vh - 220px); overflow-y: auto;
+}
+.pipeline-col-body::-webkit-scrollbar { width: 4px; }
+.pipeline-col-body::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 2px; }
+
+/* Cards */
+.car-card {
+  background: var(--bg-card); border: 1px solid transparent;
+  border-radius: var(--radius); padding: 14px 16px;
+  cursor: pointer; transition: all 0.2s ease;
+  box-shadow: var(--shadow-sm);
+  animation: fadeUp 0.3s ease both;
+}
+.car-card:hover {
+  box-shadow: var(--shadow);
+  border-color: var(--border-strong);
+  transform: translateY(-1px);
+}
+.card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; gap: 8px; }
+.card-title { font-size: 0.88rem; font-weight: 700; flex: 1; letter-spacing: -0.02em; line-height: 1.3; color: var(--text); }
+.source-tag {
+  background: var(--blue-bg); color: var(--blue);
+  padding: 3px 8px; border-radius: 20px; font-size: 0.68rem;
+  font-weight: 600; white-space: nowrap; letter-spacing: -0.01em;
+  flex-shrink: 0;
+}
+.card-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
+.chip {
+  padding: 3px 9px; border-radius: 20px; font-size: 0.72rem;
+  font-family: var(--mono); font-weight: 500;
+  background: var(--bg); color: var(--text-secondary);
+}
+.chip-price { background: var(--green-bg); color: var(--green); font-weight: 500; }
+.chip-score { font-weight: 500; padding: 3px 10px; border-radius: 20px; font-family: var(--mono); }
+.chip-score.green { background: var(--green-bg); color: var(--green); }
+.chip-score.yellow { background: var(--yellow-bg); color: var(--yellow); }
+.chip-score.red { background: var(--red-bg); color: var(--red); }
+.card-notes {
+  font-size: 0.78rem; color: var(--text-muted); margin-bottom: 10px;
+  line-height: 1.45; letter-spacing: -0.01em;
+}
+.card-actions { display: flex; gap: 5px; }
+.card-btn {
+  background: var(--bg); border: none;
+  color: var(--text-muted); padding: 4px 10px;
+  border-radius: var(--radius-sm); font-size: 0.72rem;
+  font-weight: 600; transition: all 0.15s;
+}
+.card-btn:hover { background: var(--bg-warm); color: var(--text-secondary); }
+.card-btn.compare-active { background: var(--accent-light); color: var(--accent); }
+
+/* List view */
+.list-view { padding: 20px 32px; }
+.list-table-wrap { overflow-x: auto; border-radius: var(--radius); box-shadow: var(--shadow); }
+.list-table { border-collapse: collapse; width: 100%; font-size: 0.84rem; }
+.list-table th {
+  background: var(--bg-warm); font-weight: 700; font-size: 0.72rem;
+  color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase;
+  padding: 10px 14px; text-align: left; white-space: nowrap;
+  position: sticky; top: 0;
+}
+.list-table td {
+  background: var(--bg-card); padding: 12px 14px;
+  border-bottom: 1px solid var(--border); vertical-align: middle;
+}
+.list-table tbody tr { cursor: pointer; transition: background 0.1s; }
+.list-table tbody tr:hover td { background: var(--bg); }
+.list-table .td-title {
+  font-weight: 700; letter-spacing: -0.02em; color: var(--text);
+  max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.list-table .td-mono { font-family: var(--mono); font-size: 0.82rem; color: var(--text-secondary); }
+.list-table .td-price { font-family: var(--mono); font-weight: 500; color: var(--green); }
+.list-table .td-actions { white-space: nowrap; }
+
+/* Compare view */
+.compare-view { padding: 20px 32px; }
+.compare-selectors { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px; }
+.compare-toggle {
+  background: var(--bg-card); border: 1px solid var(--border-strong);
+  color: var(--text-secondary); padding: 7px 14px; border-radius: var(--radius-sm);
+  font-size: 0.8rem; font-weight: 600; transition: all 0.15s;
+}
+.compare-toggle:hover { border-color: var(--accent); }
+.compare-toggle.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+.compare-table-wrap {
+  overflow-x: auto; border-radius: var(--radius);
+  box-shadow: var(--shadow); animation: fadeUp 0.4s ease both;
+}
+.compare-table { border-collapse: collapse; width: 100%; font-size: 0.84rem; }
+.compare-table th, .compare-table td {
+  padding: 11px 16px; text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+.compare-table th {
+  background: var(--bg-warm); font-weight: 700; font-size: 0.78rem;
+  color: var(--text-secondary); letter-spacing: -0.01em;
+}
+.compare-table td { background: var(--bg-card); font-family: var(--mono); font-size: 0.82rem; color: var(--text-secondary); }
+.compare-table tbody tr:hover td { background: var(--bg); }
+.compare-table .best { background: var(--green-bg); color: var(--green); font-weight: 500; }
+.compare-table .worst { background: var(--red-bg); color: var(--red); }
+
+/* Detail panel */
+.detail-overlay {
+  display: none; position: fixed; inset: 0;
+  background: var(--bg-overlay); z-index: 200;
+  opacity: 0; transition: opacity 0.3s ease;
+}
+.detail-overlay.open { display: block; opacity: 1; }
+.detail-panel {
+  position: fixed; top: 0; right: 0; bottom: 0;
+  width: 440px; max-width: 92vw;
+  background: var(--bg-card); z-index: 201;
+  overflow-y: auto; transform: translateX(100%);
+  transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+  padding: 28px; box-shadow: var(--shadow-xl);
+}
+.detail-panel.open { transform: translateX(0); }
+.detail-panel::-webkit-scrollbar { width: 4px; }
+.detail-panel::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 2px; }
+.detail-close {
+  position: absolute; top: 20px; right: 20px;
+  background: var(--bg); border: none; color: var(--text-muted);
+  width: 32px; height: 32px; border-radius: 8px;
+  font-size: 1.1rem; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all 0.15s;
+}
+.detail-close:hover { background: var(--bg-warm); color: var(--text); }
+.detail-title {
+  font-size: 1.25rem; font-weight: 800; letter-spacing: -0.03em;
+  margin-bottom: 8px; padding-right: 40px; line-height: 1.3;
+}
+.detail-badges { display: flex; gap: 6px; margin-bottom: 20px; flex-wrap: wrap; }
+.status-badge {
+  padding: 4px 12px; border-radius: 20px; font-size: 0.76rem;
+  font-weight: 600; background: var(--bg); color: var(--text-secondary);
+}
+.detail-score { margin-bottom: 20px; }
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 24px; }
+.detail-chip {
+  background: var(--bg); border-radius: var(--radius);
+  padding: 14px 16px;
+}
+.detail-chip label {
+  font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase;
+  font-weight: 700; letter-spacing: 0.06em; display: block; margin-bottom: 4px;
+}
+.detail-chip span {
+  font-size: 1.05rem; font-weight: 700; font-family: var(--mono);
+  color: var(--text); letter-spacing: -0.02em;
+}
+.detail-section { margin-bottom: 20px; }
+.detail-section h3 {
+  font-size: 0.72rem; color: var(--text-muted); margin-bottom: 8px;
+  text-transform: uppercase; font-weight: 700; letter-spacing: 0.06em;
+}
+.detail-notes {
+  white-space: pre-wrap; font-size: 0.88rem; line-height: 1.6;
+  background: var(--bg); padding: 14px 16px; border-radius: var(--radius);
+  color: var(--text-secondary);
+}
+.price-history-item {
+  display: flex; gap: 10px; align-items: baseline;
+  padding: 8px 0; font-size: 0.84rem;
+  border-bottom: 1px solid var(--border);
+}
+.price-history-item:last-child { border-bottom: none; }
+.ph-price { color: var(--green); font-weight: 500; font-family: var(--mono); }
+.ph-date { color: var(--text-muted); font-size: 0.75rem; font-family: var(--mono); }
+.ph-note { color: var(--text-muted); font-size: 0.78rem; font-style: italic; }
+.detail-actions { display: flex; gap: 8px; margin-top: 28px; }
+.btn {
+  padding: 9px 18px; border-radius: var(--radius-sm);
+  font-size: 0.84rem; font-weight: 600; border: none;
+  transition: all 0.15s; letter-spacing: -0.01em;
+}
+.btn-primary { background: var(--accent); color: #fff; box-shadow: 0 2px 8px rgba(12,110,93,0.2); }
+.btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(12,110,93,0.25); }
+.btn-danger { background: var(--red-bg); color: var(--red); }
+.btn-danger:hover { background: var(--red); color: #fff; }
+.btn-link {
+  background: var(--blue-bg); color: var(--blue); text-decoration: none;
+  display: inline-flex; align-items: center; gap: 6px; text-align: center;
+  font-weight: 600; padding: 9px 18px; border-radius: var(--radius-sm);
+  font-size: 0.84rem; transition: all 0.15s;
+}
+.btn-link:hover { background: var(--blue); color: #fff; }
+.btn-link svg { width: 14px; height: 14px; }
+
+/* Modal */
+.modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: var(--bg-overlay); z-index: 300;
+  align-items: center; justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--bg-card); border-radius: var(--radius-lg);
+  padding: 32px; width: 520px; max-width: 92vw; max-height: 90vh;
+  overflow-y: auto; box-shadow: var(--shadow-xl);
+  animation: scaleIn 0.25s ease;
+}
+.modal::-webkit-scrollbar { width: 4px; }
+.modal::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 2px; }
+.modal h2 {
+  font-size: 1.15rem; font-weight: 800; letter-spacing: -0.03em;
+  margin-bottom: 24px; color: var(--text);
+}
+.form-group { margin-bottom: 14px; }
+.form-group label {
+  display: block; font-size: 0.72rem; color: var(--text-muted);
+  margin-bottom: 5px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.form-group input, .form-group select, .form-group textarea {
+  width: 100%; background: var(--bg); border: 1px solid var(--border-strong);
+  color: var(--text); padding: 10px 14px; border-radius: var(--radius-sm);
+  font-size: 0.88rem; outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+}
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+  border-color: var(--accent); box-shadow: 0 0 0 3px rgba(12,110,93,0.08);
+}
+.form-group input::placeholder, .form-group textarea::placeholder { color: var(--text-muted); }
+.form-group textarea { resize: vertical; min-height: 70px; line-height: 1.5; }
+.form-group select { cursor: pointer; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.form-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 24px; }
+.btn-secondary {
+  background: var(--bg); border: none; color: var(--text-secondary);
+  font-weight: 600;
+}
+.btn-secondary:hover { background: var(--bg-warm); }
+.price-change-reason { display: none; }
+.price-change-reason.show { display: block; }
+
+.view { display: none; }
+.view.active { display: block; }
+.pipeline.active { display: flex; }
+
+.empty-state {
+  text-align: center; padding: 40px 20px; color: var(--text-muted);
+  font-size: 0.84rem; font-weight: 500;
+}
+.empty-state-icon {
+  font-size: 2rem; margin-bottom: 8px; opacity: 0.4;
+}
+
+/* Scrollbar global */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.12); border-radius: 3px; }
+
+/* Status-specific column accents */
+.pipeline-col[data-status="to-contact"] .pipeline-col-header { border-left: 3px solid var(--text-muted); padding-left: 13px; }
+.pipeline-col[data-status="contacted"] .pipeline-col-header { border-left: 3px solid var(--blue); padding-left: 13px; }
+.pipeline-col[data-status="sem-resposta"] .pipeline-col-header { border-left: 3px solid var(--yellow); padding-left: 13px; }
+.pipeline-col[data-status="inativo"] .pipeline-col-header { border-left: 3px solid #8B3A2A; padding-left: 13px; }
+.pipeline-col[data-status="negotiating"] .pipeline-col-header { border-left: 3px solid #E8873A; padding-left: 13px; }
+.pipeline-col[data-status="rejected"] .pipeline-col-header { border-left: 3px solid var(--red); padding-left: 13px; }
+.pipeline-col[data-status="bought"] .pipeline-col-header { border-left: 3px solid var(--green); padding-left: 13px; }
+
+/* Drag-and-drop */
+.pipeline-col.drag-over { outline: 2px dashed var(--accent); background: rgba(12,110,93,0.04); }
+.car-card[draggable="true"] { cursor: grab; }
+.car-card[draggable="true"]:active { cursor: grabbing; opacity: 0.8; }
+
+/* Icon action buttons */
+.icon-btn {
+  background: none; border: none; color: var(--text-muted);
+  padding: 5px 7px; border-radius: var(--radius-sm);
+  font-size: 0.9rem; line-height: 1; transition: all 0.15s;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.icon-btn:hover { background: var(--bg-warm); color: var(--text); }
+.icon-btn svg { width: 14px; height: 14px; pointer-events: none; }
+
+/* Status badge staleness colors */
+.status-badge.sem-resposta { background: var(--yellow-bg); color: var(--yellow); }
+.status-badge.inativo { background: var(--red-bg); color: #8B3A2A; }
+
+/* Inferred field highlight */
+.field-inferred { border-left: 2px solid var(--accent) !important; }
+</style>
+<datalist id="makes-list">
+  <option value="Audi">
+  <option value="BMW">
+  <option value="Citroën">
+  <option value="Dacia">
+  <option value="Fiat">
+  <option value="Ford">
+  <option value="Honda">
+  <option value="Hyundai">
+  <option value="Kia">
+  <option value="Mazda">
+  <option value="Mercedes-Benz">
+  <option value="Mitsubishi">
+  <option value="Nissan">
+  <option value="Opel">
+  <option value="Peugeot">
+  <option value="Renault">
+  <option value="Seat">
+  <option value="Skoda">
+  <option value="Suzuki">
+  <option value="Toyota">
+  <option value="Volkswagen">
+  <option value="Volvo">
+</datalist>
+<datalist id="models-list"></datalist>
+</head>
+<body>
+
+<div class="header">
+  <h1>Car<span>Tracker</span></h1>
+  <div class="nav-tabs">
+    <button class="nav-tab active" data-view="pipeline">Pipeline</button>
+    <button class="nav-tab" data-view="list">List</button>
+    <button class="nav-tab" data-view="compare">Compare</button>
+  </div>
+  <div class="header-right">
+    <button class="btn-add" onclick="openModal()">+ Add Car</button>
+  </div>
+</div>
+
+<!-- Pipeline filter bar -->
+<div class="filter-bar" id="pipeline-filters">
+  <input type="text" id="pipeline-search" placeholder="Search cars...">
+  <select id="pipeline-fuel-filter">
+    <option value="">All Fuels</option>
+    <option value="Diesel">Diesel</option>
+    <option value="Gasolina">Gasolina</option>
+  </select>
+  <select id="pipeline-source-filter">
+    <option value="">All Sources</option>
+    <option value="StandVirtual">StandVirtual</option>
+    <option value="AutoScout24">AutoScout24</option>
+    <option value="OLX">OLX</option>
+    <option value="Facebook Marketplace">Facebook Marketplace</option>
+    <option value="PiscaPisca">PiscaPisca</option>
+    <option value="Other">Other</option>
+  </select>
+</div>
+
+<!-- List filter bar -->
+<div class="filter-bar" id="list-filters" style="display:none;">
+  <input type="text" id="list-search" placeholder="Search cars...">
+  <div class="fuel-toggle">
+    <button class="active" data-fuel="">All</button>
+    <button data-fuel="Diesel">Diesel</button>
+    <button data-fuel="Gasolina">Gasolina</button>
+  </div>
+  <select id="list-source-filter">
+    <option value="">All Sources</option>
+    <option value="StandVirtual">StandVirtual</option>
+    <option value="AutoScout24">AutoScout24</option>
+    <option value="OLX">OLX</option>
+    <option value="Facebook Marketplace">Facebook Marketplace</option>
+    <option value="PiscaPisca">PiscaPisca</option>
+    <option value="Other">Other</option>
+  </select>
+  <select id="list-status-filter">
+    <option value="">All Statuses</option>
+    <option value="to-contact">To Contact</option>
+    <option value="contacted">Contacted</option>
+    <option value="sem-resposta">Sem Resposta</option>
+    <option value="inativo">Inativo</option>
+    <option value="negotiating">Negociação</option>
+    <option value="rejected">Rejeitado</option>
+    <option value="bought">Comprado</option>
+  </select>
+  <select id="list-make-filter">
+    <option value="">All Makes</option>
+  </select>
+  <span style="color:var(--text-muted);font-size:0.78rem;font-weight:600;margin-left:8px;letter-spacing:0.04em;text-transform:uppercase;">Sort</span>
+  <button class="sort-btn" data-sort="price">Price</button>
+  <button class="sort-btn" data-sort="km">Km</button>
+  <button class="sort-btn" data-sort="year">Year</button>
+  <button class="sort-btn" data-sort="score">Score</button>
+  <button class="sort-btn" data-sort="addedAt">Date Added</button>
+</div>
+
+<!-- Pipeline View -->
+<div class="pipeline view active" id="pipeline-view"></div>
+
+<!-- List View -->
+<div class="list-view view" id="list-view">
+  <div class="list-table-wrap" id="list-table-wrap"></div>
+</div>
+
+<!-- Compare View -->
+<div class="compare-view view" id="compare-view">
+  <div class="compare-selectors" id="compare-selectors"></div>
+  <div class="compare-table-wrap" id="compare-table-wrap"></div>
+</div>
+
+<!-- Detail side panel -->
+<div class="detail-overlay" id="detail-overlay" onclick="closeDetail()"></div>
+<div class="detail-panel" id="detail-panel">
+  <button class="detail-close" onclick="closeDetail()">&times;</button>
+  <div id="detail-content"></div>
+</div>
+
+<!-- Add/Edit modal -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal" onclick="event.stopPropagation()">
+    <h2 id="modal-title">Add Car</h2>
+    <form id="car-form" onsubmit="handleSubmit(event)">
+      <input type="hidden" id="form-id">
+      <div class="form-group">
+        <label>URL</label>
+        <input type="url" id="form-url" placeholder="Listing URL">
+      </div>
+      <div class="form-group">
+        <label>Title</label>
+        <input type="text" id="form-title" placeholder="e.g. Renault Clio III 1.5 dCi 2008" required>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Make</label>
+          <input type="text" id="form-make" list="makes-list" placeholder="e.g. Renault" autocomplete="off">
+        </div>
+        <div class="form-group">
+          <label>Model</label>
+          <input type="text" id="form-model" list="models-list" placeholder="e.g. Clio" autocomplete="off">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Year</label>
+          <input type="number" id="form-year" placeholder="2008">
+        </div>
+        <div class="form-group">
+          <label>Km</label>
+          <input type="number" id="form-km" placeholder="120000">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Price (EUR)</label>
+          <input type="number" id="form-price" placeholder="5500">
+        </div>
+        <div class="form-group">
+          <label>Fuel</label>
+          <select id="form-fuel">
+            <option value="">--</option>
+            <option value="Diesel">Diesel</option>
+            <option value="Gasolina">Gasolina</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Source</label>
+          <select id="form-source">
+            <option value="">--</option>
+            <option value="StandVirtual">StandVirtual</option>
+            <option value="AutoScout24">AutoScout24</option>
+            <option value="OLX">OLX</option>
+            <option value="Facebook Marketplace">Facebook Marketplace</option>
+            <option value="PiscaPisca">PiscaPisca</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Status</label>
+          <select id="form-status">
+            <option value="to-contact">To Contact</option>
+            <option value="contacted">Contacted</option>
+            <option value="sem-resposta">Sem Resposta</option>
+            <option value="inativo">Inativo</option>
+            <option value="negotiating">Negociação</option>
+            <option value="rejected">Rejeitado</option>
+            <option value="bought">Comprado</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Localização</label>
+        <input type="text" id="form-location" placeholder="e.g. Lisboa, Porto">
+      </div>
+      <div class="form-group">
+        <label>Notes</label>
+        <textarea id="form-notes" placeholder="Free text notes..."></textarea>
+      </div>
+      <div class="form-group price-change-reason" id="price-change-group">
+        <label>Reason for price change</label>
+        <input type="text" id="form-price-note" placeholder="e.g. Seller lowered asking price">
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="form-submit-btn">Add Car</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+// --- State ---
+let cars = [];
+let currentView = 'pipeline';
+let selectedForCompare = new Set();
+let listSort = { field: 'addedAt', asc: false };
+let editingOriginalPrice = null;
+
+const STATUSES = [
+  { key: 'to-contact', label: 'To Contact' },
+  { key: 'contacted', label: 'Contacted' },
+  { key: 'sem-resposta', label: 'Sem Resposta' },
+  { key: 'inativo', label: 'Inativo' },
+  { key: 'negotiating', label: 'Negociação' },
+  { key: 'rejected', label: 'Rejeitado' },
+  { key: 'bought', label: 'Comprado' }
+];
+
+const STATUS_LABELS = Object.fromEntries(STATUSES.map(s => [s.key, s.label]));
+
+// --- URL Inference ---
+const SOURCE_MAP = {
+  'standvirtual.com': 'StandVirtual',
+  'autoscout24.pt': 'AutoScout24',
+  'olx.pt': 'OLX',
+  'facebook.com': 'Facebook Marketplace',
+  'piscapisca.pt': 'PiscaPisca'
+};
+
+function capitalize(s) {
+  return s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : '';
+}
+
+function inferFromUrl(url) {
+  if (!url) return;
+  let parsed;
+  try { parsed = new URL(url); } catch { return; }
+
+  const hostname = parsed.hostname.replace(/^www\./, '');
+  const sourceField = document.getElementById('form-source');
+  const makeField = document.getElementById('form-make');
+  const modelField = document.getElementById('form-model');
+
+  // Source from domain
+  const inferredSource = SOURCE_MAP[hostname];
+  if (inferredSource && !sourceField.value) {
+    sourceField.value = inferredSource;
+    sourceField.classList.add('field-inferred');
+  }
+
+  // Make/Model from URL path
+  let make = '', model = '';
+  const parts = parsed.pathname.toLowerCase().split('/').filter(Boolean);
+
+  if (hostname === 'standvirtual.com' && parts[0] === 'anuncios' && parts[1]) {
+    const segments = parts[1].split('-');
+    make = capitalize(segments[0]);
+    model = capitalize(segments[1] || '');
+  } else if (hostname === 'autoscout24.pt') {
+    const carrosIdx = parts.indexOf('carros');
+    if (carrosIdx !== -1 && parts[carrosIdx + 1]) {
+      make = capitalize(parts[carrosIdx + 1]);
+      model = capitalize(parts[carrosIdx + 2] || '');
+    }
+  } else if (parts[0]) {
+    const segments = parts[0].split('-');
+    make = capitalize(segments[0]);
+    model = capitalize(segments[1] || '');
+  }
+
+  if (make && !makeField.value) {
+    makeField.value = make;
+    makeField.classList.add('field-inferred');
+  }
+  if (model && !modelField.value) {
+    modelField.value = model;
+    modelField.classList.add('field-inferred');
+  }
+
+  updateModelDatalist(make || makeField.value);
+}
+
+function updateModelDatalist(make) {
+  const dl = document.getElementById('models-list');
+  if (!make) { dl.innerHTML = ''; return; }
+  const models = [...new Set(
+    cars.filter(c => c.make && c.make.toLowerCase() === make.toLowerCase() && c.model)
+        .map(c => c.model)
+  )].sort();
+  dl.innerHTML = models.map(m => `<option value="${esc(m)}">`).join('');
+}
+
+// --- Score ---
+function computeScore(car) {
+  const kmScore = Math.max(0, 100 - (car.km / 200000) * 100);
+  const priceScore = Math.max(0, 100 - (car.price / 10000) * 100);
+  const yearScore = Math.min(100, Math.max(0, ((car.year - 2000) / 15) * 100));
+  let statusScore = 0;
+  if (car.status === 'negotiating') statusScore = 100;
+  const total = kmScore * 0.35 + priceScore * 0.35 + yearScore * 0.20 + statusScore * 0.10;
+  return Math.round(total);
+}
+
+function scoreClass(score) {
+  if (score >= 75) return 'green';
+  if (score >= 50) return 'yellow';
+  return 'red';
+}
+
+// --- API ---
+async function fetchCars() {
+  const res = await fetch('/api/cars');
+  cars = await res.json();
+  render();
+}
+
+async function createCar(data) {
+  await fetch('/api/cars', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+  await fetchCars();
+}
+
+async function updateCar(id, data) {
+  await fetch(`/api/cars/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+  await fetchCars();
+}
+
+async function deleteCar(id) {
+  if (!confirm('Delete this car?')) return;
+  await fetch(`/api/cars/${id}`, { method: 'DELETE' });
+  closeDetail();
+  await fetchCars();
+}
+
+// --- Filtering ---
+function filterCars(carsArr, searchId, fuelVal, sourceVal, statusVal, makeVal) {
+  const search = (document.getElementById(searchId)?.value || '').toLowerCase();
+  return carsArr.filter(c => {
+    if (search && ![c.title, c.make, c.model, c.notes].some(f => (f || '').toLowerCase().includes(search))) return false;
+    if (fuelVal && c.fuel !== fuelVal) return false;
+    if (sourceVal && c.source !== sourceVal) return false;
+    if (statusVal && c.status !== statusVal) return false;
+    if (makeVal && c.make !== makeVal) return false;
+    return true;
+  });
+}
+
+// --- Card HTML ---
+function cardHTML(car) {
+  const score = computeScore(car);
+  const sc = scoreClass(score);
+  const notesPreview = car.notes ? (car.notes.length > 80 ? car.notes.slice(0, 80) + '...' : car.notes) : '';
+  const compareActive = selectedForCompare.has(car.id) ? ' compare-active' : '';
+  return `<div class="car-card" onclick="openDetail('${car.id}')" data-id="${car.id}"
+      draggable="true"
+      ondragstart="event.dataTransfer.setData('carId','${car.id}');event.stopPropagation()">
+    <div class="card-header">
+      <span class="card-title">${esc(car.title)}</span>
+      ${car.source ? `<span class="source-tag">${esc(car.source)}</span>` : ''}
+    </div>
+    <div class="card-chips">
+      <span class="chip">${car.year || '\u2014'}</span>
+      <span class="chip">${car.km ? car.km.toLocaleString() + ' km' : '\u2014'}</span>
+      <span class="chip">${car.fuel || '\u2014'}</span>
+      <span class="chip chip-price">\u20AC${car.price ? car.price.toLocaleString() : '\u2014'}</span>
+      <span class="chip chip-score ${sc}">${score}</span>
+    </div>
+    ${car.location ? `<div class="card-notes" style="margin-bottom:6px;">📍 ${esc(car.location)}</div>` : ''}
+    ${notesPreview ? `<div class="card-notes">${esc(notesPreview)}</div>` : ''}
+    <div class="card-actions">
+      <button class="card-btn" onclick="event.stopPropagation();openModal('${car.id}')">Edit</button>
+      <button class="card-btn${compareActive}" onclick="event.stopPropagation();toggleCompare('${car.id}')">Compare</button>
+    </div>
+  </div>`;
+}
+
+function esc(s) {
+  const d = document.createElement('div');
+  d.textContent = s || '';
+  return d.innerHTML;
+}
+
+// --- Render ---
+function render() {
+  if (currentView === 'pipeline') renderPipeline();
+  else if (currentView === 'list') renderList();
+  else if (currentView === 'compare') renderCompare();
+}
+
+function renderPipeline() {
+  const fuel = document.getElementById('pipeline-fuel-filter').value;
+  const source = document.getElementById('pipeline-source-filter').value;
+  const filtered = filterCars(cars, 'pipeline-search', fuel, source);
+
+  const el = document.getElementById('pipeline-view');
+  el.innerHTML = STATUSES.map(s => {
+    const colCars = filtered.filter(c => c.status === s.key);
+    return `<div class="pipeline-col" data-status="${s.key}"
+        ondragover="event.preventDefault();this.classList.add('drag-over')"
+        ondragleave="if(!this.contains(event.relatedTarget)){this.classList.remove('drag-over')}"
+        ondrop="event.preventDefault();this.classList.remove('drag-over');handleDrop(event,this)">
+      <div class="pipeline-col-header">${s.label} <span class="count-badge">${colCars.length}</span></div>
+      <div class="pipeline-col-body">${colCars.length ? colCars.map(cardHTML).join('') : '<div class="empty-state"><div class="empty-state-icon">\u2015</div>No cars</div>'}</div>
+    </div>`;
+  }).join('');
+}
+function handleDrop(event, col) {
+  const id = event.dataTransfer.getData('carId');
+  const newStatus = col.dataset.status;
+  if (!id || !newStatus) return;
+  updateCar(id, { status: newStatus });
+}
+
+function renderList() {
+  const fuel = document.querySelector('#list-filters .fuel-toggle button.active')?.dataset.fuel || '';
+  const source = document.getElementById('list-source-filter').value;
+  const status = document.getElementById('list-status-filter').value;
+  const make = document.getElementById('list-make-filter').value;
+  let filtered = filterCars(cars, 'list-search', fuel, source, status, make);
+
+  // Sort
+  filtered.sort((a, b) => {
+    let av, bv;
+    if (listSort.field === 'score') { av = computeScore(a); bv = computeScore(b); }
+    else if (listSort.field === 'addedAt') { av = a.addedAt; bv = b.addedAt; }
+    else { av = a[listSort.field]; bv = b[listSort.field]; }
+    if (av < bv) return listSort.asc ? -1 : 1;
+    if (av > bv) return listSort.asc ? 1 : -1;
+    return 0;
+  });
+
+  // Populate make dropdown
+  const makes = [...new Set(cars.map(c => c.make).filter(Boolean))].sort();
+  const makeSel = document.getElementById('list-make-filter');
+  const curMake = makeSel.value;
+  makeSel.innerHTML = '<option value="">All Makes</option>' + makes.map(m => `<option value="${esc(m)}"${m === curMake ? ' selected' : ''}>${esc(m)}</option>`).join('');
+
+  const wrap = document.getElementById('list-table-wrap');
+  if (!filtered.length) {
+    wrap.innerHTML = '<div class="empty-state"><div class="empty-state-icon">\u2015</div>No cars match filters</div>';
+    return;
+  }
+
+  let html = `<table class="list-table"><thead><tr>
+    <th>Title</th><th>Source</th><th>Local</th><th>Year</th><th>Km</th><th>Price</th>
+    <th>Fuel</th><th>Status</th><th>Score</th><th></th>
+  </tr></thead><tbody>`;
+
+  filtered.forEach(car => {
+    const score = computeScore(car);
+    const sc = scoreClass(score);
+    const compareActive = selectedForCompare.has(car.id) ? ' compare-active' : '';
+    const statusClass = ['sem-resposta', 'inativo'].includes(car.status) ? ` ${car.status}` : '';
+    const urlBtn = car.url ? `<a href="${esc(car.url)}" target="_blank" rel="noopener noreferrer"
+        onclick="event.stopPropagation()" class="icon-btn" title="Open listing">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M6 3H3v10h10v-3M9 1h6v6M7 9L15 1"/>
+        </svg></a>` : '';
+    html += `<tr onclick="openDetail('${car.id}')">
+      <td class="td-title">${esc(car.title)}</td>
+      <td>${car.source ? `<span class="source-tag">${esc(car.source)}</span>` : '\u2014'}</td>
+      <td class="td-mono">${esc(car.location || '') || '\u2014'}</td>
+      <td class="td-mono">${car.year || '\u2014'}</td>
+      <td class="td-mono">${car.km ? car.km.toLocaleString() : '\u2014'}</td>
+      <td class="td-price">${car.price ? '\u20AC' + car.price.toLocaleString() : '\u2014'}</td>
+      <td>${car.fuel || '\u2014'}</td>
+      <td><span class="status-badge${statusClass}">${STATUS_LABELS[car.status] || car.status}</span></td>
+      <td><span class="chip chip-score ${sc}">${score}</span></td>
+      <td class="td-actions" onclick="event.stopPropagation()">
+        ${urlBtn}
+        <button class="icon-btn${compareActive}" onclick="toggleCompare('${car.id}')" title="Compare">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 8h10M9 4l4 4-4 4"/>
+          </svg>
+        </button>
+        <button class="icon-btn" onclick="openModal('${car.id}')" title="Edit">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M11 2l3 3-8 8H3v-3L11 2z"/>
+          </svg>
+        </button>
+        <button class="icon-btn" onclick="deleteCar('${car.id}')" title="Delete">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M3 4h10M6 4V2h4v2M5 4v9h6V4"/>
+          </svg>
+        </button>
+      </td>
+    </tr>`;
+  });
+
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+}
+
+function renderCompare() {
+  const selEl = document.getElementById('compare-selectors');
+  selEl.innerHTML = cars.map(c => {
+    const active = selectedForCompare.has(c.id) ? ' active' : '';
+    return `<button class="compare-toggle${active}" onclick="toggleCompare('${c.id}')">${esc(c.title)}</button>`;
+  }).join('');
+
+  const wrap = document.getElementById('compare-table-wrap');
+  const selected = cars.filter(c => selectedForCompare.has(c.id));
+  if (selected.length < 2) {
+    wrap.innerHTML = '<div class="empty-state"><div class="empty-state-icon">\u2194</div>Select at least 2 cars to compare</div>';
+    return;
+  }
+
+  const fields = [
+    { key: 'status', label: 'Status', format: v => STATUS_LABELS[v] || v },
+    { key: 'source', label: 'Source' },
+    { key: 'year', label: 'Year', numeric: true, higherBetter: true },
+    { key: 'km', label: 'Km', numeric: true, higherBetter: false, format: v => v ? v.toLocaleString() : '\u2014' },
+    { key: 'price', label: 'Price', numeric: true, higherBetter: false, format: v => v ? '\u20AC' + v.toLocaleString() : '\u2014' },
+    { key: 'fuel', label: 'Fuel' },
+    { key: 'score', label: 'Score', numeric: true, higherBetter: true, getValue: c => computeScore(c) },
+    { key: 'url', label: 'URL', format: v => v ? `<a href="${esc(v)}" target="_blank" style="color:var(--blue);text-decoration:none;font-weight:600;">Open \u2197</a>` : '\u2014' },
+    { key: 'notes', label: 'Notes', format: v => v || '\u2014' },
+    { key: 'addedAt', label: 'Date Added', format: v => v ? new Date(v).toLocaleDateString() : '\u2014' }
+  ];
+
+  let html = '<table class="compare-table"><thead><tr><th></th>';
+  selected.forEach(c => html += `<th>${esc(c.title)}</th>`);
+  html += '</tr></thead><tbody>';
+
+  fields.forEach(f => {
+    const values = selected.map(c => f.getValue ? f.getValue(c) : c[f.key]);
+    let best = null, worst = null;
+    if (f.numeric) {
+      const nums = values.filter(v => typeof v === 'number' && v > 0);
+      if (nums.length > 1) {
+        best = f.higherBetter ? Math.max(...nums) : Math.min(...nums);
+        worst = f.higherBetter ? Math.min(...nums) : Math.max(...nums);
+        if (best === worst) { best = null; worst = null; }
+      }
+    }
+    html += `<tr><th>${f.label}</th>`;
+    values.forEach(v => {
+      let cls = '';
+      if (f.numeric && v === best) cls = ' class="best"';
+      else if (f.numeric && v === worst) cls = ' class="worst"';
+      const display = f.format ? f.format(v) : (v || '\u2014');
+      html += `<td${cls}>${display}</td>`;
+    });
+    html += '</tr>';
+  });
+
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+}
+
+// --- Detail Panel ---
+function openDetail(id) {
+  const car = cars.find(c => c.id === id);
+  if (!car) return;
+  const score = computeScore(car);
+  const sc = scoreClass(score);
+  const statusBadgeClass = ['sem-resposta', 'inativo'].includes(car.status) ? ` ${car.status}` : '';
+
+  document.getElementById('detail-content').innerHTML = `
+    <div class="detail-title">${esc(car.title)}</div>
+    <div class="detail-badges">
+      <span class="status-badge${statusBadgeClass}">${STATUS_LABELS[car.status] || car.status}</span>
+      ${car.source ? `<span class="source-tag">${esc(car.source)}</span>` : ''}
+    </div>
+    <div class="detail-score"><span class="chip chip-score ${sc}" style="font-size:1.1rem;padding:5px 16px;">${score}</span></div>
+    <div class="detail-grid">
+      <div class="detail-chip"><label>Year</label><span>${car.year || '\u2014'}</span></div>
+      <div class="detail-chip"><label>Km</label><span>${car.km ? car.km.toLocaleString() : '\u2014'}</span></div>
+      <div class="detail-chip"><label>Fuel</label><span>${car.fuel || '\u2014'}</span></div>
+      <div class="detail-chip"><label>Price</label><span style="color:var(--green)">${car.price ? '\u20AC' + car.price.toLocaleString() : '\u2014'}</span></div>
+      ${car.location ? `<div class="detail-chip" style="grid-column:1/-1"><label>Local</label><span style="font-size:0.95rem">📍 ${esc(car.location)}</span></div>` : ''}
+    </div>
+    ${car.url ? `<a href="${esc(car.url)}" target="_blank" class="btn-link" style="margin-bottom:20px;"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3H3v10h10v-3M9 1h6v6M7 9L15 1"/></svg>Open Listing</a>` : ''}
+    ${car.notes ? `<div class="detail-section"><h3>Notes</h3><div class="detail-notes">${esc(car.notes)}</div></div>` : ''}
+    <div class="detail-section">
+      <h3>Price History</h3>
+      ${(car.priceHistory || []).map(p => `
+        <div class="price-history-item">
+          <span class="ph-price">\u20AC${p.price.toLocaleString()}</span>
+          <span class="ph-date">${new Date(p.date).toLocaleDateString()}</span>
+          ${p.note ? `<span class="ph-note">${esc(p.note)}</span>` : ''}
+        </div>
+      `).join('')}
+    </div>
+    <div class="detail-actions">
+      <button class="btn btn-primary" onclick="closeDetail();openModal('${car.id}')">Edit</button>
+      <button class="btn btn-danger" onclick="deleteCar('${car.id}')">Delete</button>
+    </div>
+  `;
+
+  document.getElementById('detail-overlay').classList.add('open');
+  document.getElementById('detail-panel').classList.add('open');
+}
+
+function closeDetail() {
+  document.getElementById('detail-overlay').classList.remove('open');
+  document.getElementById('detail-panel').classList.remove('open');
+}
+
+// --- Modal ---
+function openModal(id) {
+  const form = document.getElementById('car-form');
+  form.reset();
+  ['form-make', 'form-model', 'form-source'].forEach(id =>
+    document.getElementById(id).classList.remove('field-inferred')
+  );
+  document.getElementById('price-change-group').classList.remove('show');
+  editingOriginalPrice = null;
+
+  if (id) {
+    const car = cars.find(c => c.id === id);
+    if (!car) return;
+    document.getElementById('modal-title').textContent = 'Edit Car';
+    document.getElementById('form-submit-btn').textContent = 'Save Changes';
+    document.getElementById('form-id').value = car.id;
+    document.getElementById('form-url').value = car.url || '';
+    document.getElementById('form-title').value = car.title || '';
+    document.getElementById('form-make').value = car.make || '';
+    document.getElementById('form-model').value = car.model || '';
+    document.getElementById('form-year').value = car.year || '';
+    document.getElementById('form-km').value = car.km || '';
+    document.getElementById('form-price').value = car.price || '';
+    document.getElementById('form-fuel').value = car.fuel || '';
+    document.getElementById('form-source').value = car.source || '';
+    document.getElementById('form-status').value = car.status || 'to-contact';
+    document.getElementById('form-notes').value = car.notes || '';
+    document.getElementById('form-location').value = car.location || '';
+    updateModelDatalist(car.make || '');
+    editingOriginalPrice = car.price;
+    document.getElementById('form-price').addEventListener('input', checkPriceChange);
+  } else {
+    document.getElementById('modal-title').textContent = 'Add Car';
+    document.getElementById('form-submit-btn').textContent = 'Add Car';
+    document.getElementById('form-id').value = '';
+    updateModelDatalist('');
+  }
+
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function checkPriceChange() {
+  if (editingOriginalPrice === null) return;
+  const newPrice = Number(document.getElementById('form-price').value);
+  const group = document.getElementById('price-change-group');
+  if (newPrice !== editingOriginalPrice) {
+    group.classList.add('show');
+  } else {
+    group.classList.remove('show');
+  }
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+  document.getElementById('form-price').removeEventListener('input', checkPriceChange);
+  editingOriginalPrice = null;
+}
+
+async function handleSubmit(e) {
+  e.preventDefault();
+  const data = {
+    url: document.getElementById('form-url').value,
+    title: document.getElementById('form-title').value,
+    make: document.getElementById('form-make').value,
+    model: document.getElementById('form-model').value,
+    year: document.getElementById('form-year').value,
+    km: document.getElementById('form-km').value,
+    price: document.getElementById('form-price').value,
+    fuel: document.getElementById('form-fuel').value,
+    source: document.getElementById('form-source').value,
+    status: document.getElementById('form-status').value,
+    location: document.getElementById('form-location').value,
+    notes: document.getElementById('form-notes').value
+  };
+
+  const id = document.getElementById('form-id').value;
+  if (id) {
+    const priceNote = document.getElementById('form-price-note').value;
+    if (priceNote) data.priceNote = priceNote;
+    await updateCar(id, data);
+  } else {
+    await createCar(data);
+  }
+  closeModal();
+}
+
+// --- Compare toggle ---
+function toggleCompare(id) {
+  if (selectedForCompare.has(id)) {
+    selectedForCompare.delete(id);
+  } else if (selectedForCompare.size < 5) {
+    selectedForCompare.add(id);
+  }
+  render();
+}
+
+// --- View switching ---
+document.querySelectorAll('.nav-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    currentView = tab.dataset.view;
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById(currentView + '-view').classList.add('active');
+    document.getElementById('pipeline-filters').style.display = currentView === 'pipeline' ? 'flex' : 'none';
+    document.getElementById('list-filters').style.display = currentView === 'list' ? 'flex' : 'none';
+    render();
+  });
+});
+
+// --- Filter events ---
+['pipeline-search', 'pipeline-fuel-filter', 'pipeline-source-filter'].forEach(id => {
+  document.getElementById(id).addEventListener('input', renderPipeline);
+  document.getElementById(id).addEventListener('change', renderPipeline);
+});
+
+['list-search', 'list-source-filter', 'list-status-filter', 'list-make-filter'].forEach(id => {
+  document.getElementById(id).addEventListener('input', renderList);
+  document.getElementById(id).addEventListener('change', renderList);
+});
+
+document.querySelectorAll('#list-filters .fuel-toggle button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#list-filters .fuel-toggle button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderList();
+  });
+});
+
+document.querySelectorAll('.sort-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const field = btn.dataset.sort;
+    if (listSort.field === field) {
+      listSort.asc = !listSort.asc;
+    } else {
+      listSort.field = field;
+      listSort.asc = true;
+    }
+    document.querySelectorAll('.sort-btn').forEach(b => {
+      b.classList.remove('active');
+      b.textContent = b.dataset.sort === 'addedAt' ? 'Date Added' : b.dataset.sort.charAt(0).toUpperCase() + b.dataset.sort.slice(1);
+    });
+    btn.classList.add('active');
+    const label = field === 'addedAt' ? 'Date Added' : field.charAt(0).toUpperCase() + field.slice(1);
+    btn.textContent = label + (listSort.asc ? ' \u2191' : ' \u2193');
+    renderList();
+  });
+});
+
+document.getElementById('modal-overlay').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('modal-overlay')) closeModal();
+});
+
+// --- Init ---
+// URL inference
+document.getElementById('form-url').addEventListener('blur', e => inferFromUrl(e.target.value));
+
+// Clear inferred class on focus; update model datalist on make change
+['form-make', 'form-model', 'form-source'].forEach(id => {
+  document.getElementById(id).addEventListener('focus', e => e.target.classList.remove('field-inferred'));
+});
+document.getElementById('form-make').addEventListener('input', e => updateModelDatalist(e.target.value));
+
+fetchCars();
+</script>
+</body>
+</html>
