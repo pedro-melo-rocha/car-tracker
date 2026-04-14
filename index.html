@@ -789,7 +789,8 @@ function locationScore(location) {
 }
 
 function computeScore(car) {
-  const kmScore = Math.max(0, 100 - (car.km / 200000) * 100);
+  const kmBaseline = car.fuel === 'Gasolina' ? 130000 : 200000;
+  const kmScore = Math.max(0, 100 - (car.km / kmBaseline) * 100);
   const priceScore = Math.max(0, 100 - (car.price / 10000) * 100);
   const yearScore = Math.min(100, Math.max(0, ((car.year - 2000) / 15) * 100));
   const locScore = locationScore(car.location);

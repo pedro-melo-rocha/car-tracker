@@ -83,7 +83,7 @@
     "price": 5250,
     "fuel": "Diesel",
     "source": "PiscaPisca",
-    "status": "to-contact",
+    "status": "inactive",
     "notes": "",
     "priceHistory": [
       {
@@ -104,16 +104,21 @@
     "model": "Corsa",
     "year": 2013,
     "km": 159888,
-    "price": 5000,
+    "price": 4500,
     "fuel": "Diesel",
     "source": "OLX",
-    "status": "to-contact",
-    "notes": "",
+    "status": "negotiating",
+    "notes": "É muito longe",
     "priceHistory": [
       {
         "date": "2026-04-12T22:18:41.974Z",
         "price": 5000,
         "note": "Initial price"
+      },
+      {
+        "date": "2026-04-13T22:17:06.390Z",
+        "price": 4500,
+        "note": "Price changed from €5000 to €4500"
       }
     ],
     "location": "Setúbal",
@@ -213,7 +218,7 @@
     "price": 5900,
     "fuel": "Diesel",
     "source": "StandVirtual",
-    "status": "to-contact",
+    "status": "rejected",
     "notes": "68cv, 1399cc",
     "priceHistory": [
       {
@@ -222,7 +227,8 @@
         "note": "Initial price"
       }
     ],
-    "location": "Alvalade, Lisboa"
+    "location": "Alvalade, Lisboa",
+    "contactedAt": null
   },
   {
     "id": "1776103711569",
@@ -236,7 +242,7 @@
     "price": 4990,
     "fuel": "Diesel",
     "source": "StandVirtual",
-    "status": "to-contact",
+    "status": "contacted",
     "notes": "90cv, 1248cc",
     "priceHistory": [
       {
@@ -245,7 +251,8 @@
         "note": "Initial price"
       }
     ],
-    "location": "Loures, Lisboa"
+    "location": "Loures, Lisboa",
+    "contactedAt": "2026-04-13T22:19:01.434Z"
   },
   {
     "id": "1776103711570",
@@ -259,8 +266,8 @@
     "price": 5999,
     "fuel": "Diesel",
     "source": "StandVirtual",
-    "status": "to-contact",
-    "notes": "90cv, 1582cc",
+    "status": "contacted",
+    "notes": "90cv, 1582cc\nOfereci 4800 euros",
     "priceHistory": [
       {
         "date": "2026-04-13T18:08:31.567Z",
@@ -268,7 +275,8 @@
         "note": "Initial price"
       }
     ],
-    "location": "Vila Nova de Famalicão, Braga"
+    "location": "Vila Nova de Famalicão, Braga",
+    "contactedAt": "2026-04-13T22:21:30.990Z"
   },
   {
     "id": "1776103711571",
@@ -282,8 +290,8 @@
     "price": 5500,
     "fuel": "Diesel",
     "source": "StandVirtual",
-    "status": "to-contact",
-    "notes": "110cv, 1560cc",
+    "status": "contacted",
+    "notes": "110cv, 1560cc\n\nOfereci 4500 euros",
     "priceHistory": [
       {
         "date": "2026-04-13T18:08:31.567Z",
@@ -291,7 +299,8 @@
         "note": "Initial price"
       }
     ],
-    "location": "Coimbra, Coimbra"
+    "location": "Coimbra, Coimbra",
+    "contactedAt": "2026-04-13T22:23:07.252Z"
   },
   {
     "id": "1776103711572",
@@ -305,7 +314,7 @@
     "price": 5990,
     "fuel": "Diesel",
     "source": "StandVirtual",
-    "status": "to-contact",
+    "status": "contacted",
     "notes": "109cv, 1560cc",
     "priceHistory": [
       {
@@ -314,7 +323,8 @@
         "note": "Initial price"
       }
     ],
-    "location": "Gondomar, Porto"
+    "location": "Gondomar, Porto",
+    "contactedAt": "2026-04-13T22:25:50.586Z"
   },
   {
     "id": "1776103711573",
@@ -328,7 +338,7 @@
     "price": 5250,
     "fuel": "Diesel",
     "source": "StandVirtual",
-    "status": "to-contact",
+    "status": "rejected",
     "notes": "85cv, 1248cc",
     "priceHistory": [
       {
@@ -337,7 +347,8 @@
         "note": "Initial price"
       }
     ],
-    "location": "Faro, Faro"
+    "location": "Faro, Faro",
+    "contactedAt": null
   },
   {
     "id": "1776103711574",
@@ -374,7 +385,7 @@
     "price": 5500,
     "fuel": "Diesel",
     "source": "StandVirtual",
-    "status": "to-contact",
+    "status": "rejected",
     "notes": "90cv, 1248cc",
     "priceHistory": [
       {
@@ -383,7 +394,8 @@
         "note": "Initial price"
       }
     ],
-    "location": "Leiria, Leiria"
+    "location": "Leiria, Leiria",
+    "contactedAt": null
   },
   {
     "id": "1776103711576",
@@ -397,7 +409,7 @@
     "price": 4000,
     "fuel": "Diesel",
     "source": "StandVirtual",
-    "status": "to-contact",
+    "status": "rejected",
     "notes": "85cv, 1461cc",
     "priceHistory": [
       {
@@ -406,7 +418,8 @@
         "note": "Initial price"
       }
     ],
-    "location": "Lousado, Braga"
+    "location": "Lousado, Braga",
+    "contactedAt": null
   },
   {
     "id": "1776103711577",
@@ -420,7 +433,7 @@
     "price": 4990,
     "fuel": "Diesel",
     "source": "StandVirtual",
-    "status": "to-contact",
+    "status": "rejected",
     "notes": "75cv, 1199cc",
     "priceHistory": [
       {
@@ -429,7 +442,8 @@
         "note": "Initial price"
       }
     ],
-    "location": "Braga, Braga"
+    "location": "Braga, Braga",
+    "contactedAt": null
   },
   {
     "id": "1776103711578",
@@ -440,19 +454,25 @@
     "model": "Polo",
     "year": 2011,
     "km": 143224,
-    "price": 5900,
+    "price": 5000,
     "fuel": "Diesel",
     "source": "StandVirtual",
-    "status": "to-contact",
+    "status": "negotiating",
     "notes": "75cv, 1199cc",
     "priceHistory": [
       {
         "date": "2026-04-13T18:08:31.567Z",
         "price": 5900,
         "note": "Initial price"
+      },
+      {
+        "date": "2026-04-14T09:52:12.246Z",
+        "price": 5000,
+        "note": "Máximo que desce é 5000, podemos agendar visita"
       }
     ],
-    "location": "Ramalde, Porto"
+    "location": "Ramalde, Porto",
+    "contactedAt": null
   },
   {
     "id": "1776104138626",
@@ -535,7 +555,7 @@
     "price": 4500,
     "fuel": "Diesel",
     "source": "StandVirtual",
-    "status": "to-contact",
+    "status": "rejected",
     "location": "Campanhã, Porto",
     "notes": "75cv, 1199cc",
     "priceHistory": [
@@ -544,7 +564,8 @@
         "price": 4500,
         "note": "Initial price"
       }
-    ]
+    ],
+    "contactedAt": null
   },
   {
     "id": "1776104138630",
@@ -581,7 +602,7 @@
     "price": 4200,
     "fuel": "Diesel",
     "source": "StandVirtual",
-    "status": "to-contact",
+    "status": "rejected",
     "location": "Elvas, Portalegre",
     "notes": "140cv, 1968cc",
     "priceHistory": [
@@ -590,7 +611,8 @@
         "price": 4200,
         "note": "Initial price"
       }
-    ]
+    ],
+    "contactedAt": null
   },
   {
     "id": "1776104138632",
@@ -651,7 +673,7 @@
     "price": 4900,
     "fuel": "Diesel",
     "source": "CustoJusto",
-    "status": "to-contact",
+    "status": "contacted",
     "notes": "",
     "priceHistory": [
       {
@@ -661,7 +683,7 @@
       }
     ],
     "location": "Santa Clara e Castelo Viegas, Coimbra",
-    "contactedAt": null
+    "contactedAt": "2026-04-13T22:37:39.989Z"
   },
   {
     "id": "1776117531225",
@@ -700,7 +722,7 @@
     "make": "Seat",
     "model": "Ibiza",
     "year": 2015,
-    "km": 110,
+    "km": 110000,
     "price": 4000,
     "fuel": "Gasolina",
     "source": "Facebook Marketplace",
@@ -718,6 +740,30 @@
         "date": "2026-04-13T22:02:38.333Z",
         "price": 4000,
         "note": "Negociação"
+      }
+    ]
+  },
+  {
+    "id": "1776168654926",
+    "addedAt": "2026-04-14T12:10:54.926Z",
+    "url": "https://www.facebook.com/marketplace/item/968230162216789/?referralSurface=messenger_banner&referralCode=2",
+    "title": "Ford Fiesta titanium",
+    "make": "Ford",
+    "model": "Fiesta",
+    "year": 2009,
+    "km": 150000,
+    "price": 4500,
+    "fuel": "Diesel",
+    "source": "Facebook Marketplace",
+    "status": "contacted",
+    "location": "Viana do Castelo",
+    "contactedAt": "2026-04-14T12:10:58.724Z",
+    "notes": "Já trocou a correia de distribuição",
+    "priceHistory": [
+      {
+        "date": "2026-04-14T12:10:54.926Z",
+        "price": 4500,
+        "note": "Initial price"
       }
     ]
   }
