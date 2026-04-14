@@ -1,12 +1,11 @@
 {
   "name": "car-organizer",
   "version": "1.0.0",
-  "description": "Local car search tracker",
-  "main": "server.js",
+  "description": "Car search tracker",
   "scripts": {
-    "start": "node server.js"
+    "migrate": "node --env-file=.env scripts/migrate.js"
   },
   "dependencies": {
-    "express": "^4.21.0"
+    "@supabase/supabase-js": "^2.45.0"
   }
 }

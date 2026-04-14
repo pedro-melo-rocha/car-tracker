@@ -1038,25 +1038,45 @@ function scoreClass(score) {
 }
 
 // --- API ---
+function getApiSecret() {
+  let secret = localStorage.getItem('apiSecret');
+  if (!secret) {
+    secret = prompt('Enter app password:') || '';
+    if (secret) localStorage.setItem('apiSecret', secret);
+  }
+  return secret;
+}
+
+async function apiFetch(path, opts = {}) {
+  const headers = { ...(opts.headers || {}), 'x-api-secret': getApiSecret() };
+  const res = await fetch(path, { ...opts, headers });
+  if (res.status === 401) {
+    localStorage.removeItem('apiSecret');
+    alert('Wrong password. Reload to try again.');
+    throw new Error('Unauthorized');
+  }
+  return res;
+}
+
 async function fetchCars() {
-  const res = await fetch('/api/cars');
+  const res = await apiFetch('/api/cars');
   cars = await res.json();
   render();
 }
 
 async function createCar(data) {
-  await fetch('/api/cars', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+  await apiFetch('/api/cars', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
   await fetchCars();
 }
 
 async function updateCar(id, data) {
-  await fetch(`/api/cars/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+  await apiFetch(`/api/cars/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
   await fetchCars();
 }
 
 async function deleteCar(id) {
   if (!confirm('Delete this car?')) return;
-  await fetch(`/api/cars/${id}`, { method: 'DELETE' });
+  await apiFetch(`/api/cars/${id}`, { method: 'DELETE' });
   closeDetail();
   await fetchCars();
 }

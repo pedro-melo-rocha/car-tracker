@@ -4,23 +4,34 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Car Tracker is a local-only car search tracker for browsing used car listings in Portugal. It uses a no-framework stack: plain HTML/JS frontend (single `index.html` with inline CSS/JS), Express backend (`server.js`), and `data.json` for file-based persistence.
+Car Tracker is a hosted car search tracker for browsing used car listings in Portugal. It uses a no-framework stack: plain HTML/JS frontend (single `index.html` with inline CSS/JS), Vercel serverless functions for the API (`api/*`), and Supabase Postgres for persistence.
 
 ## Commands
 
-- **Start server:** `npm start` (runs `node server.js`, serves on http://localhost:3000)
-- **Install deps:** `npm install` (only dependency is Express)
+- **Install deps:** `npm install`
+- **Local dev:** `vercel dev` (run from project root; needs Vercel CLI: `npm i -g vercel`)
+- **Migrate `data.json` → Supabase:** `npm run migrate` (one-time, script kept in case of re-seeding)
+- **Deploy to prod:** `vercel --prod`
 
-There are no tests, linter, or build step.
-
-- **Environment:** `PORT` env var overrides the default port 3000 (e.g., `PORT=4000 npm start`).
+No tests, linter, or build step.
 
 ## Architecture
 
-- **`server.js`** — Express REST API with CRUD endpoints (`/api/cars`). Reads/writes `data.json` synchronously. Includes automatic status staleness logic: cars in `contacted` status auto-transition to `inactive` after 3 days (evaluated on GET). Also migrates legacy `sem-resposta`/`inativo` values to `inactive` on read.
-- **`index.html`** — Single-file SPA with all CSS and JS inline. Three views: Pipeline (Kanban), List (grid with sort/filter), Compare (side-by-side table). Includes a detail side panel and add/edit modal.
-- **`data.json`** — Array of car objects. Each car tracks price history as an array of `{date, price, note}` entries.
-- **`car-tracker-prompt.md`** — Original specification document. Refer to this for the data model, scoring formula, and UI design intent.
+- **`index.html`** — Single-file SPA with all CSS and JS inline. Three views: Pipeline (Kanban), List (grid with sort/filter), Compare (side-by-side table). Includes a detail side panel and add/edit modal. `apiFetch()` wrapper injects `x-api-secret` header on every request; on 401 it clears `localStorage.apiSecret` and re-prompts.
+- **`api/cars.js`** — Serverless function: `GET` (list) and `POST` (create). On GET, applies staleness migration and persists any status flips.
+- **`api/cars/[id].js`** — Serverless function: `PUT` (update) and `DELETE` (delete).
+- **`lib/supabase.js`** — Shared Supabase client using service role key (bypasses RLS).
+- **`lib/auth.js`** — `requireSecret(req, res)` guard — checks `x-api-secret` header against `API_SECRET` env var; 401s on mismatch.
+- **`lib/staleness.js`** — Pure function `applyStaleness(cars)` that mutates in place and returns the list of rows whose status changed (for the handler to persist).
+- **`scripts/schema.sql`** — Run once in Supabase SQL Editor to create the `cars` table.
+- **`scripts/migrate.js`** — One-time import from `data.json` into Supabase.
+- **`vercel.json`** — Forces `framework: null` so Vercel doesn't auto-detect any preset.
+- **`car-tracker-prompt.md`** — Original specification document (data model, scoring formula, UI intent).
+
+## Environment Variables
+
+- `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` — Supabase project URL + **secret** key (not publishable). Set in `.env` locally and in Vercel project settings for prod.
+- `API_SECRET` — Shared password all users type on first load. Stored in `x-api-secret` header.
 
 ## Key Domain Concepts
 
@@ -39,6 +50,8 @@ There are no tests, linter, or build step.
 
 ## Gotchas
 
-- **Synchronous file I/O:** `server.js` uses `readFileSync`/`writeFileSync` — concurrent requests can race on `data.json`. Fine for single-user local use; don't deploy to shared environments.
-- **`index.html` is 1200+ lines:** All CSS and JS are inline in one file. When editing, search by function name or CSS variable rather than scrolling.
+- **Supabase column names are camelCase and quoted** (`"addedAt"`, `"contactedAt"`, `"priceHistory"`) so JS objects pass through unchanged. Any new column with a capital letter must be created with double quotes in SQL.
+- **RLS is enabled with no policies.** All access goes through serverless functions using the service role key. Do not expose the service role key client-side.
+- **`index.html` is 1600+ lines:** All CSS and JS are inline in one file. When editing, search by function name or CSS variable rather than scrolling.
 - **`priceNote` is transient:** Accepted in PUT requests but `delete`d from the stored car object before writing — it only appears in the `priceHistory` entry's `note` field.
+- **Two humans share one list:** Pedro and his girlfriend both use the same `API_SECRET`; there is no per-user data scoping.
