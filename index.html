@@ -452,6 +452,111 @@ input, select, textarea { font-family: inherit; }
 
 /* Inferred field highlight */
 .field-inferred { border-left: 2px solid var(--accent) !important; }
+
+/* Score breakdown (detail panel) */
+.score-breakdown {
+  background: var(--bg); border-radius: var(--radius);
+  padding: 14px 16px; margin-bottom: 20px;
+}
+.score-breakdown-row {
+  display: grid; grid-template-columns: auto 1fr auto auto;
+  gap: 10px; align-items: center;
+  padding: 6px 0;
+  font-size: 0.82rem;
+}
+.score-breakdown-row + .score-breakdown-row { border-top: 1px solid var(--border); }
+.score-breakdown-label { color: var(--text-secondary); font-weight: 600; letter-spacing: -0.01em; }
+.score-breakdown-weight { font-size: 0.7rem; color: var(--text-muted); font-family: var(--mono); }
+.score-breakdown-bar { height: 6px; background: var(--bg-warm); border-radius: 3px; overflow: hidden; min-width: 60px; }
+.score-breakdown-bar-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width 0.3s; }
+.score-breakdown-bar-fill.low { background: var(--red); }
+.score-breakdown-bar-fill.mid { background: var(--yellow); }
+.score-breakdown-value { font-family: var(--mono); color: var(--text); font-weight: 600; min-width: 32px; text-align: right; }
+.score-breakdown-reason {
+  grid-column: 1 / -1; font-size: 0.76rem;
+  color: var(--text-muted); font-style: italic;
+  padding: 2px 0 4px; line-height: 1.4;
+}
+.score-breakdown-reason.pos { color: var(--green); font-style: normal; }
+.score-breakdown-reason.neg { color: var(--red); font-style: normal; }
+
+/* Docs view */
+.docs-view { padding: 30px 32px 60px; max-width: 880px; margin: 0 auto; }
+.docs-view h2 {
+  font-size: 1.6rem; font-weight: 800; letter-spacing: -0.03em;
+  margin-bottom: 6px; color: var(--text);
+}
+.docs-view .docs-sub {
+  color: var(--text-muted); font-size: 0.92rem;
+  margin-bottom: 28px; line-height: 1.5; letter-spacing: -0.01em;
+}
+.docs-section {
+  background: var(--bg-card); border-radius: var(--radius-lg);
+  padding: 24px 28px; margin-bottom: 18px; box-shadow: var(--shadow-sm);
+}
+.docs-section h3 {
+  font-size: 1.05rem; font-weight: 700; letter-spacing: -0.02em;
+  margin-bottom: 12px; color: var(--text);
+}
+.docs-section p, .docs-section li {
+  font-size: 0.9rem; color: var(--text-secondary);
+  line-height: 1.6; letter-spacing: -0.005em;
+}
+.docs-section p { margin-bottom: 10px; }
+.docs-section ul { list-style: none; padding: 0; margin: 6px 0 10px; }
+.docs-section li { padding: 5px 0; border-bottom: 1px solid var(--border); }
+.docs-section li:last-child { border-bottom: none; }
+.docs-section strong { color: var(--text); font-weight: 700; }
+.docs-section code {
+  font-family: var(--mono); font-size: 0.82rem;
+  background: var(--bg); padding: 2px 7px; border-radius: 4px;
+  color: var(--accent);
+}
+.docs-weights {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 10px; margin-top: 8px;
+}
+.docs-weight-card {
+  background: var(--bg); padding: 12px 14px; border-radius: var(--radius);
+  border-left: 3px solid var(--accent);
+}
+.docs-weight-card .w-label { font-size: 0.74rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+.docs-weight-card .w-value { font-family: var(--mono); font-size: 1.3rem; font-weight: 700; color: var(--text); letter-spacing: -0.02em; }
+.docs-weight-card .w-hint { font-size: 0.78rem; color: var(--text-secondary); margin-top: 4px; line-height: 1.4; }
+.docs-engines { display: grid; gap: 8px; margin-top: 8px; }
+.docs-engine-row {
+  display: grid; grid-template-columns: 140px 60px 1fr;
+  gap: 12px; padding: 9px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  background: var(--bg);
+  align-items: center;
+}
+.docs-engine-row.pos { background: var(--green-bg); }
+.docs-engine-row.neg { background: var(--red-bg); }
+.docs-engine-label { font-family: var(--mono); font-weight: 600; color: var(--text); font-size: 0.82rem; }
+.docs-engine-delta {
+  font-family: var(--mono); font-weight: 700; text-align: center;
+  padding: 2px 6px; border-radius: 20px; font-size: 0.78rem;
+  background: var(--bg-card);
+}
+.docs-engine-row.pos .docs-engine-delta { color: var(--green); }
+.docs-engine-row.neg .docs-engine-delta { color: var(--red); }
+.docs-engine-reason { color: var(--text-secondary); font-size: 0.82rem; line-height: 1.4; }
+.docs-makes { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 6px; margin-top: 8px; }
+.docs-make-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 7px 12px; background: var(--bg); border-radius: var(--radius-sm);
+  font-size: 0.84rem;
+}
+.docs-make-row .m-name { color: var(--text); font-weight: 600; }
+.docs-make-row .m-score { font-family: var(--mono); font-weight: 700; }
+.docs-make-row .m-score.green { color: var(--green); }
+.docs-make-row .m-score.yellow { color: var(--yellow); }
+.docs-make-row .m-score.red { color: var(--red); }
+.docs-sources { font-size: 0.78rem; color: var(--text-muted); line-height: 1.6; }
+.docs-sources a { color: var(--accent); text-decoration: none; }
+.docs-sources a:hover { text-decoration: underline; }
 </style>
 <datalist id="makes-list">
   <option value="Audi">
@@ -487,6 +592,7 @@ input, select, textarea { font-family: inherit; }
     <button class="nav-tab active" data-view="pipeline">Pipeline</button>
     <button class="nav-tab" data-view="list">List</button>
     <button class="nav-tab" data-view="compare">Compare</button>
+    <button class="nav-tab" data-view="docs">Docs</button>
   </div>
   <div class="header-right">
     <button class="btn-add" onclick="openModal()">+ Add Car</button>
@@ -564,6 +670,9 @@ input, select, textarea { font-family: inherit; }
   <div class="compare-table-wrap" id="compare-table-wrap"></div>
 </div>
 
+<!-- Docs View -->
+<div class="docs-view view" id="docs-view"></div>
+
 <!-- Detail side panel -->
 <div class="detail-overlay" id="detail-overlay" onclick="closeDetail()"></div>
 <div class="detail-panel" id="detail-panel">
@@ -617,6 +726,16 @@ input, select, textarea { font-family: inherit; }
             <option value="Diesel">Diesel</option>
             <option value="Gasolina">Gasolina</option>
           </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Engine</label>
+          <input type="text" id="form-engine" placeholder="e.g. 1.5 dCi, 1.4 D-4D, 1.3 Multijet">
+        </div>
+        <div class="form-group">
+          <label>Power (cv)</label>
+          <input type="number" id="form-power" placeholder="90">
         </div>
       </div>
       <div class="form-row">
@@ -758,6 +877,7 @@ function updateModelDatalist(make) {
 }
 
 // --- Score ---
+// Distances from Viana do Castelo (km, approx driving)
 const LOCATION_DISTANCES = {
   'viana do castelo': 0, 'viana': 0,
   'braga': 50, 'barcelos': 35, 'guimarães': 65, 'guimaraes': 65, 'famalicão': 55, 'famalicao': 55,
@@ -779,6 +899,46 @@ const LOCATION_DISTANCES = {
   'faro': 550, 'portimão': 560, 'portimao': 560, 'albufeira': 555, 'loulé': 550, 'loule': 550
 };
 
+// Make-level reliability baseline (informed by AutoTuga/Motorguia/Razão Automóvel consensus)
+const MAKE_RELIABILITY = {
+  'toyota': 90, 'lexus': 92, 'honda': 88,
+  'mazda': 78, 'suzuki': 76, 'subaru': 74,
+  'hyundai': 74, 'kia': 72, 'nissan': 72,
+  'volvo': 70,
+  'skoda': 72, 'vw': 66, 'volkswagen': 66, 'audi': 64, 'seat': 62,
+  'ford': 64, 'opel': 58,
+  'mini': 58, 'bmw': 60, 'mercedes': 62, 'mercedes-benz': 62,
+  'dacia': 62,
+  'renault': 54, 'peugeot': 54, 'citroen': 50, 'citroën': 50,
+  'fiat': 48, 'alfa romeo': 42, 'lancia': 42,
+  'chevrolet': 52
+};
+
+// Engine-level adjustments. First pattern to match wins.
+// Patterns are tested against title + notes + engine.
+const ENGINE_PROFILES = [
+  // Stellar
+  { re: /1\.4\s*d[- ]?4d/i, delta: 18, reason: 'Toyota 1.4 D-4D — ultra-reliable, documented 300k+ km units.' },
+  { re: /vvt[- ]?i/i, delta: 14, reason: 'Toyota VVT-i petrol — bulletproof, cheap to maintain.' },
+  { re: /1\.9\s*tdi/i, delta: 12, reason: 'VAG 1.9 TDI (PD/non-PD) — legendary longevity.' },
+  { re: /1\.9\s*(multijet|jtd)/i, delta: 10, reason: 'Fiat/Alfa 1.9 Multijet — robust, unlike the 1.3 variant.' },
+  { re: /honda\b.*\b(i-vtec|vtec)/i, delta: 12, reason: 'Honda VTEC petrol — extremely durable.' },
+  { re: /mazda\b.*\b(mzr|skyactiv)/i, delta: 8, reason: 'Mazda MZR / SkyActiv — generally reliable.' },
+  // Solid
+  { re: /1\.0\s*tsi.*ea211|1\.2\s*tsi.*ea211/i, delta: 5, reason: 'VW EA211 TSI (post-2013) — fixed the timing chain issues.' },
+  { re: /1\.5\s*tdci|1\.6\s*tdci/i, delta: 2, reason: 'Ford 1.5/1.6 TDCi — refined PSA block, reasonably reliable.' },
+  // Problem engines
+  { re: /1\.3\s*(multijet|m[- ]?jet|jtd|cdti)/i, delta: -16, reason: 'Fiat/Opel 1.3 Multijet/JTD/CDTi — timing chain stretch 120–150k km, EGR/DPF clogs, turbo failures. Widely flagged as "motor a evitar".' },
+  { re: /1\.4\s*(hdi|tdci)/i, delta: -10, reason: 'PSA 1.4 HDi / Ford 1.4 TDCi — injector and FAP issues, oil sludge.' },
+  { re: /1\.6\s*tdi(?!.*ea288)/i, delta: -9, reason: 'VW 1.6 TDI common-rail (EA189) — injector/EGR issues, sensitive to urban use, DieselGate era.' },
+  { re: /1\.5\s*dci/i, delta: -5, reason: 'Renault 1.5 dCi (K9K) — mixed track record; early units plagued by injectors and turbo failure.' },
+  { re: /1\.6\s*hdi/i, delta: -4, reason: 'PSA 1.6 HDi — early units (pre-2010) had injector seal failures; FAP additive management needed.' },
+  { re: /2\.0\s*tdi.*(cbab|cbdb|cfgb)|2\.0\s*tdi.*pd/i, delta: -6, reason: '2.0 TDI PD / early CR — oil pump balance-shaft failures, FAP issues.' },
+  { re: /1\.2\s*tsi(?!.*ea211)/i, delta: -10, reason: 'VW 1.2 TSI (EA111, pre-2013) — timing chain stretch, tensioner failures.' },
+  { re: /1\.4\s*tsi/i, delta: -10, reason: 'VW 1.4 TSI — timing chain, carbon build-up, oil consumption.' },
+  { re: /1\.2\s*tdi/i, delta: -4, reason: 'VW 1.2 TDI 3-cyl — fragile in cold starts, DPF issues on short trips.' }
+];
+
 function locationScore(location) {
   if (!location) return 50;
   const loc = location.toLowerCase().trim();
@@ -788,14 +948,87 @@ function locationScore(location) {
   return 50;
 }
 
+function getMakeReliability(make) {
+  if (!make) return 60;
+  const key = make.toLowerCase().trim();
+  if (MAKE_RELIABILITY[key] !== undefined) return MAKE_RELIABILITY[key];
+  for (const k in MAKE_RELIABILITY) {
+    if (key.includes(k) || k.includes(key)) return MAKE_RELIABILITY[k];
+  }
+  return 60;
+}
+
+function getEngineProfile(car) {
+  const blob = [car.title, car.notes, car.engine].filter(Boolean).join(' ');
+  if (!blob) return null;
+  for (const p of ENGINE_PROFILES) {
+    if (p.re.test(blob)) return p;
+  }
+  return null;
+}
+
+function kmSubscore(car) {
+  if (!car.km) return 50;
+  // Diesels tolerate more km than petrol in the Portuguese market
+  const baseline = car.fuel === 'Gasolina' ? 170000 : 230000;
+  return Math.max(0, Math.min(100, Math.round(100 - (car.km / baseline) * 100)));
+}
+
+function priceSubscore(car) {
+  if (!car.price) return 50;
+  // Target budget anchor: 8000€ is the upper bound of the ≤5–8k Portuguese used-car segment
+  return Math.max(0, Math.min(100, Math.round(100 - (car.price / 8000) * 100)));
+}
+
+function yearSubscore(car) {
+  if (!car.year) return 50;
+  // 2005 → 0, 2020 → 100
+  return Math.max(0, Math.min(100, Math.round(((car.year - 2005) / 15) * 100)));
+}
+
+function reliabilitySubscore(car) {
+  const base = getMakeReliability(car.make);
+  const profile = getEngineProfile(car);
+  const delta = profile ? profile.delta : 0;
+  return {
+    score: Math.max(0, Math.min(100, base + delta)),
+    base, delta,
+    reason: profile ? profile.reason : null
+  };
+}
+
+function valueSubscore(car) {
+  // €/km-of-remaining-life — lower is better.
+  if (!car.price || !car.km) return 50;
+  const lifeKm = car.fuel === 'Gasolina' ? 230000 : 320000;
+  const remaining = Math.max(15000, lifeKm - car.km);
+  const eurPerKm = car.price / remaining;
+  // 0.02 €/km = 100, 0.12 €/km = 0
+  return Math.max(0, Math.min(100, Math.round(100 - ((eurPerKm - 0.02) / 0.10) * 100)));
+}
+
+const SCORE_WEIGHTS = { km: 0.22, price: 0.22, reliability: 0.22, year: 0.13, location: 0.13, value: 0.08 };
+
+function computeScoreBreakdown(car) {
+  const km = kmSubscore(car);
+  const price = priceSubscore(car);
+  const year = yearSubscore(car);
+  const loc = locationScore(car.location);
+  const rel = reliabilitySubscore(car);
+  const value = valueSubscore(car);
+  const total = Math.round(
+    km * SCORE_WEIGHTS.km +
+    price * SCORE_WEIGHTS.price +
+    rel.score * SCORE_WEIGHTS.reliability +
+    year * SCORE_WEIGHTS.year +
+    loc * SCORE_WEIGHTS.location +
+    value * SCORE_WEIGHTS.value
+  );
+  return { total, km, price, year, loc, rel, value };
+}
+
 function computeScore(car) {
-  const kmBaseline = car.fuel === 'Gasolina' ? 130000 : 200000;
-  const kmScore = Math.max(0, 100 - (car.km / kmBaseline) * 100);
-  const priceScore = Math.max(0, 100 - (car.price / 10000) * 100);
-  const yearScore = Math.min(100, Math.max(0, ((car.year - 2000) / 15) * 100));
-  const locScore = locationScore(car.location);
-  const total = kmScore * 0.30 + priceScore * 0.30 + yearScore * 0.20 + locScore * 0.20;
-  return Math.round(total);
+  return computeScoreBreakdown(car).total;
 }
 
 function scoreClass(score) {
@@ -880,6 +1113,120 @@ function render() {
   if (currentView === 'pipeline') renderPipeline();
   else if (currentView === 'list') renderList();
   else if (currentView === 'compare') renderCompare();
+  else if (currentView === 'docs') renderDocs();
+}
+
+function renderDocs() {
+  const el = document.getElementById('docs-view');
+  const weights = [
+    { label: 'Kms',         pct: 22, hint: 'Baseline: 230k (diesel), 170k (gasolina). Km at baseline ⇒ 0.' },
+    { label: 'Price',       pct: 22, hint: '0€ ⇒ 100, 8000€ ⇒ 0. Anchored to the ≤5–8k segment.' },
+    { label: 'Reliability', pct: 22, hint: 'Make baseline (60–90) ± engine adjustment from known patterns.' },
+    { label: 'Year',        pct: 13, hint: '2005 ⇒ 0, 2020 ⇒ 100. Rewards newer electronics & DPF maturity.' },
+    { label: 'Location',    pct: 13, hint: 'Driving distance from Viana do Castelo; 0 km ⇒ 100, 600+ km ⇒ 0.' },
+    { label: '€/km value',  pct: 8,  hint: 'Price divided by remaining life (300k diesel / 230k petrol). Captures price-vs-wear.' }
+  ];
+
+  const weightsHTML = weights.map(w => `
+    <div class="docs-weight-card">
+      <div class="w-label">${w.label}</div>
+      <div class="w-value">${w.pct}%</div>
+      <div class="w-hint">${w.hint}</div>
+    </div>`).join('');
+
+  const makes = Object.entries(MAKE_RELIABILITY)
+    .filter(([k]) => k !== 'vw' && k !== 'citroen')
+    .sort((a, b) => b[1] - a[1]);
+  const makeCls = v => v >= 75 ? 'green' : v >= 55 ? 'yellow' : 'red';
+  const makesHTML = makes.map(([k, v]) => {
+    const name = k.split(' ').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ');
+    return `<div class="docs-make-row"><span class="m-name">${name}</span><span class="m-score ${makeCls(v)}">${v}</span></div>`;
+  }).join('');
+
+  const enginesHTML = ENGINE_PROFILES.map(p => {
+    const cls = p.delta > 0 ? 'pos' : 'neg';
+    const sign = p.delta > 0 ? '+' : '';
+    const pattern = p.re.source
+      .replace(/\\s\*/g, ' ')
+      .replace(/\\\./g, '.')
+      .replace(/\[- ?\]\??/g, '-')
+      .replace(/\(\?!.*?\)/g, '')
+      .replace(/\\b/g, '')
+      .replace(/\(.*?\)/g, m => m.replace(/[()|]/g, ' ').trim().split(/\s+/).slice(0, 2).join('/'))
+      .replace(/\s+/g, ' ')
+      .trim();
+    return `<div class="docs-engine-row ${cls}">
+      <span class="docs-engine-label">${esc(pattern)}</span>
+      <span class="docs-engine-delta">${sign}${p.delta}</span>
+      <span class="docs-engine-reason">${esc(p.reason)}</span>
+    </div>`;
+  }).join('');
+
+  el.innerHTML = `
+    <h2>Scoring Methodology</h2>
+    <p class="docs-sub">Every car gets a 0–100 score designed to surface the most promising leads in the ≤8k€ Portuguese used-car segment. Higher is better. The score blends objective facts (km, price, year, distance) with market reliability signals drawn from AutoTuga, Motorguia, Razão Automóvel and Furiamotor consensus.</p>
+
+    <div class="docs-section">
+      <h3>Weights</h3>
+      <div class="docs-weights">${weightsHTML}</div>
+    </div>
+
+    <div class="docs-section">
+      <h3>How each subscore works</h3>
+      <p><strong>Kms.</strong> Diesels in this segment are expected to reach 300k km if well maintained, so the reference line sits at <code>230 000 km</code> (where the subscore hits 0). Petrol is more fragile at high mileage and the gasoline baseline is <code>170 000 km</code>. Below 50k km the score saturates at 100.</p>
+      <p><strong>Price.</strong> Linear anchor against an 8000€ budget ceiling. This market concentrates listings between 3–7k€, so the curve penalises anything creeping above 6k€.</p>
+      <p><strong>Reliability.</strong> Each make starts from a baseline (see table below) derived from consistent community consensus. The engine pattern matcher then applies a bonus or penalty based on the known track record of the block. Without an engine signal the score falls back to the pure make baseline.</p>
+      <p><strong>Year.</strong> 2005 → 0, 2020 → 100. Newer cars tend to have better safety kit and more mature DPF/EGR systems, but nothing newer than 2020 usually appears in this budget.</p>
+      <p><strong>Location.</strong> Straight-line driving distance from <strong>Viana do Castelo</strong>. Cars in Minho, Porto, Braga score high; Algarve and Alentejo drop fast — you still have to drive there to see them.</p>
+      <p><strong>€/km value.</strong> Price divided by the estimated remaining lifespan in km (320k diesel, 230k petrol). Answers the question "how much am I paying per km of future use?". Anything under 0.04 €/km is excellent.</p>
+    </div>
+
+    <div class="docs-section">
+      <h3>Make reliability baseline</h3>
+      <p>Before any engine adjustment. Scale is 0–100.</p>
+      <div class="docs-makes">${makesHTML}</div>
+    </div>
+
+    <div class="docs-section">
+      <h3>Engine adjustments</h3>
+      <p>The matcher scans title + notes + the explicit engine field. First match wins, and its delta is added to the make baseline.</p>
+      <div class="docs-engines">${enginesHTML}</div>
+    </div>
+
+    <div class="docs-section">
+      <h3>Why these adjustments?</h3>
+      <ul>
+        <li><strong>Fiat 1.3 Multijet / Opel 1.3 CDTi / Alfa 1.3 JTDM</strong> — same Fiat block. Timing chain stretch at 120–150k km (expensive fix), EGR/DPF clogging, turbo failures, injector issues. Widely labelled a "motor a evitar". Strongest negative flag in the model.</li>
+        <li><strong>VW 1.2/1.4 TSI (EA111) and 1.6 TDI CR (EA189)</strong> — timing chain and injector problems respectively. The post-2013 EA211 TSIs corrected most of this and get a small bonus instead.</li>
+        <li><strong>PSA 1.4 HDi / Ford 1.4 TDCi</strong> — shared block, small displacement working hard in Fiestas/C3s/207s. Injector and FAP issues are near-universal beyond 150k km.</li>
+        <li><strong>Renault 1.5 dCi (K9K)</strong> — small penalty. The engine can do 300k km if lucky, but K9K-722 onwards had serious injector/turbo runs. The 2013+ Energy dCi variant is cleaner; the field value is conservative.</li>
+        <li><strong>Toyota 1.4 D-4D / VVT-i</strong> — the reference point of durability. 300k km+ units with just belts and oil are documented. Strong positive bonus.</li>
+        <li><strong>VAG 1.9 TDI (PD and non-PD)</strong> — the legendary EDC-based diesel. Simple, abundant parts, fixable. Positive bonus.</li>
+      </ul>
+    </div>
+
+    <div class="docs-section">
+      <h3>What isn't scored</h3>
+      <ul>
+        <li><strong>Seller behaviour</strong> — note it in the Notes field; not a numeric input.</li>
+        <li><strong>Accident history / rust</strong> — impossible to assess remotely. Inspect on visit.</li>
+        <li><strong>Options/trim level</strong> — irrelevant for this budget; most listings are base/mid trim.</li>
+        <li><strong>FAP/DPF removal</strong> — technically adds torque and reduces failure risk, but it's illegal for IPO. The model ignores it.</li>
+      </ul>
+    </div>
+
+    <div class="docs-section">
+      <h3>Colour thresholds</h3>
+      <p><code>≥ 75</code> green · <code>50–74</code> yellow · <code>&lt; 50</code> red. Don't overthink a single-point gap — the model is a ranking aid, not an oracle.</p>
+    </div>
+
+    <div class="docs-section">
+      <h3>Sources &amp; further reading</h3>
+      <div class="docs-sources">
+        Reliability consensus is distilled from Portuguese used-car community discussions (r/AutoTuga threads on "carro até 5000 €"), plus editorial reviews from <a href="https://www.razaoautomovel.com/" target="_blank">Razão Automóvel</a>, <a href="https://motorguia.net/" target="_blank">Motorguia</a>, <a href="https://furiamotor.com/" target="_blank">Furiamotor</a>, and the <a href="https://www.e-konomista.pt/motores-diesel-fiaveis/" target="_blank">E-konomista</a> diesel-reliability roundup. Engine-specific verdicts are cross-checked against owner forums (ibizaClubPT, alfaromeoteam, clubegolfpt).
+      </div>
+    </div>
+  `;
 }
 
 function renderPipeline() {
@@ -1039,11 +1386,39 @@ function renderCompare() {
 }
 
 // --- Detail Panel ---
+function scoreBreakdownHTML(car) {
+  const b = computeScoreBreakdown(car);
+  const row = (label, val, weight) => {
+    const cls = val >= 75 ? '' : val >= 50 ? 'mid' : 'low';
+    return `<div class="score-breakdown-row">
+      <span class="score-breakdown-label">${label}</span>
+      <span class="score-breakdown-bar"><span class="score-breakdown-bar-fill ${cls}" style="width:${val}%"></span></span>
+      <span class="score-breakdown-weight">${Math.round(weight * 100)}%</span>
+      <span class="score-breakdown-value">${val}</span>
+    </div>`;
+  };
+  let html = '<div class="score-breakdown">';
+  html += row('Kms', b.km, SCORE_WEIGHTS.km);
+  html += row('Price', b.price, SCORE_WEIGHTS.price);
+  html += row('Reliability', b.rel.score, SCORE_WEIGHTS.reliability);
+  if (b.rel.reason) {
+    const cls = b.rel.delta > 0 ? 'pos' : 'neg';
+    const sign = b.rel.delta > 0 ? '+' : '';
+    html += `<div class="score-breakdown-reason ${cls}">${sign}${b.rel.delta} · ${esc(b.rel.reason)}</div>`;
+  }
+  html += row('Year', b.year, SCORE_WEIGHTS.year);
+  html += row('Location', b.loc, SCORE_WEIGHTS.location);
+  html += row('€/km value', b.value, SCORE_WEIGHTS.value);
+  html += '</div>';
+  return html;
+}
+
 function openDetail(id) {
   const car = cars.find(c => c.id === id);
   if (!car) return;
   const score = computeScore(car);
   const sc = scoreClass(score);
+  const engineLine = [car.engine, car.power ? car.power + 'cv' : ''].filter(Boolean).join(' · ');
   document.getElementById('detail-content').innerHTML = `
     <div class="detail-title">${esc(car.title)}</div>
     <div class="detail-badges">
@@ -1051,11 +1426,13 @@ function openDetail(id) {
       ${car.source ? `<span class="source-tag">${esc(car.source)}</span>` : ''}
     </div>
     <div class="detail-score"><span class="chip chip-score ${sc}" style="font-size:1.1rem;padding:5px 16px;">${score}</span></div>
+    ${scoreBreakdownHTML(car)}
     <div class="detail-grid">
       <div class="detail-chip"><label>Year</label><span>${car.year || '\u2014'}</span></div>
       <div class="detail-chip"><label>Km</label><span>${car.km ? car.km.toLocaleString() : '\u2014'}</span></div>
       <div class="detail-chip"><label>Fuel</label><span>${car.fuel || '\u2014'}</span></div>
       <div class="detail-chip"><label>Price</label><span style="color:var(--green)">${car.price ? '\u20AC' + car.price.toLocaleString() : '\u2014'}</span></div>
+      ${engineLine ? `<div class="detail-chip" style="grid-column:1/-1"><label>Engine</label><span style="font-size:0.95rem">${esc(engineLine)}</span></div>` : ''}
       ${car.location ? `<div class="detail-chip" style="grid-column:1/-1"><label>Local</label><span style="font-size:0.95rem">📍 ${esc(car.location)}</span></div>` : ''}
     </div>
     ${car.url ? `<a href="${esc(car.url)}" target="_blank" class="btn-link" style="margin-bottom:20px;"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3H3v10h10v-3M9 1h6v6M7 9L15 1"/></svg>Open Listing</a>` : ''}
@@ -1109,6 +1486,8 @@ function openModal(id) {
     document.getElementById('form-km').value = car.km || '';
     document.getElementById('form-price').value = car.price || '';
     document.getElementById('form-fuel').value = car.fuel || '';
+    document.getElementById('form-engine').value = car.engine || '';
+    document.getElementById('form-power').value = car.power || '';
     document.getElementById('form-source').value = car.source || '';
     document.getElementById('form-status').value = car.status || 'to-contact';
     document.getElementById('form-notes').value = car.notes || '';
@@ -1154,6 +1533,8 @@ async function handleSubmit(e) {
     km: document.getElementById('form-km').value,
     price: document.getElementById('form-price').value,
     fuel: document.getElementById('form-fuel').value,
+    engine: document.getElementById('form-engine').value,
+    power: document.getElementById('form-power').value,
     source: document.getElementById('form-source').value,
     status: document.getElementById('form-status').value,
     location: document.getElementById('form-location').value,
@@ -1191,7 +1572,8 @@ document.querySelectorAll('.nav-tab').forEach(tab => {
     document.getElementById(currentView + '-view').classList.add('active');
     document.getElementById('pipeline-filters').style.display = currentView === 'pipeline' ? 'flex' : 'none';
     document.getElementById('list-filters').style.display = currentView === 'list' ? 'flex' : 'none';
-    render();
+    if (currentView === 'docs') renderDocs();
+    else render();
   });
 });
 

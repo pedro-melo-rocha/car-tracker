@@ -56,6 +56,8 @@ app.post('/api/cars', (req, res) => {
     km: Number(req.body.km) || 0,
     price: Number(req.body.price) || 0,
     fuel: req.body.fuel || '',
+    engine: req.body.engine || '',
+    power: Number(req.body.power) || 0,
     source: req.body.source || '',
     status: req.body.status || 'to-contact',
     location: req.body.location || '',
@@ -87,10 +89,10 @@ app.put('/api/cars/:id', (req, res) => {
     });
   }
 
-  const fields = ['url', 'title', 'make', 'model', 'year', 'km', 'price', 'fuel', 'source', 'status', 'location', 'notes'];
+  const fields = ['url', 'title', 'make', 'model', 'year', 'km', 'price', 'fuel', 'engine', 'power', 'source', 'status', 'location', 'notes'];
   for (const f of fields) {
     if (req.body[f] !== undefined) {
-      car[f] = ['year', 'km', 'price'].includes(f) ? Number(req.body[f]) : req.body[f];
+      car[f] = ['year', 'km', 'price', 'power'].includes(f) ? Number(req.body[f]) : req.body[f];
     }
   }
 

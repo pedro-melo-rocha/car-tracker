@@ -1,29 +1,5 @@
 [
   {
-    "id": "1776031331281",
-    "addedAt": "2026-04-12T22:02:11.281Z",
-    "url": "https://www.piscapisca.pt/carros/usados/volkswagen-polo-1-4-tdi-diesel/9ZABK",
-    "title": "Volkswagen Polo 1.4 TDI",
-    "make": "Volkswagen",
-    "model": "Polo",
-    "year": 2015,
-    "km": 54422,
-    "price": 1500,
-    "fuel": "Diesel",
-    "source": "PiscaPisca",
-    "status": "inactive",
-    "notes": "75cv",
-    "priceHistory": [
-      {
-        "date": "2026-04-12T22:02:11.281Z",
-        "price": 1500,
-        "note": "Initial price"
-      }
-    ],
-    "location": "Setúbal",
-    "contactedAt": "2026-04-13T18:39:36.649Z"
-  },
-  {
     "id": "1776031575553",
     "addedAt": "2026-04-12T22:06:15.553Z",
     "url": "https://www.piscapisca.pt/carros/usados/renault-clio-1-5-dci-diesel/DvPx1",
