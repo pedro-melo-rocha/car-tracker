@@ -18,6 +18,7 @@
   --text-muted: #A09B93;
   --accent: #0C6E5D;
   --accent-light: #E8F5F1;
+  --accent-soft: #F0F8F5;
   --accent-hover: #0A5C4E;
   --green: #2D8B6F;
   --green-bg: #E8F5F1;
@@ -29,15 +30,34 @@
   --blue-bg: #EBF2FC;
   --border: rgba(0,0,0,0.06);
   --border-strong: rgba(0,0,0,0.1);
-  --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
-  --shadow: 0 2px 8px rgba(0,0,0,0.06);
-  --shadow-lg: 0 8px 30px rgba(0,0,0,0.1);
-  --shadow-xl: 0 20px 60px rgba(0,0,0,0.12);
-  --radius: 12px;
+  --shadow-sm: 0 1px 2px rgba(16,14,10,0.04);
+  --shadow: 0 4px 14px -4px rgba(16,14,10,0.08);
+  --shadow-lg: 0 18px 48px -12px rgba(16,14,10,0.14);
+  --shadow-xl: 0 24px 70px -14px rgba(16,14,10,0.2);
+  --radius-xs: 4px;
   --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius: 12px;
   --radius-lg: 16px;
+  --radius-xl: 20px;
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --dur-fast: 120ms;
+  --dur: 200ms;
+  --fs-xs: 0.72rem;
+  --fs-sm: 0.82rem;
+  --fs-md: 0.92rem;
+  --fs-lg: 1.05rem;
   --font: 'Plus Jakarta Sans', -apple-system, sans-serif;
   --mono: 'DM Mono', 'SF Mono', monospace;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -54,9 +74,31 @@ input, select, textarea { font-family: inherit; }
   from { opacity: 0; transform: translateX(20px); }
   to { opacity: 1; transform: translateX(0); }
 }
+@keyframes slideInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes slideInDown {
+  from { opacity: 0; transform: translateY(-12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes slideOutRight {
+  to { opacity: 0; transform: translateX(20px); }
+}
 @keyframes scaleIn {
   from { opacity: 0; transform: scale(0.97); }
   to { opacity: 1; transform: scale(1); }
+}
+@keyframes shimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes sheetUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
 }
 
 /* Header */
@@ -173,17 +215,34 @@ input, select, textarea { font-family: inherit; }
 
 /* Cards */
 .car-card {
-  background: var(--bg-card); border: 1px solid transparent;
+  background: var(--bg-card); border: 1px solid var(--border);
   border-radius: var(--radius); padding: 14px 16px;
-  cursor: pointer; transition: all 0.2s ease;
+  cursor: pointer;
+  transition: border-color var(--dur-fast) var(--ease),
+              box-shadow var(--dur-fast) var(--ease),
+              transform var(--dur-fast) var(--ease),
+              opacity var(--dur-fast) var(--ease);
   box-shadow: var(--shadow-sm);
-  animation: fadeUp 0.3s ease both;
+  animation: fadeUp 0.3s var(--ease) both;
 }
 .car-card:hover {
   box-shadow: var(--shadow);
   border-color: var(--border-strong);
   transform: translateY(-1px);
 }
+.car-card:active { transform: translateY(0) scale(0.995); }
+.car-card { position: relative; }
+.car-card.is-pending,
+.list-card.is-pending { opacity: 0.65; pointer-events: none; }
+tr.is-pending td { opacity: 0.65; }
+.car-card.is-pending::after,
+.list-card.is-pending::after {
+  content: 'Saving\u2026';
+  position: absolute; top: 8px; right: 10px;
+  font-size: 0.66rem; color: var(--text-muted);
+  font-family: var(--mono); letter-spacing: 0.05em;
+}
+.list-card { position: relative; }
 .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; gap: 8px; }
 .card-title { font-size: 0.88rem; font-weight: 700; flex: 1; letter-spacing: -0.02em; line-height: 1.3; color: var(--text); }
 .source-tag {
@@ -198,8 +257,13 @@ input, select, textarea { font-family: inherit; }
   font-family: var(--mono); font-weight: 500;
   background: var(--bg); color: var(--text-secondary);
 }
-.chip-price { background: var(--green-bg); color: var(--green); font-weight: 500; }
-.chip-score { font-weight: 500; padding: 3px 10px; border-radius: 20px; font-family: var(--mono); }
+.chip-price { background: var(--green-bg); color: var(--green); font-weight: 600; box-shadow: inset 0 0 0 1px rgba(45,139,111,0.12); }
+.chip-score {
+  font-weight: 700; padding: 3px 11px; border-radius: 999px;
+  font-family: var(--mono);
+  box-shadow: inset 0 0 0 1px currentColor;
+  position: relative;
+}
 .chip-score.green { background: var(--green-bg); color: var(--green); }
 .chip-score.yellow { background: var(--yellow-bg); color: var(--yellow); }
 .chip-score.red { background: var(--red-bg); color: var(--red); }
@@ -428,9 +492,16 @@ input, select, textarea { font-family: inherit; }
 .pipeline-col[data-status="bought"] .pipeline-col-header { border-left: 3px solid var(--green); padding-left: 13px; }
 
 /* Drag-and-drop */
-.pipeline-col.drag-over { outline: 2px dashed var(--accent); background: rgba(12,110,93,0.04); }
+.pipeline-col {
+  transition: box-shadow var(--dur-fast) var(--ease), background-color var(--dur-fast) var(--ease);
+}
+.pipeline-col.drag-over {
+  box-shadow: inset 0 0 0 2px var(--accent);
+  background: var(--accent-soft);
+}
 .car-card[draggable="true"] { cursor: grab; }
 .car-card[draggable="true"]:active { cursor: grabbing; opacity: 0.8; }
+.car-card.is-dragging { opacity: 0.4; }
 
 /* Icon action buttons */
 .icon-btn {
@@ -557,6 +628,270 @@ input, select, textarea { font-family: inherit; }
 .docs-sources { font-size: 0.78rem; color: var(--text-muted); line-height: 1.6; }
 .docs-sources a { color: var(--accent); text-decoration: none; }
 .docs-sources a:hover { text-decoration: underline; }
+
+/* ===== Skeletons ===== */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--bg-warm) 0%,
+    rgba(255,255,255,0.65) 50%,
+    var(--bg-warm) 100%
+  );
+  background-size: 800px 100%;
+  animation: shimmer 1.4s linear infinite;
+  border-radius: var(--radius-sm);
+}
+.skel-line { height: 12px; width: 100%; }
+.sk-h-10 { height: 10px; }
+.sk-h-14 { height: 14px; }
+.sk-h-20 { height: 20px; }
+.sk-h-36 { height: 36px; }
+.sk-w-40 { width: 40%; }
+.sk-w-60 { width: 60%; }
+.sk-w-70 { width: 70%; }
+.sk-w-80 { width: 80%; }
+.skel-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  display: flex; flex-direction: column; gap: 10px;
+  box-shadow: var(--shadow-sm);
+}
+.skel-chips { display: flex; gap: 5px; }
+.skel-chip { height: 18px; width: 46px; border-radius: 999px; }
+
+/* ===== Toasts ===== */
+.toast-stack {
+  position: fixed; bottom: 20px; right: 20px; z-index: 400;
+  display: flex; flex-direction: column; gap: 8px;
+  pointer-events: none; max-width: 360px;
+}
+.toast {
+  pointer-events: auto;
+  background: var(--bg-card);
+  color: var(--text);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  box-shadow: var(--shadow-lg);
+  padding: 12px 16px;
+  font-size: 0.85rem; font-weight: 500;
+  letter-spacing: -0.01em;
+  min-width: 220px;
+  animation: slideIn 0.25s var(--ease) both;
+  display: flex; align-items: center; gap: 10px;
+  line-height: 1.35;
+}
+.toast.leaving { animation: slideOutRight 0.2s var(--ease) forwards; }
+.toast.error { border-left-color: var(--red); }
+.toast.info { border-left-color: var(--blue); }
+.toast-icon {
+  width: 16px; height: 16px; flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.toast.success .toast-icon { color: var(--accent); }
+.toast.error .toast-icon { color: var(--red); }
+.toast.info .toast-icon { color: var(--blue); }
+.toast-msg { flex: 1; }
+.toast-action {
+  background: none; border: none; color: var(--accent);
+  font-weight: 700; font-size: 0.78rem; padding: 4px 8px;
+  border-radius: var(--radius-sm); cursor: pointer;
+  text-transform: uppercase; letter-spacing: 0.05em;
+}
+.toast-action:hover { background: var(--accent-soft); }
+
+/* ===== Global spinner (top-right, ref-counted) ===== */
+.global-spinner {
+  position: fixed; top: 74px; right: 20px; z-index: 150;
+  width: 20px; height: 20px;
+  pointer-events: none;
+}
+.global-spinner::after {
+  content: '';
+  display: block; width: 100%; height: 100%;
+  border: 2px solid var(--border-strong);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+/* Inline button spinner */
+.btn-loading { position: relative; color: transparent !important; pointer-events: none; }
+.btn-loading::after {
+  content: '';
+  position: absolute; top: 50%; left: 50%;
+  width: 14px; height: 14px; margin: -7px 0 0 -7px;
+  border: 2px solid rgba(255,255,255,0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+.btn-secondary.btn-loading::after {
+  border-color: rgba(30,28,24,0.2);
+  border-top-color: var(--text);
+}
+
+/* ===== Empty/error states ===== */
+.empty-state.error { color: var(--red); }
+.empty-state .empty-state-retry {
+  margin-top: 12px;
+  background: var(--accent); color: #fff; border: none;
+  padding: 8px 18px; border-radius: var(--radius-md);
+  font-size: 0.8rem; font-weight: 700; cursor: pointer;
+  transition: background var(--dur-fast) var(--ease);
+}
+.empty-state .empty-state-retry:hover { background: var(--accent-hover); }
+
+/* ===== List mobile cards ===== */
+.list-cards { display: none; flex-direction: column; gap: 10px; }
+.list-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 14px 16px;
+  display: flex; flex-direction: column; gap: 8px;
+  box-shadow: var(--shadow-sm);
+  animation: fadeUp 0.25s var(--ease) both;
+}
+.list-card .lc-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.list-card .lc-title { font-weight: 700; letter-spacing: -0.02em; font-size: 0.92rem; line-height: 1.3; flex: 1; }
+.list-card .lc-meta { display: flex; flex-wrap: wrap; gap: 6px; font-size: 0.76rem; }
+.list-card .lc-actions { display: flex; gap: 6px; justify-content: flex-end; margin-top: 2px; }
+
+/* ===== Tablet breakpoint ===== */
+@media (max-width: 960px) {
+  .header { padding: 0 20px; gap: 20px; }
+  .filter-bar { padding: 12px 20px; }
+  .pipeline { padding: 16px 20px; gap: 12px; }
+  .list-view, .compare-view { padding: 16px 20px; }
+  .docs-view { padding: 24px 20px 60px; }
+  .pipeline-col { min-width: 240px; }
+  .list-table .td-mono:nth-child(3), .list-table th:nth-child(3) { display: none; } /* hide Local */
+}
+
+/* ===== Mobile breakpoint (≤640px) ===== */
+@media (max-width: 640px) {
+  .header {
+    padding: 0 14px; gap: 10px; height: 56px;
+    overflow-x: auto; scrollbar-width: none;
+  }
+  .header::-webkit-scrollbar { display: none; }
+  .header h1 { font-size: 0.95rem; }
+  .nav-tabs { padding: 2px; flex-shrink: 0; }
+  .nav-tab { padding: 7px 12px; font-size: 0.78rem; min-height: 36px; }
+  .btn-add {
+    padding: 0 12px; height: 36px; min-height: 36px;
+    font-size: 0.78rem;
+  }
+
+  .filter-bar {
+    padding: 10px 14px; gap: 6px;
+    overflow-x: auto; flex-wrap: nowrap;
+    scrollbar-width: none;
+  }
+  .filter-bar::-webkit-scrollbar { display: none; }
+  .filter-bar input[type="text"] { min-width: 180px; flex-shrink: 0; }
+  .filter-bar select, .sort-btn, .fuel-toggle { flex-shrink: 0; }
+
+  /* Pipeline becomes horizontal snap-scroll */
+  .pipeline {
+    padding: 14px 14px 20px;
+    gap: 10px;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    min-height: calc(100vh - 130px);
+  }
+  .pipeline-col {
+    min-width: 82vw; max-width: 82vw;
+    scroll-snap-align: center;
+    scroll-snap-stop: always;
+  }
+  .pipeline-col-body {
+    max-height: calc(100vh - 200px);
+  }
+
+  /* List: hide table, show cards */
+  .list-table-wrap { box-shadow: none; }
+  .list-view .list-table { display: none; }
+  .list-cards { display: flex; }
+
+  /* Compare */
+  .compare-selectors {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-bottom: 4px;
+  }
+  .compare-selectors::-webkit-scrollbar { display: none; }
+  .compare-toggle { flex-shrink: 0; min-height: 40px; }
+  .compare-toggle.disabled { opacity: 0.4; pointer-events: none; }
+  .compare-table th:first-child,
+  .compare-table td:first-child {
+    position: sticky; left: 0; z-index: 1;
+    background: var(--bg-card);
+    box-shadow: 1px 0 0 var(--border);
+  }
+  .compare-table thead th:first-child { background: var(--bg-warm); }
+
+  /* Detail panel → full-screen drawer */
+  .detail-panel {
+    width: 100%; max-width: 100%;
+    padding: 24px 20px;
+    padding-bottom: calc(24px + env(safe-area-inset-bottom));
+  }
+
+  /* Modal → bottom sheet */
+  .modal-overlay { align-items: flex-end; }
+  .modal {
+    width: 100%; max-width: 100%; max-height: 92vh;
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    padding: 10px 20px 24px;
+    padding-bottom: calc(24px + env(safe-area-inset-bottom));
+    animation: sheetUp 0.3s var(--ease) both;
+  }
+  .modal::before {
+    content: '';
+    display: block;
+    width: 40px; height: 4px;
+    background: var(--border-strong);
+    border-radius: 999px;
+    margin: 4px auto 16px;
+  }
+  .modal h2 { margin-bottom: 16px; font-size: 1.05rem; }
+  .form-row { grid-template-columns: 1fr; gap: 0; }
+  .form-group input, .form-group select, .form-group textarea {
+    font-size: 1rem; /* prevents iOS zoom on focus */
+    padding: 11px 14px;
+  }
+
+  /* Touch-friendly hit targets */
+  .icon-btn { min-width: 40px; min-height: 40px; padding: 8px; }
+  .icon-btn svg { width: 16px; height: 16px; }
+  .card-btn { padding: 8px 14px; min-height: 36px; font-size: 0.78rem; }
+  .btn { padding: 11px 20px; font-size: 0.88rem; min-height: 44px; }
+  .btn-link { padding: 11px 20px; min-height: 44px; }
+  .nav-tab, .sort-btn, .fuel-toggle button { min-height: 36px; }
+  .detail-close { width: 40px; height: 40px; }
+
+  /* Toasts anchored to top on mobile */
+  .toast-stack {
+    top: 12px; bottom: auto;
+    right: 12px; left: 12px;
+    max-width: none;
+  }
+  .toast {
+    animation: slideInDown 0.25s var(--ease) both;
+    width: 100%;
+  }
+
+  .global-spinner { top: 14px; right: 14px; }
+
+  /* Disable the heavy lift hover on mobile */
+  .car-card:hover { transform: none; }
+}
+
+/* Bump out any -webkit- tap highlight */
+a, button { -webkit-tap-highlight-color: transparent; }
 </style>
 <datalist id="makes-list">
   <option value="Audi">
@@ -680,8 +1015,14 @@ input, select, textarea { font-family: inherit; }
   <div id="detail-content"></div>
 </div>
 
+<!-- Toast stack -->
+<div id="toast-stack" class="toast-stack" aria-live="polite" role="status"></div>
+
+<!-- Global spinner (ref-counted) -->
+<div id="global-spinner" class="global-spinner" hidden></div>
+
 <!-- Add/Edit modal -->
-<div class="modal-overlay" id="modal-overlay">
+<div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)closeModal()">
   <div class="modal" onclick="event.stopPropagation()">
     <h2 id="modal-title">Add Car</h2>
     <form id="car-form" onsubmit="handleSubmit(event)">
@@ -774,7 +1115,7 @@ input, select, textarea { font-family: inherit; }
       </div>
       <div class="form-group price-change-reason" id="price-change-group">
         <label>Reason for price change</label>
-        <input type="text" id="form-price-note" placeholder="e.g. Seller lowered asking price">
+        <textarea id="form-price-note" rows="2" placeholder="e.g. Seller lowered asking price"></textarea>
       </div>
       <div class="form-actions">
         <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
@@ -791,6 +1132,15 @@ let currentView = 'pipeline';
 let selectedForCompare = new Set();
 let listSort = { field: 'addedAt', asc: false };
 let editingOriginalPrice = null;
+const state = {
+  loading: true,
+  hasError: false,
+  suppressRefreshUntil: 0,
+  refreshTimer: null,
+  refreshInterval: null,
+  spinnerCount: 0
+};
+const isMobile = () => window.matchMedia('(max-width: 640px)').matches;
 
 const STATUSES = [
   { key: 'to-contact', label: 'To Contact' },
@@ -1037,6 +1387,69 @@ function scoreClass(score) {
   return 'red';
 }
 
+// --- Toasts ---
+const TOAST_ICONS = {
+  success: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8l3.5 3.5L13 5"/></svg>',
+  error: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg>',
+  info: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M8 7v4M8 4.5v.01"/><circle cx="8" cy="8" r="6"/></svg>'
+};
+const _toastRecent = new Map();
+function toast(msg, variant = 'success', opts = {}) {
+  const stack = document.getElementById('toast-stack');
+  if (!stack) return;
+  // Coalesce identical messages within 1s
+  const key = variant + '|' + msg;
+  const last = _toastRecent.get(key);
+  if (last && Date.now() - last < 1000) return;
+  _toastRecent.set(key, Date.now());
+
+  // Cap visible toasts at 3 — remove the oldest
+  while (stack.children.length >= 3) stack.removeChild(stack.firstChild);
+
+  const el = document.createElement('div');
+  el.className = 'toast ' + variant;
+  el.innerHTML = `<span class="toast-icon">${TOAST_ICONS[variant] || ''}</span><span class="toast-msg"></span>`;
+  el.querySelector('.toast-msg').textContent = msg;
+
+  if (opts.action) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'toast-action';
+    btn.textContent = opts.action.label;
+    btn.addEventListener('click', () => {
+      try { opts.action.onClick?.(); } finally { dismiss(); }
+    });
+    el.appendChild(btn);
+  }
+
+  const duration = opts.duration ?? (variant === 'error' ? 5000 : 2800);
+  let timeoutId = setTimeout(dismiss, duration);
+  el.addEventListener('mouseenter', () => clearTimeout(timeoutId));
+  el.addEventListener('mouseleave', () => { timeoutId = setTimeout(dismiss, 1500); });
+
+  function dismiss() {
+    if (!el.isConnected) return;
+    el.classList.add('leaving');
+    el.addEventListener('animationend', () => el.remove(), { once: true });
+  }
+
+  stack.appendChild(el);
+}
+
+// --- Ref-counted global spinner ---
+function showSpinner() {
+  state.spinnerCount++;
+  if (state.spinnerCount === 1) {
+    document.getElementById('global-spinner').hidden = false;
+  }
+}
+function hideSpinner() {
+  state.spinnerCount = Math.max(0, state.spinnerCount - 1);
+  if (state.spinnerCount === 0) {
+    document.getElementById('global-spinner').hidden = true;
+  }
+}
+
 // --- API ---
 function getApiSecret() {
   let secret = localStorage.getItem('apiSecret');
@@ -1048,37 +1461,210 @@ function getApiSecret() {
 }
 
 async function apiFetch(path, opts = {}) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 12000);
   const headers = { ...(opts.headers || {}), 'x-api-secret': getApiSecret() };
-  const res = await fetch(path, { ...opts, headers });
-  if (res.status === 401) {
-    localStorage.removeItem('apiSecret');
-    alert('Wrong password. Reload to try again.');
-    throw new Error('Unauthorized');
+  try {
+    const res = await fetch(path, { ...opts, headers, signal: controller.signal });
+    if (res.status === 401) {
+      localStorage.removeItem('apiSecret');
+      toast('Session expired. Reloading…', 'error');
+      setTimeout(() => location.reload(), 1400);
+      throw new Error('Unauthorized');
+    }
+    if (!res.ok && res.status !== 204) {
+      let msg = 'Request failed (' + res.status + ')';
+      try {
+        const body = await res.clone().json();
+        if (body?.error) msg = body.error;
+      } catch {}
+      const err = new Error(msg);
+      err.status = res.status;
+      throw err;
+    }
+    return res;
+  } catch (e) {
+    if (e.name === 'AbortError') {
+      const err = new Error('Request timed out');
+      err.status = 0;
+      throw err;
+    }
+    throw e;
+  } finally {
+    clearTimeout(timeout);
   }
-  return res;
+}
+
+// --- Optimistic mutate helper ---
+async function mutate({ optimistic, request, rollback, successMsg, errorMsg }) {
+  const snap = optimistic ? optimistic() : null;
+  render();
+  showSpinner();
+  try {
+    const data = await request();
+    if (successMsg) toast(successMsg, 'success');
+    return data;
+  } catch (e) {
+    if (rollback) rollback(snap);
+    render();
+    if (e.message !== 'Unauthorized') {
+      toast(errorMsg || e.message || 'Something went wrong', 'error');
+    }
+    throw e;
+  } finally {
+    hideSpinner();
+    scheduleRefresh();
+  }
+}
+
+function scheduleRefresh() {
+  if (state.refreshTimer) clearTimeout(state.refreshTimer);
+  state.refreshTimer = setTimeout(() => refreshCars(), 2000);
+}
+
+function startBackgroundRefresh() {
+  if (state.refreshInterval) clearInterval(state.refreshInterval);
+  state.refreshInterval = setInterval(() => refreshCars(), 60000);
 }
 
 async function fetchCars() {
-  const res = await apiFetch('/api/cars');
-  cars = await res.json();
+  state.loading = true;
+  state.hasError = false;
   render();
+  try {
+    const res = await apiFetch('/api/cars');
+    cars = await res.json();
+    state.loading = false;
+    state.hasError = false;
+    render();
+  } catch (e) {
+    state.loading = false;
+    state.hasError = true;
+    render();
+    if (e.message !== 'Unauthorized') {
+      toast(e.message || 'Failed to load cars', 'error');
+    }
+  }
+}
+
+async function refreshCars() {
+  if (Date.now() < state.suppressRefreshUntil) return;
+  try {
+    const res = await apiFetch('/api/cars');
+    const data = await res.json();
+    // Only replace if no pending local mutations (tmp- ids present means a create is in-flight)
+    if (!cars.some(c => String(c.id).startsWith('tmp-'))) {
+      cars = data;
+      render();
+    }
+  } catch { /* silent */ }
 }
 
 async function createCar(data) {
-  await apiFetch('/api/cars', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-  await fetchCars();
+  const tmpId = 'tmp-' + (crypto.randomUUID ? crypto.randomUUID() : Date.now() + Math.random());
+  const now = new Date().toISOString();
+  const optimisticCar = {
+    id: tmpId,
+    addedAt: now,
+    url: data.url || '',
+    title: data.title || '',
+    make: data.make || '',
+    model: data.model || '',
+    year: Number(data.year) || 0,
+    km: Number(data.km) || 0,
+    price: Number(data.price) || 0,
+    fuel: data.fuel || '',
+    engine: data.engine || '',
+    power: Number(data.power) || 0,
+    source: data.source || '',
+    status: data.status || 'to-contact',
+    location: data.location || '',
+    contactedAt: data.status === 'contacted' ? now : null,
+    notes: data.notes || '',
+    priceHistory: [{ date: now, price: Number(data.price) || 0, note: 'Initial price' }],
+    _pending: true
+  };
+
+  return mutate({
+    optimistic: () => { cars.unshift(optimisticCar); return { tmpId }; },
+    request: async () => {
+      const res = await apiFetch('/api/cars', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      const created = await res.json();
+      const idx = cars.findIndex(c => c.id === tmpId);
+      if (idx !== -1) cars[idx] = created;
+      render();
+      return created;
+    },
+    rollback: ({ tmpId }) => {
+      const idx = cars.findIndex(c => c.id === tmpId);
+      if (idx !== -1) cars.splice(idx, 1);
+    },
+    successMsg: 'Car added',
+    errorMsg: 'Couldn\u2019t add car'
+  });
 }
 
-async function updateCar(id, data) {
-  await apiFetch(`/api/cars/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-  await fetchCars();
+async function updateCar(id, data, { silent = false, statusMutation = false } = {}) {
+  const idx = cars.findIndex(c => c.id === id);
+  if (idx === -1) return;
+  const prev = { ...cars[idx] };
+  if (statusMutation) state.suppressRefreshUntil = Date.now() + 3000;
+
+  return mutate({
+    optimistic: () => {
+      const merged = { ...cars[idx] };
+      for (const k of ['url','title','make','model','year','km','price','fuel','engine','power','source','status','location','notes']) {
+        if (data[k] !== undefined) merged[k] = ['year','km','price','power'].includes(k) ? Number(data[k]) || 0 : data[k];
+      }
+      if (data.status === 'contacted') merged.contactedAt = new Date().toISOString();
+      if (data.status && !['contacted','inactive'].includes(data.status)) merged.contactedAt = null;
+      cars[idx] = merged;
+      return { prev };
+    },
+    request: async () => {
+      const res = await apiFetch(`/api/cars/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      const updated = await res.json();
+      const i = cars.findIndex(c => c.id === id);
+      if (i !== -1) cars[i] = updated;
+      render();
+      return updated;
+    },
+    rollback: ({ prev }) => {
+      const i = cars.findIndex(c => c.id === id);
+      if (i !== -1) cars[i] = prev;
+    },
+    successMsg: silent ? null : 'Saved',
+    errorMsg: 'Couldn\u2019t save changes'
+  });
 }
 
 async function deleteCar(id) {
   if (!confirm('Delete this car?')) return;
-  await apiFetch(`/api/cars/${id}`, { method: 'DELETE' });
-  closeDetail();
-  await fetchCars();
+  const idx = cars.findIndex(c => c.id === id);
+  if (idx === -1) return;
+  const prev = cars[idx];
+
+  return mutate({
+    optimistic: () => {
+      cars.splice(idx, 1);
+      closeDetail();
+      return { prev, idx };
+    },
+    request: async () => {
+      await apiFetch(`/api/cars/${id}`, { method: 'DELETE' });
+    },
+    rollback: ({ prev, idx }) => { cars.splice(idx, 0, prev); },
+    successMsg: 'Car deleted',
+    errorMsg: 'Couldn\u2019t delete car'
+  });
 }
 
 // --- Filtering ---
@@ -1099,10 +1685,12 @@ function cardHTML(car) {
   const score = computeScore(car);
   const sc = scoreClass(score);
   const notesPreview = car.notes ? (car.notes.length > 80 ? car.notes.slice(0, 80) + '...' : car.notes) : '';
-  const compareActive = selectedForCompare.has(car.id) ? ' compare-active' : '';
-  return `<div class="car-card" onclick="openDetail('${car.id}')" data-id="${car.id}"
-      draggable="true"
-      ondragstart="event.dataTransfer.setData('carId','${car.id}');event.stopPropagation()">
+  const pending = car._pending ? ' is-pending' : '';
+  const draggable = !car._pending && !isMobile();
+  return `<div class="car-card${pending}" onclick="openDetail('${car.id}')" data-id="${car.id}"
+      draggable="${draggable}"
+      ${draggable ? `ondragstart="event.dataTransfer.setData('carId','${car.id}');event.stopPropagation();this.classList.add('is-dragging')"
+      ondragend="this.classList.remove('is-dragging')"` : ''}>
     <div class="card-header">
       <span class="card-title">${esc(car.title)}</span>
       ${car.source ? `<span class="source-tag">${esc(car.source)}</span>` : ''}
@@ -1130,10 +1718,64 @@ function esc(s) {
 
 // --- Render ---
 function render() {
+  if (state.loading && !cars.length) {
+    renderSkeletons();
+    return;
+  }
+  if (state.hasError && !cars.length) {
+    renderError();
+    return;
+  }
   if (currentView === 'pipeline') renderPipeline();
   else if (currentView === 'list') renderList();
   else if (currentView === 'compare') renderCompare();
   else if (currentView === 'docs') renderDocs();
+}
+
+function renderSkeletons() {
+  if (currentView === 'pipeline') {
+    const el = document.getElementById('pipeline-view');
+    el.innerHTML = STATUSES.slice(0, 4).map((s, i) => `
+      <div class="pipeline-col" data-status="${s.key}">
+        <div class="pipeline-col-header">${s.label} <span class="count-badge">\u2013</span></div>
+        <div class="pipeline-col-body">
+          ${Array.from({ length: i === 0 ? 3 : 2 }).map(() => skeletonCardHTML()).join('')}
+        </div>
+      </div>`).join('');
+  } else if (currentView === 'list') {
+    const wrap = document.getElementById('list-table-wrap');
+    wrap.innerHTML = `<div class="list-cards" style="display:flex;">${Array.from({ length: 6 }).map(() => skeletonCardHTML()).join('')}</div>`;
+  } else if (currentView === 'compare') {
+    document.getElementById('compare-selectors').innerHTML = '';
+    document.getElementById('compare-table-wrap').innerHTML = '<div class="empty-state"><div class="empty-state-icon">\u2194</div>Loading\u2026</div>';
+  } else if (currentView === 'docs') {
+    renderDocs();
+  }
+}
+
+function skeletonCardHTML() {
+  return `<div class="skel-card">
+    <div class="skeleton skel-line sk-h-14 sk-w-70"></div>
+    <div class="skel-chips">
+      <div class="skeleton skel-chip"></div>
+      <div class="skeleton skel-chip"></div>
+      <div class="skeleton skel-chip"></div>
+    </div>
+    <div class="skeleton skel-line sk-h-10 sk-w-60"></div>
+  </div>`;
+}
+
+function renderError() {
+  const msg = '<div class="empty-state error"><div class="empty-state-icon">\u26A0</div>Couldn\u2019t load cars.<br><button class="empty-state-retry" onclick="fetchCars()">Retry</button></div>';
+  if (currentView === 'pipeline') {
+    document.getElementById('pipeline-view').innerHTML = msg;
+  } else if (currentView === 'list') {
+    document.getElementById('list-table-wrap').innerHTML = msg;
+  } else if (currentView === 'compare') {
+    document.getElementById('compare-table-wrap').innerHTML = msg;
+  } else if (currentView === 'docs') {
+    renderDocs();
+  }
 }
 
 function renderDocs() {
@@ -1270,7 +1912,9 @@ function handleDrop(event, col) {
   const id = event.dataTransfer.getData('carId');
   const newStatus = col.dataset.status;
   if (!id || !newStatus) return;
-  updateCar(id, { status: newStatus });
+  const car = cars.find(c => c.id === id);
+  if (!car || car.status === newStatus) return;
+  updateCar(id, { status: newStatus }, { silent: true, statusMutation: true });
 }
 
 function renderList() {
@@ -1303,7 +1947,40 @@ function renderList() {
     return;
   }
 
-  let html = `<table class="list-table"><thead><tr>
+  // Mobile card stack (CSS hides the table below 640px)
+  const mobileCards = '<div class="list-cards">' + filtered.map(car => {
+    const score = computeScore(car);
+    const sc = scoreClass(score);
+    const pending = car._pending ? ' is-pending' : '';
+    const urlBtn = car.url ? `<a href="${esc(car.url)}" target="_blank" rel="noopener noreferrer"
+        onclick="event.stopPropagation()" class="icon-btn" title="Open listing">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M6 3H3v10h10v-3M9 1h6v6M7 9L15 1"/>
+        </svg></a>` : '';
+    return `<div class="list-card${pending}" onclick="openDetail('${car.id}')">
+      <div class="lc-top">
+        <span class="lc-title">${esc(car.title)}</span>
+        <span class="chip chip-score ${sc}">${score}</span>
+      </div>
+      <div class="lc-meta">
+        <span class="chip chip-price">\u20AC${car.price ? car.price.toLocaleString() : '\u2014'}</span>
+        <span class="chip">${car.km ? car.km.toLocaleString() + ' km' : '\u2014'}</span>
+        <span class="chip">${car.year || '\u2014'}</span>
+        <span class="status-badge ${car.status}">${STATUS_LABELS[car.status] || car.status}</span>
+      </div>
+      <div class="lc-actions" onclick="event.stopPropagation()">
+        ${urlBtn}
+        <button class="icon-btn" onclick="openModal('${car.id}')" title="Edit">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M11 2l3 3-8 8H3v-3L11 2z"/></svg>
+        </button>
+        <button class="icon-btn" onclick="deleteCar('${car.id}')" title="Delete">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 4h10M6 4V2h4v2M5 4v9h6V4"/></svg>
+        </button>
+      </div>
+    </div>`;
+  }).join('') + '</div>';
+
+  let html = mobileCards + `<table class="list-table"><thead><tr>
     <th>Title</th><th>Source</th><th>Local</th><th>Year</th><th>Km</th><th>Price</th>
     <th>Fuel</th><th>Status</th><th>Score</th><th></th>
   </tr></thead><tbody>`;
@@ -1312,12 +1989,13 @@ function renderList() {
     const score = computeScore(car);
     const sc = scoreClass(score);
     const compareActive = selectedForCompare.has(car.id) ? ' compare-active' : '';
+    const pending = car._pending ? ' is-pending' : '';
     const urlBtn = car.url ? `<a href="${esc(car.url)}" target="_blank" rel="noopener noreferrer"
         onclick="event.stopPropagation()" class="icon-btn" title="Open listing">
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M6 3H3v10h10v-3M9 1h6v6M7 9L15 1"/>
         </svg></a>` : '';
-    html += `<tr onclick="openDetail('${car.id}')">
+    html += `<tr class="${pending}" onclick="openDetail('${car.id}')">
       <td class="td-title">${esc(car.title)}</td>
       <td>${car.source ? `<span class="source-tag">${esc(car.source)}</span>` : '\u2014'}</td>
       <td class="td-mono">${esc(car.location || '') || '\u2014'}</td>
@@ -1350,9 +2028,12 @@ function renderList() {
 function renderCompare() {
   const selEl = document.getElementById('compare-selectors');
   const comparableCars = cars.filter(c => c.status !== 'rejected');
+  const atLimit = selectedForCompare.size >= 5;
   selEl.innerHTML = comparableCars.map(c => {
-    const active = selectedForCompare.has(c.id) ? ' active' : '';
-    return `<button class="compare-toggle${active}" onclick="toggleCompare('${c.id}')">${esc(c.title)}</button>`;
+    const isSelected = selectedForCompare.has(c.id);
+    const active = isSelected ? ' active' : '';
+    const disabled = !isSelected && atLimit ? ' disabled' : '';
+    return `<button class="compare-toggle${active}${disabled}" onclick="toggleCompare('${c.id}')" title="${atLimit && !isSelected ? 'Max 5 cars to compare' : ''}">${esc(c.title)}</button>`;
   }).join('');
 
   const wrap = document.getElementById('compare-table-wrap');
@@ -1561,15 +2242,26 @@ async function handleSubmit(e) {
     notes: document.getElementById('form-notes').value
   };
 
-  const id = document.getElementById('form-id').value;
-  if (id) {
-    const priceNote = document.getElementById('form-price-note').value;
-    if (priceNote) data.priceNote = priceNote;
-    await updateCar(id, data);
-  } else {
-    await createCar(data);
+  const submitBtn = document.getElementById('form-submit-btn');
+  submitBtn.classList.add('btn-loading');
+  submitBtn.disabled = true;
+
+  try {
+    const id = document.getElementById('form-id').value;
+    if (id) {
+      const priceNote = document.getElementById('form-price-note').value;
+      if (priceNote) data.priceNote = priceNote;
+      await updateCar(id, data);
+    } else {
+      await createCar(data);
+    }
+    closeModal();
+  } catch {
+    /* error toast already shown by mutate(); keep modal open */
+  } finally {
+    submitBtn.classList.remove('btn-loading');
+    submitBtn.disabled = false;
   }
-  closeModal();
 }
 
 // --- Compare toggle ---
@@ -1646,7 +2338,28 @@ document.getElementById('form-url').addEventListener('blur', e => inferFromUrl(e
 });
 document.getElementById('form-make').addEventListener('input', e => updateModelDatalist(e.target.value));
 
-fetchCars();
+// Escape closes modal / detail panel
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  const modalOpen = document.getElementById('modal-overlay').classList.contains('open');
+  const detailOpen = document.getElementById('detail-panel').classList.contains('open');
+  if (modalOpen) closeModal();
+  else if (detailOpen) closeDetail();
+});
+
+// Re-render on viewport change (mobile/desktop branching in views)
+let _resizeTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(_resizeTimer);
+  _resizeTimer = setTimeout(() => { if (!state.loading) render(); }, 120);
+});
+
+// Refresh when tab regains focus (carries server staleness corrections in)
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) refreshCars();
+});
+
+fetchCars().then(() => startBackgroundRefresh());
 </script>
 </body>
 </html>
