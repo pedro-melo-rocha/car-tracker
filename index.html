@@ -175,6 +175,123 @@ input, select, textarea { font-family: inherit; }
 .fuel-toggle button:not(:first-child) { border-left: none; }
 .fuel-toggle button.active { background: var(--accent); border-color: var(--accent); color: #fff; }
 
+/* List view: top-bar extras */
+.list-count {
+  margin-left: auto; color: var(--text-muted); font-size: 0.78rem;
+  font-weight: 600; letter-spacing: 0.02em; white-space: nowrap;
+}
+.list-filters-btn {
+  display: none; align-items: center; gap: 6px;
+  background: var(--bg-card); border: 1px solid var(--border-strong);
+  color: var(--text-secondary); padding: 6px 12px; border-radius: var(--radius-sm);
+  font-size: 0.78rem; font-weight: 600; transition: all 0.15s;
+}
+.list-filters-btn:hover { border-color: var(--accent); color: var(--accent); }
+.list-filters-btn svg { width: 14px; height: 14px; }
+.filter-count-pill {
+  background: var(--accent); color: #fff; font-size: 0.68rem;
+  font-weight: 700; padding: 1px 6px; border-radius: 999px; min-width: 16px;
+  text-align: center; line-height: 1.4;
+}
+.list-clear-btn {
+  background: transparent; border: 1px solid transparent; color: var(--text-muted);
+  padding: 6px 10px; border-radius: var(--radius-sm);
+  font-size: 0.76rem; font-weight: 600; transition: all 0.15s;
+}
+.list-clear-btn:hover { color: var(--red); border-color: var(--red); }
+
+/* List table: filter icon inside headers */
+.list-table th .th-inner {
+  display: inline-flex; align-items: center; gap: 4px;
+}
+.list-table th .th-label {
+  background: transparent; border: none; padding: 0; margin: 0;
+  color: inherit; font: inherit; letter-spacing: inherit;
+  text-transform: inherit; cursor: pointer;
+}
+.list-table th .th-label:hover { color: var(--accent); }
+.list-table th .th-label.active { color: var(--accent); }
+.list-table th .th-filter {
+  background: transparent; border: none; padding: 2px 4px; margin: 0;
+  color: var(--text-muted); cursor: pointer; line-height: 1;
+  border-radius: 4px; display: inline-flex; align-items: center;
+  transition: background 0.15s, color 0.15s;
+}
+.list-table th .th-filter svg { width: 11px; height: 11px; }
+.list-table th .th-filter:hover { background: var(--bg); color: var(--accent); }
+.list-table th .th-filter.active {
+  color: var(--accent); background: var(--accent-light, rgba(12,110,93,0.12));
+}
+
+/* Column filter popover (desktop) + mobile sheet */
+.th-popover {
+  position: fixed; z-index: 320; display: none;
+  flex-direction: column;
+  background: var(--bg-card); border: 1px solid var(--border-strong);
+  border-radius: var(--radius); box-shadow: var(--shadow-xl, 0 10px 40px rgba(0,0,0,0.18));
+  padding: 12px; min-width: 220px; max-width: 280px;
+  max-height: min(60vh, 420px);
+  font-size: 0.84rem; color: var(--text);
+}
+.th-popover.open { display: flex; animation: scaleIn 0.15s ease; }
+.th-popover .pop-title {
+  font-size: 0.7rem; font-weight: 700; color: var(--text-muted);
+  letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 8px;
+  flex: 0 0 auto;
+}
+.th-popover .pop-options {
+  display: flex; flex-direction: column; gap: 2px;
+  overflow-y: auto; min-height: 0; flex: 1 1 auto;
+  padding-right: 4px;
+}
+.th-popover .pop-options::-webkit-scrollbar { width: 4px; }
+.th-popover .pop-options::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 2px; }
+.th-popover label.pop-option {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 8px; border-radius: var(--radius-sm); cursor: pointer;
+  transition: background 0.1s;
+}
+.th-popover label.pop-option:hover { background: var(--bg-warm); }
+.th-popover label.pop-option input { margin: 0; accent-color: var(--accent); }
+.th-popover label.pop-option .pop-opt-label { flex: 1; }
+.th-popover .pop-range {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 2px;
+}
+.th-popover .pop-range input {
+  background: var(--bg); border: 1px solid var(--border-strong);
+  color: var(--text); padding: 6px 8px; border-radius: var(--radius-sm);
+  font-size: 0.82rem; outline: none; width: 100%;
+  font-family: var(--mono);
+}
+.th-popover .pop-range input:focus { border-color: var(--accent); }
+.th-popover .pop-range-labels {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+  color: var(--text-muted); font-size: 0.7rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 2px;
+}
+.th-popover .pop-actions {
+  display: flex; justify-content: space-between; gap: 8px;
+  margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border);
+  flex: 0 0 auto;
+}
+.th-popover .pop-actions button {
+  background: transparent; border: 1px solid var(--border-strong);
+  color: var(--text-secondary); padding: 5px 10px; border-radius: var(--radius-sm);
+  font-size: 0.76rem; font-weight: 600; transition: all 0.15s;
+}
+.th-popover .pop-actions button.pop-clear:hover { border-color: var(--red); color: var(--red); }
+.th-popover .pop-actions button.pop-close { background: var(--accent); border-color: var(--accent); color: #fff; }
+.th-popover .pop-actions button.pop-close:hover { background: var(--accent-hover); }
+
+/* Mobile filter sheet sections (reuses .modal-overlay / .modal shell) */
+.mf-section { margin-bottom: 18px; }
+.mf-section:last-child { margin-bottom: 0; }
+.mf-title {
+  font-size: 0.72rem; font-weight: 700; color: var(--text-muted);
+  letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 8px;
+}
+.mf-options { display: flex; flex-direction: column; gap: 2px; }
+
 /* Pipeline */
 .pipeline {
   display: flex; gap: 14px; padding: 20px 32px;
@@ -302,6 +419,7 @@ tr.is-pending td { opacity: 0.65; }
   max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .list-table .td-mono { font-family: var(--mono); font-size: 0.82rem; color: var(--text-secondary); }
+.list-table .td-make { font-weight: 600; color: var(--text-secondary); white-space: nowrap; }
 .list-table .td-price { font-family: var(--mono); font-weight: 500; color: var(--green); }
 .list-table .td-actions { white-space: nowrap; }
 
@@ -458,6 +576,14 @@ tr.is-pending td { opacity: 0.65; }
 .form-group select { cursor: pointer; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .form-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 24px; }
+
+/* Dialog (confirm / prompt) */
+.dialog-message {
+  color: var(--text-secondary); font-size: 0.88rem; line-height: 1.5;
+  margin-bottom: 18px;
+}
+.dialog-message[hidden] { display: none; }
+.dialog .form-group { margin-bottom: 0; }
 .btn-secondary {
   background: var(--bg); border: none; color: var(--text-secondary);
   font-weight: 600;
@@ -792,6 +918,9 @@ tr.is-pending td { opacity: 0.65; }
   .filter-bar::-webkit-scrollbar { display: none; }
   .filter-bar input[type="text"] { min-width: 180px; flex-shrink: 0; }
   .filter-bar select, .sort-btn, .fuel-toggle { flex-shrink: 0; }
+  .list-filters-btn { display: inline-flex; flex-shrink: 0; }
+  .list-count { margin-left: 0; flex-shrink: 0; }
+  .th-popover { left: 8px !important; right: 8px !important; width: auto; max-width: none; }
 
   /* Pipeline becomes horizontal snap-scroll */
   .pipeline {
@@ -892,6 +1021,63 @@ tr.is-pending td { opacity: 0.65; }
 
 /* Bump out any -webkit- tap highlight */
 a, button { -webkit-tap-highlight-color: transparent; }
+
+/* Custom select */
+.custom-select-wrap { position: relative; }
+.custom-select-trigger {
+  width: 100%; background: var(--bg); border: 1px solid var(--border-strong);
+  color: var(--text); padding: 10px 12px 10px 14px; border-radius: var(--radius-sm);
+  font-size: 0.88rem; font-family: inherit; text-align: left; cursor: pointer;
+  display: flex; align-items: center; justify-content: space-between;
+  transition: border-color 0.2s, box-shadow 0.2s; user-select: none;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.custom-select-trigger:focus {
+  outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(12,110,93,0.08);
+}
+.custom-select-trigger.open { border-color: var(--accent); border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+.custom-select-trigger-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+.custom-select-trigger-text.is-placeholder { color: var(--text-muted); }
+.custom-select-arrow {
+  flex-shrink: 0; margin-left: 8px; color: var(--text-muted);
+  transition: transform 0.15s var(--ease);
+}
+.custom-select-wrap.open .custom-select-arrow { transform: rotate(180deg); }
+.custom-select-dropdown {
+  position: absolute; top: 100%; left: 0; right: 0; z-index: 200;
+  background: var(--bg-card); border: 1px solid var(--accent);
+  border-top: none; border-bottom-left-radius: var(--radius-sm); border-bottom-right-radius: var(--radius-sm);
+  box-shadow: var(--shadow); overflow: hidden; display: none; max-height: 220px; overflow-y: auto;
+}
+.custom-select-wrap.open .custom-select-dropdown,
+.custom-combobox-wrap.open .custom-select-dropdown { display: block; }
+.custom-select-option {
+  padding: 9px 14px; font-size: 0.88rem; cursor: pointer; color: var(--text);
+  transition: background var(--dur-fast);
+}
+.custom-select-option.is-placeholder { color: var(--text-muted); }
+.custom-select-option:hover { background: var(--bg-warm); }
+.custom-select-option.selected { color: var(--accent); font-weight: 600; background: var(--accent-soft); }
+.custom-select-option.kbd-active { background: var(--bg-warm); }
+
+/* Custom combobox (free-text input + suggestion dropdown) */
+.custom-combobox-wrap { position: relative; }
+.custom-combobox-wrap.open input[type="text"] {
+  border-bottom-left-radius: 0; border-bottom-right-radius: 0;
+  border-color: var(--accent); box-shadow: 0 0 0 3px rgba(12,110,93,0.08);
+}
+.custom-combobox-dropdown {
+  border-top: 1px solid var(--accent) !important;
+  border-top-left-radius: 0 !important; border-top-right-radius: 0 !important;
+}
+
+/* Filter-bar custom selects — smaller sizing */
+.filter-bar .custom-select-trigger {
+  background: var(--bg-card); font-size: 0.82rem;
+  padding: 8px 10px 8px 12px; color: var(--text-secondary);
+}
+.filter-bar .custom-select-trigger-text.is-placeholder { color: var(--text-secondary); }
+.filter-bar .custom-select-option { font-size: 0.82rem; padding: 8px 12px; }
 </style>
 <datalist id="makes-list">
   <option value="Audi">
@@ -918,6 +1104,27 @@ a, button { -webkit-tap-highlight-color: transparent; }
   <option value="Volvo">
 </datalist>
 <datalist id="models-list"></datalist>
+<datalist id="engines-list">
+  <option value="1.4 D-4D">
+  <option value="VVT-i">
+  <option value="1.9 TDI">
+  <option value="1.9 Multijet">
+  <option value="Honda i-VTEC">
+  <option value="Mazda SkyActiv">
+  <option value="1.0 TSI EA211">
+  <option value="1.2 TSI EA211">
+  <option value="1.5 TDCi">
+  <option value="1.6 TDCi">
+  <option value="1.3 Multijet">
+  <option value="1.4 HDi">
+  <option value="1.6 TDI">
+  <option value="1.5 dCi">
+  <option value="1.6 HDi">
+  <option value="2.0 TDI PD">
+  <option value="1.2 TSI">
+  <option value="1.4 TSI">
+  <option value="1.2 TDI">
+</datalist>
 </head>
 <body>
 
@@ -957,38 +1164,13 @@ a, button { -webkit-tap-highlight-color: transparent; }
 <!-- List filter bar -->
 <div class="filter-bar" id="list-filters" style="display:none;">
   <input type="text" id="list-search" placeholder="Search cars...">
-  <div class="fuel-toggle">
-    <button class="active" data-fuel="">All</button>
-    <button data-fuel="Diesel">Diesel</button>
-    <button data-fuel="Gasolina">Gasolina</button>
-  </div>
-  <select id="list-source-filter">
-    <option value="">All Sources</option>
-    <option value="StandVirtual">StandVirtual</option>
-    <option value="AutoScout24">AutoScout24</option>
-    <option value="OLX">OLX</option>
-    <option value="Facebook Marketplace">Facebook Marketplace</option>
-    <option value="PiscaPisca">PiscaPisca</option>
-    <option value="CustoJusto">CustoJusto</option>
-    <option value="Other">Other</option>
-  </select>
-  <select id="list-status-filter">
-    <option value="">All Statuses</option>
-    <option value="to-contact">To Contact</option>
-    <option value="contacted">Contacted</option>
-    <option value="inactive">Inactive</option>
-    <option value="negotiating">Negotiating</option>
-    <option value="bought">Bought</option>
-  </select>
-  <select id="list-make-filter">
-    <option value="">All Makes</option>
-  </select>
-  <span style="color:var(--text-muted);font-size:0.78rem;font-weight:600;margin-left:8px;letter-spacing:0.04em;text-transform:uppercase;">Sort</span>
-  <button class="sort-btn" data-sort="price">Price</button>
-  <button class="sort-btn" data-sort="km">Km</button>
-  <button class="sort-btn" data-sort="year">Year</button>
-  <button class="sort-btn" data-sort="score">Score</button>
-  <button class="sort-btn" data-sort="addedAt">Date Added</button>
+  <button type="button" class="list-filters-btn" id="list-filters-mobile-btn" aria-label="Open filters">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 3h12M4 8h8M6 13h4"/></svg>
+    <span>Filters</span>
+    <span class="filter-count-pill" id="list-filters-active-count" hidden>0</span>
+  </button>
+  <button type="button" class="list-clear-btn" id="list-clear-filters" hidden>Clear filters</button>
+  <span class="list-count" id="list-count"></span>
 </div>
 
 <!-- Pipeline View -->
@@ -1008,6 +1190,9 @@ a, button { -webkit-tap-highlight-color: transparent; }
 <!-- Docs View -->
 <div class="docs-view view" id="docs-view"></div>
 
+<!-- Column filter popover -->
+<div class="th-popover" id="th-popover" role="dialog" aria-modal="false"></div>
+
 <!-- Detail side panel -->
 <div class="detail-overlay" id="detail-overlay" onclick="closeDetail()"></div>
 <div class="detail-panel" id="detail-panel">
@@ -1022,7 +1207,7 @@ a, button { -webkit-tap-highlight-color: transparent; }
 <div id="global-spinner" class="global-spinner" hidden></div>
 
 <!-- Add/Edit modal -->
-<div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)closeModal()">
+<div class="modal-overlay" id="modal-overlay">
   <div class="modal" onclick="event.stopPropagation()">
     <h2 id="modal-title">Add Car</h2>
     <form id="car-form" onsubmit="handleSubmit(event)">
@@ -1072,7 +1257,7 @@ a, button { -webkit-tap-highlight-color: transparent; }
       <div class="form-row">
         <div class="form-group">
           <label>Engine</label>
-          <input type="text" id="form-engine" placeholder="e.g. 1.5 dCi, 1.4 D-4D, 1.3 Multijet">
+          <input type="text" id="form-engine" list="engines-list" placeholder="e.g. 1.5 dCi, 1.4 D-4D, 1.3 Multijet">
         </div>
         <div class="form-group">
           <label>Power (cv)</label>
@@ -1125,12 +1310,60 @@ a, button { -webkit-tap-highlight-color: transparent; }
   </div>
 </div>
 
+<div class="modal-overlay" id="dialog-overlay">
+  <div class="modal dialog">
+    <h2 id="dialog-title">Confirm</h2>
+    <p class="dialog-message" id="dialog-message" hidden></p>
+    <div class="form-group" id="dialog-input-group" hidden>
+      <input type="text" id="dialog-input">
+    </div>
+    <div class="form-actions">
+      <button type="button" class="btn btn-secondary" id="dialog-cancel">Cancel</button>
+      <button type="button" class="btn btn-primary" id="dialog-confirm">OK</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // --- State ---
 let cars = [];
 let currentView = 'pipeline';
 let selectedForCompare = new Set();
 let listSort = { field: 'addedAt', asc: false };
+let listFilters = {
+  sources: [], makes: [], statuses: [], fuels: [],
+  yearMin: null, yearMax: null,
+  kmMin: null, kmMax: null,
+  priceMin: null, priceMax: null,
+  scoreMin: null, scoreMax: null
+};
+const LIST_COL_META = {
+  source:  { type: 'categorical', key: 'sources',  title: 'Source'   },
+  make:    { type: 'categorical', key: 'makes',    title: 'Make'     },
+  status:  { type: 'categorical', key: 'statuses', title: 'Status'   },
+  fuel:    { type: 'categorical', key: 'fuels',    title: 'Fuel'     },
+  year:    { type: 'range',       minKey: 'yearMin',  maxKey: 'yearMax',  title: 'Year',  placeholder: ['From', 'To'] },
+  km:      { type: 'range',       minKey: 'kmMin',    maxKey: 'kmMax',    title: 'Km',    placeholder: ['Min', 'Max'] },
+  price:   { type: 'range',       minKey: 'priceMin', maxKey: 'priceMax', title: 'Price', placeholder: ['Min \u20AC', 'Max \u20AC'] },
+  score:   { type: 'range',       minKey: 'scoreMin', maxKey: 'scoreMax', title: 'Score', placeholder: ['Min', 'Max'] }
+};
+function listFilterIsActive(col) {
+  const m = LIST_COL_META[col]; if (!m) return false;
+  if (m.type === 'categorical') return (listFilters[m.key] || []).length > 0;
+  return listFilters[m.minKey] != null || listFilters[m.maxKey] != null;
+}
+function listActiveFilterCount() {
+  return Object.keys(LIST_COL_META).filter(listFilterIsActive).length;
+}
+function resetListFilters() {
+  listFilters = {
+    sources: [], makes: [], statuses: [], fuels: [],
+    yearMin: null, yearMax: null,
+    kmMin: null, kmMax: null,
+    priceMin: null, priceMax: null,
+    scoreMin: null, scoreMax: null
+  };
+}
 let editingOriginalPrice = null;
 const state = {
   loading: true,
@@ -1451,10 +1684,15 @@ function hideSpinner() {
 }
 
 // --- API ---
-function getApiSecret() {
+async function getApiSecret() {
   let secret = localStorage.getItem('apiSecret');
   if (!secret) {
-    secret = prompt('Enter app password:') || '';
+    secret = (await showPrompt({
+      title: 'App password',
+      message: 'Enter the shared password to unlock the tracker.',
+      type: 'password',
+      confirmLabel: 'Unlock',
+    })) || '';
     if (secret) localStorage.setItem('apiSecret', secret);
   }
   return secret;
@@ -1463,7 +1701,7 @@ function getApiSecret() {
 async function apiFetch(path, opts = {}) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 12000);
-  const headers = { ...(opts.headers || {}), 'x-api-secret': getApiSecret() };
+  const headers = { ...(opts.headers || {}), 'x-api-secret': await getApiSecret() };
   try {
     const res = await fetch(path, { ...opts, headers, signal: controller.signal });
     if (res.status === 401) {
@@ -1647,7 +1885,13 @@ async function updateCar(id, data, { silent = false, statusMutation = false } = 
 }
 
 async function deleteCar(id) {
-  if (!confirm('Delete this car?')) return;
+  const ok = await showConfirm({
+    title: 'Delete car?',
+    message: 'This cannot be undone.',
+    confirmLabel: 'Delete',
+    danger: true,
+  });
+  if (!ok) return;
   const idx = cars.findIndex(c => c.id === id);
   if (idx === -1) return;
   const prev = cars[idx];
@@ -1676,6 +1920,34 @@ function filterCars(carsArr, searchId, fuelVal, sourceVal, statusVal, makeVal) {
     if (sourceVal && c.source !== sourceVal) return false;
     if (statusVal && c.status !== statusVal) return false;
     if (makeVal && c.make !== makeVal) return false;
+    return true;
+  });
+}
+
+function filterCarsForList(carsArr) {
+  const search = (document.getElementById('list-search')?.value || '').toLowerCase();
+  const f = listFilters;
+  const inRange = (v, min, max) => {
+    if (min != null && (v == null || v < min)) return false;
+    if (max != null && (v == null || v > max)) return false;
+    return true;
+  };
+  return carsArr.filter(c => {
+    if (search && ![c.title, c.make, c.model, c.notes].some(x => (x || '').toLowerCase().includes(search))) return false;
+    if (f.fuels.length && !f.fuels.includes(c.fuel)) return false;
+    if (f.sources.length && !f.sources.includes(c.source)) return false;
+    if (f.makes.length && !f.makes.includes(c.make)) return false;
+    if (f.statuses.length) {
+      if (!f.statuses.includes(c.status)) return false;
+    } else if (c.status === 'rejected') {
+      return false;
+    }
+    if (!inRange(c.year, f.yearMin, f.yearMax)) return false;
+    if (!inRange(c.km, f.kmMin, f.kmMax)) return false;
+    if (!inRange(c.price, f.priceMin, f.priceMax)) return false;
+    if (f.scoreMin != null || f.scoreMax != null) {
+      if (!inRange(computeScore(c), f.scoreMin, f.scoreMax)) return false;
+    }
     return true;
   });
 }
@@ -1917,12 +2189,39 @@ function handleDrop(event, col) {
   updateCar(id, { status: newStatus }, { silent: true, statusMutation: true });
 }
 
+function listHeaderCell(label, sortField, filterCol) {
+  const sortArrow = sortField && listSort.field === sortField ? (listSort.asc ? ' \u2191' : ' \u2193') : '';
+  const sortActive = sortField && listSort.field === sortField ? ' active' : '';
+  const labelHtml = sortField
+    ? `<span class="th-label sort-btn${sortActive}" data-sort="${sortField}">${label}${sortArrow}</span>`
+    : `<span class="th-label">${label}</span>`;
+  const filterActive = filterCol && listFilterIsActive(filterCol) ? ' active' : '';
+  const filterBtn = filterCol
+    ? `<button type="button" class="th-filter${filterActive}" data-filter-col="${filterCol}" aria-label="Filter ${label}"><svg viewBox="0 0 10 10" fill="currentColor"><path d="M1 2h8L6 6v3L4 8V6L1 2z"/></svg></button>`
+    : '';
+  return `<th><span class="th-inner">${labelHtml}${filterBtn}</span></th>`;
+}
+
+function updateListCountAndControls(filteredCount) {
+  const countEl = document.getElementById('list-count');
+  const total = cars.filter(c => c.status !== 'rejected' || listFilters.statuses.includes('rejected')).length;
+  if (countEl) {
+    countEl.textContent = filteredCount === total
+      ? `${filteredCount} ${filteredCount === 1 ? 'car' : 'cars'}`
+      : `${filteredCount} of ${total}`;
+  }
+  const activeCount = listActiveFilterCount();
+  const pill = document.getElementById('list-filters-active-count');
+  if (pill) {
+    pill.textContent = String(activeCount);
+    pill.hidden = activeCount === 0;
+  }
+  const clearBtn = document.getElementById('list-clear-filters');
+  if (clearBtn) clearBtn.hidden = activeCount === 0;
+}
+
 function renderList() {
-  const fuel = document.querySelector('#list-filters .fuel-toggle button.active')?.dataset.fuel || '';
-  const source = document.getElementById('list-source-filter').value;
-  const status = document.getElementById('list-status-filter').value;
-  const make = document.getElementById('list-make-filter').value;
-  let filtered = filterCars(cars, 'list-search', fuel, source, status, make).filter(c => c.status !== 'rejected');
+  let filtered = filterCarsForList(cars);
 
   // Sort
   filtered.sort((a, b) => {
@@ -1930,16 +2229,15 @@ function renderList() {
     if (listSort.field === 'score') { av = computeScore(a); bv = computeScore(b); }
     else if (listSort.field === 'addedAt') { av = a.addedAt; bv = b.addedAt; }
     else { av = a[listSort.field]; bv = b[listSort.field]; }
+    if (av == null && bv == null) return 0;
+    if (av == null) return 1;
+    if (bv == null) return -1;
     if (av < bv) return listSort.asc ? -1 : 1;
     if (av > bv) return listSort.asc ? 1 : -1;
     return 0;
   });
 
-  // Populate make dropdown
-  const makes = [...new Set(cars.map(c => c.make).filter(Boolean))].sort();
-  const makeSel = document.getElementById('list-make-filter');
-  const curMake = makeSel.value;
-  makeSel.innerHTML = '<option value="">All Makes</option>' + makes.map(m => `<option value="${esc(m)}"${m === curMake ? ' selected' : ''}>${esc(m)}</option>`).join('');
+  updateListCountAndControls(filtered.length);
 
   const wrap = document.getElementById('list-table-wrap');
   if (!filtered.length) {
@@ -1981,8 +2279,17 @@ function renderList() {
   }).join('') + '</div>';
 
   let html = mobileCards + `<table class="list-table"><thead><tr>
-    <th>Title</th><th>Source</th><th>Local</th><th>Year</th><th>Km</th><th>Price</th>
-    <th>Fuel</th><th>Status</th><th>Score</th><th></th>
+    ${listHeaderCell('Title', null, null)}
+    ${listHeaderCell('Make', null, 'make')}
+    ${listHeaderCell('Source', null, 'source')}
+    ${listHeaderCell('Local', null, null)}
+    ${listHeaderCell('Year', 'year', 'year')}
+    ${listHeaderCell('Km', 'km', 'km')}
+    ${listHeaderCell('Price', 'price', 'price')}
+    ${listHeaderCell('Fuel', null, 'fuel')}
+    ${listHeaderCell('Status', null, 'status')}
+    ${listHeaderCell('Score', 'score', 'score')}
+    <th></th>
   </tr></thead><tbody>`;
 
   filtered.forEach(car => {
@@ -1997,6 +2304,7 @@ function renderList() {
         </svg></a>` : '';
     html += `<tr class="${pending}" onclick="openDetail('${car.id}')">
       <td class="td-title">${esc(car.title)}</td>
+      <td class="td-make">${esc(car.make || '') || '\u2014'}</td>
       <td>${car.source ? `<span class="source-tag">${esc(car.source)}</span>` : '\u2014'}</td>
       <td class="td-mono">${esc(car.location || '') || '\u2014'}</td>
       <td class="td-mono">${car.year || '\u2014'}</td>
@@ -2223,6 +2531,79 @@ function closeModal() {
   editingOriginalPrice = null;
 }
 
+// --- Custom dialog (confirm / prompt) ---
+const DialogUI = (() => {
+  const overlay = document.getElementById('dialog-overlay');
+  const titleEl = document.getElementById('dialog-title');
+  const msgEl = document.getElementById('dialog-message');
+  const inputGroup = document.getElementById('dialog-input-group');
+  const inputEl = document.getElementById('dialog-input');
+  const cancelBtn = document.getElementById('dialog-cancel');
+  const confirmBtn = document.getElementById('dialog-confirm');
+  let pendingResolve = null;
+  let mode = 'confirm';
+
+  function cancelValue() { return mode === 'prompt' ? null : false; }
+  function confirmValue() { return mode === 'prompt' ? inputEl.value : true; }
+
+  function close(result) {
+    overlay.classList.remove('open');
+    document.removeEventListener('keydown', onKey, true);
+    const fn = pendingResolve;
+    pendingResolve = null;
+    if (fn) fn(result);
+  }
+
+  function onKey(e) {
+    if (e.key === 'Escape') { e.preventDefault(); close(cancelValue()); }
+    else if (e.key === 'Enter') {
+      if (e.target.tagName === 'TEXTAREA') return;
+      e.preventDefault();
+      close(confirmValue());
+    }
+  }
+
+  cancelBtn.addEventListener('click', () => close(cancelValue()));
+  confirmBtn.addEventListener('click', () => close(confirmValue()));
+  overlay.addEventListener('mousedown', e => { if (e.target === overlay) close(cancelValue()); });
+
+  function open(opts, kind) {
+    if (pendingResolve) { const fn = pendingResolve; pendingResolve = null; fn(cancelValue()); }
+    mode = kind;
+    titleEl.textContent = opts.title || (kind === 'prompt' ? 'Input required' : 'Confirm');
+    const message = opts.message || '';
+    msgEl.textContent = message;
+    msgEl.hidden = !message;
+    confirmBtn.textContent = opts.confirmLabel || (kind === 'prompt' ? 'OK' : 'Confirm');
+    cancelBtn.textContent = opts.cancelLabel || 'Cancel';
+    confirmBtn.classList.toggle('btn-danger', !!opts.danger);
+    confirmBtn.classList.toggle('btn-primary', !opts.danger);
+    if (kind === 'prompt') {
+      inputGroup.hidden = false;
+      inputEl.type = opts.type || 'text';
+      inputEl.placeholder = opts.placeholder || '';
+      inputEl.value = opts.defaultValue || '';
+    } else {
+      inputGroup.hidden = true;
+    }
+    overlay.classList.add('open');
+    document.addEventListener('keydown', onKey, true);
+    setTimeout(() => {
+      if (kind === 'prompt') { inputEl.focus(); inputEl.select(); }
+      else { confirmBtn.focus(); }
+    }, 30);
+    return new Promise(resolve => { pendingResolve = resolve; });
+  }
+
+  return {
+    confirm: (opts = {}) => open(opts, 'confirm'),
+    prompt: (opts = {}) => open(opts, 'prompt'),
+  };
+})();
+
+function showConfirm(opts) { return DialogUI.confirm(opts); }
+function showPrompt(opts) { return DialogUI.prompt(opts); }
+
 async function handleSubmit(e) {
   e.preventDefault();
   const data = {
@@ -2295,38 +2676,247 @@ document.querySelectorAll('.nav-tab').forEach(tab => {
   document.getElementById(id).addEventListener('change', renderPipeline);
 });
 
-['list-search', 'list-source-filter', 'list-status-filter', 'list-make-filter'].forEach(id => {
-  document.getElementById(id).addEventListener('input', renderList);
-  document.getElementById(id).addEventListener('change', renderList);
-});
+document.getElementById('list-search').addEventListener('input', renderList);
 
-document.querySelectorAll('#list-filters .fuel-toggle button').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('#list-filters .fuel-toggle button').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
+// Delegated sort + filter-icon clicks (headers are re-rendered on every renderList)
+document.getElementById('list-table-wrap').addEventListener('click', e => {
+  const sortEl = e.target.closest('.th-label.sort-btn');
+  if (sortEl) {
+    e.stopPropagation();
+    const field = sortEl.dataset.sort;
+    if (listSort.field === field) listSort.asc = !listSort.asc;
+    else { listSort.field = field; listSort.asc = true; }
     renderList();
-  });
+    return;
+  }
+  const filterEl = e.target.closest('.th-filter');
+  if (filterEl) {
+    e.stopPropagation();
+    openColumnPopover(filterEl.dataset.filterCol, filterEl);
+  }
 });
 
-document.querySelectorAll('.sort-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const field = btn.dataset.sort;
-    if (listSort.field === field) {
-      listSort.asc = !listSort.asc;
-    } else {
-      listSort.field = field;
-      listSort.asc = true;
-    }
-    document.querySelectorAll('.sort-btn').forEach(b => {
-      b.classList.remove('active');
-      b.textContent = b.dataset.sort === 'addedAt' ? 'Date Added' : b.dataset.sort.charAt(0).toUpperCase() + b.dataset.sort.slice(1);
+// Mobile "Filters" button opens a full-width sheet with all column filters
+document.getElementById('list-filters-mobile-btn').addEventListener('click', () => openMobileFiltersSheet());
+
+// Clear-all button
+document.getElementById('list-clear-filters').addEventListener('click', () => {
+  resetListFilters();
+  renderList();
+  closeColumnPopover();
+});
+
+// --- Column filter popover ---
+let _popoverCol = null;
+function openColumnPopover(col, anchorEl) {
+  const meta = LIST_COL_META[col]; if (!meta) return;
+  const pop = document.getElementById('th-popover');
+  if (_popoverCol === col && pop.classList.contains('open')) { closeColumnPopover(); return; }
+  _popoverCol = col;
+  pop.innerHTML = buildPopoverHTML(col, meta);
+  pop.classList.add('open');
+  // Position: anchor below the icon, clamped to viewport
+  const r = anchorEl.getBoundingClientRect();
+  const popW = Math.min(280, window.innerWidth - 16);
+  let left = Math.min(window.innerWidth - popW - 8, Math.max(8, r.left));
+  let top = r.bottom + 6;
+  pop.style.left = left + 'px';
+  pop.style.top = top + 'px';
+  pop.style.width = popW + 'px';
+  wirePopoverInputs(col, meta);
+}
+function closeColumnPopover() {
+  const pop = document.getElementById('th-popover');
+  pop.classList.remove('open');
+  _popoverCol = null;
+}
+function buildPopoverHTML(col, meta) {
+  if (meta.type === 'categorical') {
+    const selected = listFilters[meta.key] || [];
+    const options = categoricalOptions(col);
+    return `<div class="pop-title">Filter by ${meta.title}</div>
+      <div class="pop-options">
+        ${options.map(o => `
+          <label class="pop-option">
+            <input type="checkbox" data-value="${esc(o.value)}" ${selected.includes(o.value) ? 'checked' : ''}>
+            <span class="pop-opt-label">${o.display}</span>
+          </label>`).join('')}
+      </div>
+      <div class="pop-actions">
+        <button type="button" class="pop-clear">Clear</button>
+        <button type="button" class="pop-close">Done</button>
+      </div>`;
+  }
+  // range
+  const min = listFilters[meta.minKey], max = listFilters[meta.maxKey];
+  return `<div class="pop-title">${meta.title} range</div>
+    <div class="pop-range-labels"><span>Min</span><span>Max</span></div>
+    <div class="pop-range">
+      <input type="number" class="pop-min" placeholder="${meta.placeholder[0]}" value="${min == null ? '' : min}">
+      <input type="number" class="pop-max" placeholder="${meta.placeholder[1]}" value="${max == null ? '' : max}">
+    </div>
+    <div class="pop-actions">
+      <button type="button" class="pop-clear">Clear</button>
+      <button type="button" class="pop-close">Done</button>
+    </div>`;
+}
+function categoricalOptions(col) {
+  if (col === 'source') {
+    const fixed = ['StandVirtual', 'AutoScout24', 'OLX', 'Facebook Marketplace', 'PiscaPisca', 'CustoJusto', 'Other'];
+    const extra = [...new Set(cars.map(c => c.source).filter(Boolean))].filter(s => !fixed.includes(s));
+    return [...fixed, ...extra].map(v => ({ value: v, display: esc(v) }));
+  }
+  if (col === 'make') {
+    const makes = [...new Set(cars.map(c => c.make).filter(Boolean))].sort();
+    return makes.map(v => ({ value: v, display: esc(v) }));
+  }
+  if (col === 'status') {
+    return STATUSES.map(s => ({
+      value: s.key,
+      display: `<span class="status-badge ${s.key}" style="padding:2px 10px;">${s.label}</span>`
+    }));
+  }
+  if (col === 'fuel') {
+    return ['Diesel', 'Gasolina'].map(v => ({ value: v, display: esc(v) }));
+  }
+  return [];
+}
+function wirePopoverInputs(col, meta) {
+  const pop = document.getElementById('th-popover');
+  if (meta.type === 'categorical') {
+    pop.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+      cb.addEventListener('change', () => {
+        const v = cb.dataset.value;
+        const arr = listFilters[meta.key];
+        const idx = arr.indexOf(v);
+        if (cb.checked && idx === -1) arr.push(v);
+        else if (!cb.checked && idx !== -1) arr.splice(idx, 1);
+        renderList();
+      });
     });
-    btn.classList.add('active');
-    const label = field === 'addedAt' ? 'Date Added' : field.charAt(0).toUpperCase() + field.slice(1);
-    btn.textContent = label + (listSort.asc ? ' \u2191' : ' \u2193');
+  } else {
+    const minInput = pop.querySelector('.pop-min');
+    const maxInput = pop.querySelector('.pop-max');
+    const update = () => {
+      const minVal = minInput.value.trim();
+      const maxVal = maxInput.value.trim();
+      listFilters[meta.minKey] = minVal === '' ? null : Number(minVal);
+      listFilters[meta.maxKey] = maxVal === '' ? null : Number(maxVal);
+      renderList();
+    };
+    minInput.addEventListener('input', update);
+    maxInput.addEventListener('input', update);
+  }
+  pop.querySelector('.pop-clear').addEventListener('click', () => {
+    if (meta.type === 'categorical') listFilters[meta.key] = [];
+    else { listFilters[meta.minKey] = null; listFilters[meta.maxKey] = null; }
     renderList();
+    // refresh the popover contents
+    pop.innerHTML = buildPopoverHTML(col, meta);
+    wirePopoverInputs(col, meta);
   });
+  pop.querySelector('.pop-close').addEventListener('click', () => closeColumnPopover());
+}
+// Close popover on outside click / Escape / resize / scroll
+document.addEventListener('mousedown', e => {
+  const pop = document.getElementById('th-popover');
+  if (!pop.classList.contains('open')) return;
+  if (pop.contains(e.target)) return;
+  if (e.target.closest('.th-filter')) return;
+  closeColumnPopover();
 });
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && document.getElementById('th-popover').classList.contains('open')) closeColumnPopover();
+});
+window.addEventListener('scroll', e => {
+  const pop = document.getElementById('th-popover');
+  if (e.target instanceof Node && pop.contains(e.target)) return;
+  closeColumnPopover();
+}, true);
+window.addEventListener('resize', () => closeColumnPopover());
+
+// --- Mobile filters sheet ---
+function openMobileFiltersSheet() {
+  const overlay = ensureMobileSheet();
+  overlay.classList.add('open');
+  renderMobileSheetBody();
+}
+function closeMobileFiltersSheet() {
+  const overlay = document.getElementById('mobile-filter-sheet');
+  if (overlay) overlay.classList.remove('open');
+}
+function ensureMobileSheet() {
+  let overlay = document.getElementById('mobile-filter-sheet');
+  if (overlay) return overlay;
+  overlay = document.createElement('div');
+  overlay.id = 'mobile-filter-sheet';
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = `<div class="modal" onclick="event.stopPropagation()" style="width:460px;">
+    <h2>Filters</h2>
+    <div id="mobile-filter-body"></div>
+    <div style="display:flex;gap:8px;justify-content:space-between;margin-top:16px;">
+      <button type="button" class="btn btn-secondary" id="mobile-filter-clear">Clear all</button>
+      <button type="button" class="btn btn-primary" id="mobile-filter-done">Done</button>
+    </div>
+  </div>`;
+  overlay.addEventListener('click', e => { if (e.target === overlay) closeMobileFiltersSheet(); });
+  document.body.appendChild(overlay);
+  overlay.querySelector('#mobile-filter-clear').addEventListener('click', () => {
+    resetListFilters();
+    renderList();
+    renderMobileSheetBody();
+  });
+  overlay.querySelector('#mobile-filter-done').addEventListener('click', () => closeMobileFiltersSheet());
+  return overlay;
+}
+function renderMobileSheetBody() {
+  const body = document.getElementById('mobile-filter-body');
+  if (!body) return;
+  const sections = ['source', 'make', 'status', 'fuel', 'year', 'km', 'price', 'score'];
+  body.innerHTML = sections.map(col => {
+    const meta = LIST_COL_META[col];
+    if (meta.type === 'categorical') {
+      const selected = listFilters[meta.key] || [];
+      const options = categoricalOptions(col);
+      return `<div class="mf-section">
+        <div class="mf-title">${meta.title}</div>
+        <div class="mf-options">${options.map(o => `
+          <label class="pop-option">
+            <input type="checkbox" data-col="${col}" data-value="${esc(o.value)}" ${selected.includes(o.value) ? 'checked' : ''}>
+            <span class="pop-opt-label">${o.display}</span>
+          </label>`).join('')}</div>
+      </div>`;
+    }
+    const min = listFilters[meta.minKey], max = listFilters[meta.maxKey];
+    return `<div class="mf-section">
+      <div class="mf-title">${meta.title}</div>
+      <div class="pop-range">
+        <input type="number" data-col="${col}" data-bound="min" placeholder="${meta.placeholder[0]}" value="${min == null ? '' : min}">
+        <input type="number" data-col="${col}" data-bound="max" placeholder="${meta.placeholder[1]}" value="${max == null ? '' : max}">
+      </div>
+    </div>`;
+  }).join('');
+
+  body.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+    cb.addEventListener('change', () => {
+      const meta = LIST_COL_META[cb.dataset.col];
+      const v = cb.dataset.value;
+      const arr = listFilters[meta.key];
+      const idx = arr.indexOf(v);
+      if (cb.checked && idx === -1) arr.push(v);
+      else if (!cb.checked && idx !== -1) arr.splice(idx, 1);
+      renderList();
+    });
+  });
+  body.querySelectorAll('input[type="number"]').forEach(inp => {
+    inp.addEventListener('input', () => {
+      const meta = LIST_COL_META[inp.dataset.col];
+      const key = inp.dataset.bound === 'min' ? meta.minKey : meta.maxKey;
+      listFilters[key] = inp.value.trim() === '' ? null : Number(inp.value);
+      renderList();
+    });
+  });
+}
 
 // --- Init ---
 // URL inference
@@ -2341,6 +2931,8 @@ document.getElementById('form-make').addEventListener('input', e => updateModelD
 // Escape closes modal / detail panel
 document.addEventListener('keydown', e => {
   if (e.key !== 'Escape') return;
+  const sheet = document.getElementById('mobile-filter-sheet');
+  if (sheet && sheet.classList.contains('open')) { closeMobileFiltersSheet(); return; }
   const modalOpen = document.getElementById('modal-overlay').classList.contains('open');
   const detailOpen = document.getElementById('detail-panel').classList.contains('open');
   if (modalOpen) closeModal();
@@ -2358,6 +2950,244 @@ window.addEventListener('resize', () => {
 document.addEventListener('visibilitychange', () => {
   if (!document.hidden) refreshCars();
 });
+
+// --- Custom Selects ---
+function initCustomSelects() {
+  const nativeValueDesc = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value');
+
+  document.querySelectorAll('select').forEach(sel => {
+    const wrap = document.createElement('div');
+    wrap.className = 'custom-select-wrap';
+    sel.parentNode.insertBefore(wrap, sel);
+    sel.style.display = 'none';
+    wrap.appendChild(sel);
+
+    const trigger = document.createElement('button');
+    trigger.type = 'button';
+    trigger.className = 'custom-select-trigger';
+    trigger.setAttribute('aria-haspopup', 'listbox');
+    trigger.setAttribute('aria-expanded', 'false');
+
+    const triggerText = document.createElement('span');
+    triggerText.className = 'custom-select-trigger-text';
+
+    const arrow = document.createElement('span');
+    arrow.className = 'custom-select-arrow';
+    arrow.innerHTML = '<svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+    trigger.appendChild(triggerText);
+    trigger.appendChild(arrow);
+
+    const dropdown = document.createElement('div');
+    dropdown.className = 'custom-select-dropdown';
+    dropdown.setAttribute('role', 'listbox');
+
+    wrap.appendChild(trigger);
+    wrap.appendChild(dropdown);
+
+    function buildDropdown() {
+      dropdown.innerHTML = '';
+      Array.from(sel.options).forEach(opt => {
+        const div = document.createElement('div');
+        div.className = 'custom-select-option' + (opt.value === '' ? ' is-placeholder' : '');
+        div.setAttribute('role', 'option');
+        div.textContent = opt.textContent;
+        div.dataset.value = opt.value;
+        div.addEventListener('mousedown', e => {
+          e.preventDefault();
+          nativeValueDesc.set.call(sel, opt.value);
+          syncTrigger();
+          closeDropdown();
+          sel.dispatchEvent(new Event('change', { bubbles: true }));
+          sel.dispatchEvent(new Event('input', { bubbles: true }));
+        });
+        dropdown.appendChild(div);
+      });
+    }
+
+    function syncTrigger() {
+      const val = nativeValueDesc.get.call(sel);
+      const opt = sel.options[sel.selectedIndex];
+      const label = opt ? opt.textContent : '';
+      const isPlaceholder = !val;
+      triggerText.textContent = label;
+      triggerText.className = 'custom-select-trigger-text' + (isPlaceholder ? ' is-placeholder' : '');
+      dropdown.querySelectorAll('.custom-select-option').forEach(d => {
+        d.classList.toggle('selected', d.dataset.value === val);
+      });
+    }
+
+    function openDropdown() {
+      // Close any other open dropdowns first
+      document.querySelectorAll('.custom-select-wrap.open').forEach(w => {
+        if (w !== wrap) w.classList.remove('open');
+      });
+      wrap.classList.add('open');
+      trigger.classList.add('open');
+      trigger.setAttribute('aria-expanded', 'true');
+    }
+
+    function closeDropdown() {
+      wrap.classList.remove('open');
+      trigger.classList.remove('open');
+      trigger.setAttribute('aria-expanded', 'false');
+    }
+
+    trigger.addEventListener('click', () => {
+      wrap.classList.contains('open') ? closeDropdown() : openDropdown();
+    });
+
+    trigger.addEventListener('blur', () => {
+      setTimeout(closeDropdown, 120);
+    });
+
+    // Keyboard support
+    trigger.addEventListener('keydown', e => {
+      const opts = Array.from(dropdown.querySelectorAll('.custom-select-option'));
+      const currentIdx = opts.findIndex(d => d.dataset.value === nativeValueDesc.get.call(sel));
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        wrap.classList.contains('open') ? closeDropdown() : openDropdown();
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        const next = opts[Math.min(currentIdx + 1, opts.length - 1)];
+        if (next) { nativeValueDesc.set.call(sel, next.dataset.value); syncTrigger(); sel.dispatchEvent(new Event('change', { bubbles: true })); sel.dispatchEvent(new Event('input', { bubbles: true })); }
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        const prev = opts[Math.max(currentIdx - 1, 0)];
+        if (prev) { nativeValueDesc.set.call(sel, prev.dataset.value); syncTrigger(); sel.dispatchEvent(new Event('change', { bubbles: true })); sel.dispatchEvent(new Event('input', { bubbles: true })); }
+      } else if (e.key === 'Escape') {
+        closeDropdown();
+      }
+    });
+
+    // Override value setter so programmatic assignments sync the UI
+    sel._syncCustomSelect = syncTrigger;
+    Object.defineProperty(sel, 'value', {
+      get() { return nativeValueDesc.get.call(this); },
+      set(v) { nativeValueDesc.set.call(this, v); syncTrigger(); },
+      configurable: true
+    });
+
+    buildDropdown();
+    syncTrigger();
+  });
+
+  // Handle form.reset() — native reset bypasses the value setter, so sync manually
+  document.getElementById('car-form').addEventListener('reset', () => {
+    setTimeout(() => {
+      document.querySelectorAll('#car-form select').forEach(sel => {
+        if (sel._syncCustomSelect) sel._syncCustomSelect();
+      });
+    }, 0);
+  });
+
+  // Close all on outside click
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.custom-select-wrap')) {
+      document.querySelectorAll('.custom-select-wrap.open').forEach(w => w.classList.remove('open'));
+    }
+  });
+}
+
+initCustomSelects();
+
+// --- Custom Comboboxes (text input + filtered suggestion dropdown) ---
+function initCustomComboboxes() {
+  const FIELDS = [
+    { inputId: 'form-make',   datalistId: 'makes-list' },
+    { inputId: 'form-model',  datalistId: 'models-list' },
+    { inputId: 'form-engine', datalistId: 'engines-list' },
+  ];
+
+  FIELDS.forEach(({ inputId, datalistId }) => {
+    const input = document.getElementById(inputId);
+    const datalist = document.getElementById(datalistId);
+    if (!input || !datalist) return;
+
+    input.removeAttribute('list');
+
+    const wrap = document.createElement('div');
+    wrap.className = 'custom-combobox-wrap';
+    input.parentNode.insertBefore(wrap, input);
+    wrap.appendChild(input);
+
+    const dropdown = document.createElement('div');
+    dropdown.className = 'custom-select-dropdown custom-combobox-dropdown';
+    dropdown.setAttribute('role', 'listbox');
+    wrap.appendChild(dropdown);
+
+    let kbdIdx = -1;
+
+    function getMatches(query) {
+      const opts = Array.from(datalist.options).map(o => o.value);
+      if (!opts.length) return [];
+      const q = query.trim().toLowerCase();
+      if (!q) return opts;
+      return opts.filter(v => v.toLowerCase().includes(q));
+    }
+
+    function renderDropdown() {
+      const matches = getMatches(input.value);
+      if (!matches.length) { closeDropdown(); return; }
+      dropdown.innerHTML = '';
+      kbdIdx = -1;
+      matches.forEach(val => {
+        const div = document.createElement('div');
+        div.className = 'custom-select-option';
+        div.setAttribute('role', 'option');
+        div.textContent = val;
+        div.addEventListener('mousedown', e => {
+          e.preventDefault();
+          input.value = val;
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+          input.dispatchEvent(new Event('change', { bubbles: true }));
+          closeDropdown();
+        });
+        dropdown.appendChild(div);
+      });
+      wrap.classList.add('open');
+    }
+
+    function closeDropdown() {
+      wrap.classList.remove('open');
+      dropdown.innerHTML = '';
+      kbdIdx = -1;
+    }
+
+    function setKbd(idx) {
+      const opts = dropdown.querySelectorAll('.custom-select-option');
+      opts.forEach((o, i) => o.classList.toggle('kbd-active', i === idx));
+      kbdIdx = idx;
+    }
+
+    input.addEventListener('focus', renderDropdown);
+    input.addEventListener('input', renderDropdown);
+    input.addEventListener('blur', () => setTimeout(closeDropdown, 120));
+    input.addEventListener('keydown', e => {
+      const opts = Array.from(dropdown.querySelectorAll('.custom-select-option'));
+      if (e.key === 'ArrowDown') {
+        e.preventDefault(); setKbd(Math.min(kbdIdx + 1, opts.length - 1));
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault(); setKbd(Math.max(kbdIdx - 1, 0));
+      } else if (e.key === 'Enter' && kbdIdx >= 0) {
+        e.preventDefault();
+        const opt = opts[kbdIdx];
+        if (opt) { input.value = opt.textContent; input.dispatchEvent(new Event('input', { bubbles: true })); closeDropdown(); }
+      } else if (e.key === 'Escape') {
+        closeDropdown();
+      }
+    });
+  });
+
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.custom-combobox-wrap')) {
+      document.querySelectorAll('.custom-combobox-wrap.open').forEach(w => w.classList.remove('open'));
+    }
+  });
+}
+
+initCustomComboboxes();
 
 fetchCars().then(() => startBackgroundRefresh());
 </script>
