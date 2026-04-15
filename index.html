@@ -425,7 +425,8 @@ tr.is-pending td { opacity: 0.65; }
 
 /* Compare view */
 .compare-view { padding: 20px 32px; }
-.compare-selectors { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px; }
+.compare-selectors-wrap { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 20px; }
+.compare-selectors { display: flex; flex-wrap: wrap; gap: 6px; flex: 1; }
 .compare-toggle {
   background: var(--bg-card); border: 1px solid var(--border-strong);
   color: var(--text-secondary); padding: 7px 14px; border-radius: var(--radius-sm);
@@ -433,6 +434,12 @@ tr.is-pending td { opacity: 0.65; }
 }
 .compare-toggle:hover { border-color: var(--accent); }
 .compare-toggle.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+.compare-clear-btn {
+  background: var(--bg-card); border: 1px solid var(--border-strong);
+  color: var(--text-muted); padding: 7px 12px; border-radius: var(--radius-sm);
+  font-size: 0.75rem; font-weight: 600; transition: all 0.15s; white-space: nowrap; flex-shrink: 0;
+}
+.compare-clear-btn:hover { border-color: var(--red); color: var(--red); }
 .compare-table-wrap {
   overflow-x: auto; border-radius: var(--radius);
   box-shadow: var(--shadow); animation: fadeUp 0.4s ease both;
@@ -450,6 +457,32 @@ tr.is-pending td { opacity: 0.65; }
 .compare-table tbody tr:hover td { background: var(--bg); }
 .compare-table .best { background: var(--green-bg); color: var(--green); font-weight: 500; }
 .compare-table .worst { background: var(--red-bg); color: var(--red); }
+/* sticky first column on all screens */
+.compare-table th:first-child,
+.compare-table td:first-child {
+  position: sticky; left: 0; z-index: 1; box-shadow: 1px 0 0 var(--border);
+}
+.compare-table th:first-child { background: var(--bg-warm); }
+.compare-table td:first-child { background: var(--bg-card); }
+.compare-table tbody tr:hover td:first-child { background: var(--bg); }
+/* clickable car headers */
+.compare-table thead th:not(:first-child) { cursor: pointer; transition: background 0.12s, color 0.12s; }
+.compare-table thead th:not(:first-child):hover { background: var(--accent-soft); color: var(--accent); }
+/* score chip */
+.compare-score-chip { display: inline-block; padding: 2px 10px; border-radius: 20px; font-weight: 700; font-family: var(--mono); font-size: 0.88rem; }
+.compare-score-chip.green { background: var(--green-bg); color: var(--green); }
+.compare-score-chip.yellow { background: var(--yellow-bg); color: var(--yellow); }
+.compare-score-chip.red { background: var(--red-bg); color: var(--red); }
+/* subscore rows */
+.compare-subscore-row th { padding: 5px 16px 5px 28px !important; font-size: 0.72rem !important; color: var(--text-muted) !important; font-weight: 500 !important; letter-spacing: 0 !important; }
+.compare-subscore-row td { padding: 5px 16px !important; }
+.compare-mini-bar { height: 5px; border-radius: 3px; background: var(--border); overflow: hidden; min-width: 60px; }
+.compare-mini-bar-fill { height: 100%; border-radius: 3px; }
+.compare-mini-bar-fill.green { background: var(--green); }
+.compare-mini-bar-fill.yellow { background: var(--yellow); }
+.compare-mini-bar-fill.red { background: var(--red); }
+/* price drop badge */
+.price-drop-badge { display: inline-block; margin-left: 6px; font-size: 0.7rem; color: var(--green); font-weight: 700; }
 
 /* Detail panel */
 .detail-overlay {
@@ -945,6 +978,7 @@ tr.is-pending td { opacity: 0.65; }
   .list-cards { display: flex; }
 
   /* Compare */
+  .compare-view { padding: 16px; }
   .compare-selectors {
     flex-wrap: nowrap;
     overflow-x: auto;
@@ -954,13 +988,6 @@ tr.is-pending td { opacity: 0.65; }
   .compare-selectors::-webkit-scrollbar { display: none; }
   .compare-toggle { flex-shrink: 0; min-height: 40px; }
   .compare-toggle.disabled { opacity: 0.4; pointer-events: none; }
-  .compare-table th:first-child,
-  .compare-table td:first-child {
-    position: sticky; left: 0; z-index: 1;
-    background: var(--bg-card);
-    box-shadow: 1px 0 0 var(--border);
-  }
-  .compare-table thead th:first-child { background: var(--bg-warm); }
 
   /* Detail panel → full-screen drawer */
   .detail-panel {
@@ -1183,7 +1210,10 @@ a, button { -webkit-tap-highlight-color: transparent; }
 
 <!-- Compare View -->
 <div class="compare-view view" id="compare-view">
-  <div class="compare-selectors" id="compare-selectors"></div>
+  <div class="compare-selectors-wrap">
+    <div class="compare-selectors" id="compare-selectors"></div>
+    <button class="compare-clear-btn" id="compare-clear-btn" onclick="clearCompare()" style="display:none">Clear all</button>
+  </div>
   <div class="compare-table-wrap" id="compare-table-wrap"></div>
 </div>
 
@@ -2335,6 +2365,7 @@ function renderList() {
 
 function renderCompare() {
   const selEl = document.getElementById('compare-selectors');
+  const clearBtn = document.getElementById('compare-clear-btn');
   const comparableCars = cars.filter(c => c.status !== 'rejected');
   const atLimit = selectedForCompare.size >= 5;
   selEl.innerHTML = comparableCars.map(c => {
@@ -2343,6 +2374,7 @@ function renderCompare() {
     const disabled = !isSelected && atLimit ? ' disabled' : '';
     return `<button class="compare-toggle${active}${disabled}" onclick="toggleCompare('${c.id}')" title="${atLimit && !isSelected ? 'Max 5 cars to compare' : ''}">${esc(c.title)}</button>`;
   }).join('');
+  if (clearBtn) clearBtn.style.display = selectedForCompare.size > 0 ? '' : 'none';
 
   const wrap = document.getElementById('compare-table-wrap');
   const selected = cars.filter(c => selectedForCompare.has(c.id));
@@ -2356,22 +2388,58 @@ function renderCompare() {
     { key: 'source', label: 'Source' },
     { key: 'year', label: 'Year', numeric: true, higherBetter: true },
     { key: 'km', label: 'Km', numeric: true, higherBetter: false, format: v => v ? v.toLocaleString() : '\u2014' },
-    { key: 'price', label: 'Price', numeric: true, higherBetter: false, format: v => v ? '\u20AC' + v.toLocaleString() : '\u2014' },
+    {
+      key: 'price', label: 'Price', numeric: true, higherBetter: false,
+      format: (v, car) => {
+        if (!v) return '\u2014';
+        const drops = (car.priceHistory || []).length - 1;
+        const badge = drops > 0 ? `<span class="price-drop-badge">\u2193${drops}</span>` : '';
+        return '\u20AC' + v.toLocaleString() + badge;
+      },
+      getValue: c => c.price,
+      getCarForFormat: true
+    },
     { key: 'fuel', label: 'Fuel' },
-    { key: 'score', label: 'Score', numeric: true, higherBetter: true, getValue: c => computeScore(c) },
+    {
+      key: 'engine', label: 'Engine',
+      format: (v, car) => {
+        const parts = [v, car.power ? car.power + 'cv' : ''].filter(Boolean);
+        return parts.length ? esc(parts.join(' \u00B7 ')) : '\u2014';
+      },
+      getCarForFormat: true
+    },
+    { key: 'location', label: 'Location', format: v => v ? esc(v) : '\u2014' },
+    {
+      key: 'score', label: 'Score', numeric: true, higherBetter: true,
+      getValue: c => computeScore(c),
+      format: v => {
+        const sc = scoreClass(v);
+        return `<span class="compare-score-chip ${sc}">${v}</span>`;
+      },
+      isScoreRow: true
+    },
     { key: 'url', label: 'URL', format: v => v ? `<a href="${esc(v)}" target="_blank" style="color:var(--blue);text-decoration:none;font-weight:600;">Open \u2197</a>` : '\u2014' },
     { key: 'notes', label: 'Notes', format: v => v || '\u2014' },
     { key: 'addedAt', label: 'Date Added', format: v => v ? new Date(v).toLocaleDateString() : '\u2014' }
   ];
 
+  const subscoreLabels = [
+    { key: 'km', label: 'Kms' },
+    { key: 'price', label: 'Price' },
+    { key: 'rel', label: 'Reliability', extract: b => b.rel.score },
+    { key: 'year', label: 'Year' },
+    { key: 'loc', label: 'Location' },
+    { key: 'value', label: '\u20AC/km value' }
+  ];
+
   let html = '<table class="compare-table"><thead><tr><th></th>';
-  selected.forEach(c => html += `<th>${esc(c.title)}</th>`);
+  selected.forEach(c => html += `<th onclick="openDetail('${c.id}')" title="Open detail">${esc(c.title)}</th>`);
   html += '</tr></thead><tbody>';
 
   fields.forEach(f => {
     const values = selected.map(c => f.getValue ? f.getValue(c) : c[f.key]);
     let best = null, worst = null;
-    if (f.numeric) {
+    if (f.numeric && !f.isScoreRow) {
       const nums = values.filter(v => typeof v === 'number' && v > 0);
       if (nums.length > 1) {
         best = f.higherBetter ? Math.max(...nums) : Math.min(...nums);
@@ -2380,14 +2448,33 @@ function renderCompare() {
       }
     }
     html += `<tr><th>${f.label}</th>`;
-    values.forEach(v => {
+    values.forEach((v, i) => {
+      const car = selected[i];
       let cls = '';
-      if (f.numeric && v === best) cls = ' class="best"';
-      else if (f.numeric && v === worst) cls = ' class="worst"';
-      const display = f.format ? f.format(v) : (v || '\u2014');
+      if (f.numeric && !f.isScoreRow && v === best) cls = ' class="best"';
+      else if (f.numeric && !f.isScoreRow && v === worst) cls = ' class="worst"';
+      const display = f.format ? (f.getCarForFormat ? f.format(v, car) : f.format(v)) : (v || '\u2014');
       html += `<td${cls}>${display}</td>`;
     });
     html += '</tr>';
+
+    // After score row, add per-subscore breakdown rows
+    if (f.isScoreRow) {
+      const breakdowns = selected.map(c => computeScoreBreakdown(c));
+      subscoreLabels.forEach(sl => {
+        html += `<tr class="compare-subscore-row"><th>${sl.label}</th>`;
+        const subVals = breakdowns.map(b => sl.extract ? sl.extract(b) : b[sl.key]);
+        const subMax = Math.max(...subVals);
+        const subMin = Math.min(...subVals);
+        subVals.forEach(val => {
+          const barClass = val >= 75 ? 'green' : val >= 50 ? 'yellow' : 'red';
+          const isBest = subMax !== subMin && val === subMax;
+          const tdCls = isBest ? ' class="best"' : '';
+          html += `<td${tdCls}><div class="compare-mini-bar"><div class="compare-mini-bar-fill ${barClass}" style="width:${val}%"></div></div></td>`;
+        });
+        html += '</tr>';
+      });
+    }
   });
 
   html += '</tbody></table>';
@@ -2652,6 +2739,11 @@ function toggleCompare(id) {
   } else if (selectedForCompare.size < 5) {
     selectedForCompare.add(id);
   }
+  render();
+}
+
+function clearCompare() {
+  selectedForCompare.clear();
   render();
 }
 
