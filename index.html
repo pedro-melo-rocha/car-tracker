@@ -425,6 +425,14 @@ tr.is-pending td { opacity: 0.65; }
 
 /* Compare view */
 .compare-view { padding: 20px 32px; }
+.compare-filter {
+  width: 100%; max-width: 320px; margin-bottom: 12px;
+  background: var(--bg-card); border: 1px solid var(--border-strong); color: var(--text);
+  padding: 8px 12px; border-radius: var(--radius-sm); font-size: 0.85rem;
+  transition: border-color 0.15s;
+}
+.compare-filter:focus { outline: none; border-color: var(--accent); }
+.compare-no-matches { color: var(--text-muted); font-size: 0.82rem; padding: 6px 2px; }
 .compare-selectors-wrap { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 20px; }
 .compare-selectors { display: flex; flex-wrap: wrap; gap: 6px; flex: 1; }
 .compare-toggle {
@@ -466,8 +474,27 @@ tr.is-pending td { opacity: 0.65; }
 .compare-table td:first-child { background: var(--bg-card); }
 .compare-table tbody tr:hover td:first-child { background: var(--bg); }
 /* clickable car headers */
-.compare-table thead th:not(:first-child) { cursor: pointer; transition: background 0.12s, color 0.12s; }
-.compare-table thead th:not(:first-child):hover { background: var(--accent-soft); color: var(--accent); }
+.compare-table thead th:not(:first-child) { position: relative; transition: background 0.12s, color 0.12s; padding-right: 34px; }
+.compare-table thead th.winner { border-top: 2px solid var(--green); }
+.compare-th-inner { cursor: pointer; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.compare-th-inner:hover .compare-th-title { color: var(--accent); }
+.compare-winner-pill {
+  display: inline-flex; align-items: center; gap: 3px;
+  background: var(--green-bg); color: var(--green);
+  font-size: 0.66rem; font-weight: 700; padding: 2px 7px;
+  border-radius: 20px; letter-spacing: 0.02em; text-transform: uppercase;
+}
+.compare-remove-btn {
+  position: absolute; top: 50%; right: 10px; transform: translateY(-50%);
+  width: 20px; height: 20px; border-radius: 50%;
+  background: transparent; border: 1px solid var(--border-strong);
+  color: var(--text-muted); font-size: 0.95rem; line-height: 1;
+  display: inline-flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all 0.15s; padding: 0;
+}
+.compare-remove-btn:hover { border-color: var(--red); color: var(--red); background: var(--red-bg); }
+/* chip strip hidden on desktop, shown on mobile */
+.compare-chip-strip { display: none; }
 /* score chip */
 .compare-score-chip { display: inline-block; padding: 2px 10px; border-radius: 20px; font-weight: 700; font-family: var(--mono); font-size: 0.88rem; }
 .compare-score-chip.green { background: var(--green-bg); color: var(--green); }
@@ -483,6 +510,8 @@ tr.is-pending td { opacity: 0.65; }
 .compare-mini-bar-fill.red { background: var(--red); }
 /* price drop badge */
 .price-drop-badge { display: inline-block; margin-left: 6px; font-size: 0.7rem; color: var(--green); font-weight: 700; }
+/* secondary metadata inline (age after year, distance after location) */
+.compare-meta { color: var(--text-muted); font-weight: 400; margin-left: 4px; }
 
 /* Detail panel */
 .detail-overlay {
@@ -989,6 +1018,68 @@ tr.is-pending td { opacity: 0.65; }
   .compare-toggle { flex-shrink: 0; min-height: 40px; }
   .compare-toggle.disabled { opacity: 0.4; pointer-events: none; }
 
+  /* Stacked card layout on mobile */
+  .compare-table-wrap { overflow-x: visible; box-shadow: none; }
+  .compare-table, .compare-table thead, .compare-table tbody,
+  .compare-table tr, .compare-table th, .compare-table td { display: block; width: 100%; }
+  .compare-table thead { display: none; }
+  .compare-table tr {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    margin-bottom: 10px;
+    padding: 8px 12px;
+    box-shadow: var(--shadow-sm, 0 1px 2px rgba(0,0,0,0.2));
+  }
+  .compare-table tbody tr > th:first-child {
+    position: static; box-shadow: none;
+    background: transparent !important;
+    border-bottom: 1px dashed var(--border);
+    padding: 6px 0 8px; margin-bottom: 6px;
+    font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em;
+    color: var(--text-muted);
+  }
+  .compare-table tbody tr > td {
+    background: transparent !important;
+    border-bottom: none;
+    padding: 5px 0;
+    display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  }
+  .compare-table tbody tr > td::before {
+    content: attr(data-car);
+    color: var(--text-muted);
+    font-family: var(--font-sans, inherit);
+    font-size: 0.72rem;
+    font-weight: 600;
+    flex: 1; min-width: 0;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .compare-table tbody tr > td.best,
+  .compare-table tbody tr > td.worst {
+    border-radius: 4px; padding: 5px 8px;
+  }
+  .compare-table .compare-mini-bar { min-width: 120px; flex-shrink: 0; }
+  .compare-subscore-row > th { padding: 6px 0 !important; margin-bottom: 4px !important; font-size: 0.68rem !important; }
+
+  /* Mobile chip strip — shows car titles, winner, and remove buttons */
+  .compare-chip-strip {
+    display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;
+  }
+  .compare-chip {
+    position: relative;
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--bg-card); border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm); padding: 6px 34px 6px 10px;
+    max-width: 100%;
+  }
+  .compare-chip.winner { border-color: var(--green); }
+  .compare-chip-title {
+    font-size: 0.78rem; font-weight: 600; color: var(--text);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    max-width: 180px; cursor: pointer;
+  }
+  .compare-chip .compare-remove-btn { right: 6px; }
+
   /* Detail panel → full-screen drawer */
   .detail-panel {
     width: 100%; max-width: 100%;
@@ -1210,6 +1301,7 @@ a, button { -webkit-tap-highlight-color: transparent; }
 
 <!-- Compare View -->
 <div class="compare-view view" id="compare-view">
+  <input type="text" class="compare-filter" id="compare-filter" placeholder="Filter cars…" oninput="setCompareFilter(this.value)">
   <div class="compare-selectors-wrap">
     <div class="compare-selectors" id="compare-selectors"></div>
     <button class="compare-clear-btn" id="compare-clear-btn" onclick="clearCompare()" style="display:none">Clear all</button>
@@ -1359,6 +1451,7 @@ a, button { -webkit-tap-highlight-color: transparent; }
 let cars = [];
 let currentView = 'pipeline';
 let selectedForCompare = new Set();
+let compareFilter = '';
 let listSort = { field: 'addedAt', asc: false };
 let listFilters = {
   sources: [], makes: [], statuses: [], fuels: [],
@@ -1426,8 +1519,189 @@ const SOURCE_MAP = {
   'custojusto.pt': 'CustoJusto'
 };
 
-function capitalize(s) {
-  return s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : '';
+// Canonical casing for engine codes seen in slugs
+const ENGINE_CODES = {
+  tdi: 'TDI', tsi: 'TSI', dci: 'dCi', hdi: 'HDi', tdci: 'TDCi',
+  cdti: 'CDTi', crdi: 'CRDi', multijet: 'Multijet',
+  vvti: 'VVT-i', vtec: 'VTEC', mpi: 'MPI', fsi: 'FSI',
+  bluehdi: 'BlueHDi', blueefficiency: 'BlueEfficiency',
+  ecoboost: 'EcoBoost', ecotec: 'Ecotec', d4d: 'D-4D',
+  skyactiv: 'SkyActiv', tce: 'TCe', dig: 'DIG',
+  jtd: 'JTD', jtdm: 'JTDm'
+};
+const ENGINE_CODE_RE = new RegExp('^(' + Object.keys(ENGINE_CODES).join('|') + ')$');
+
+// Extra makes to recognise in URL slugs (datalist covers the common PT subset)
+const EXTRA_MAKES = [
+  'Alfa Romeo', 'Aston Martin', 'Chevrolet', 'Chrysler', 'DS', 'Dodge',
+  'Jaguar', 'Jeep', 'Lancia', 'Land Rover', 'Lexus', 'Mini', 'Porsche',
+  'Saab', 'Smart', 'Subaru', 'Tesla', 'Citroen'
+];
+
+const FUEL_MAP = { diesel: 'Diesel', gasolina: 'Gasolina', gasoline: 'Gasolina', petrol: 'Gasolina' };
+
+let _knownMakesCache = null;
+function getKnownMakes() {
+  if (_knownMakesCache) return _knownMakesCache;
+  const fromDatalist = Array.from(document.querySelectorAll('#makes-list option')).map(o => o.value);
+  const all = [...fromDatalist, ...EXTRA_MAKES];
+  const entries = all.map(m => ({
+    canonical: m,
+    parts: m.toLowerCase().split(/[\s-]+/).filter(Boolean)
+  }));
+  entries.sort((a, b) => b.parts.length - a.parts.length);
+  _knownMakesCache = entries;
+  return entries;
+}
+
+let _locationKeysCache = null;
+function getLocationKeys() {
+  if (_locationKeysCache) return _locationKeysCache;
+  _locationKeysCache = Object.keys(LOCATION_DISTANCES)
+    .map(k => ({ key: k, parts: k.split(' ') }))
+    .sort((a, b) => b.parts.length - a.parts.length);
+  return _locationKeysCache;
+}
+
+function tokenizeUrl(url) {
+  let s;
+  try { s = decodeURIComponent(url); } catch { s = url; }
+  s = s.toLowerCase().replace(/^https?:\/\/[^/]+/, '');
+  return s.split(/[^a-z0-9.]+/).filter(Boolean);
+}
+
+function titleCaseToken(t) {
+  if (/^[ivx]+$/i.test(t)) return t.toUpperCase();
+  return t.charAt(0).toUpperCase() + t.slice(1);
+}
+
+function classifyTokens(tokens) {
+  const currentYear = new Date().getFullYear();
+  const result = {};
+  const consumed = new Array(tokens.length).fill(false);
+  const claim = (i, key, val) => {
+    if (result[key] == null) { result[key] = val; consumed[i] = true; return true; }
+    return false;
+  };
+
+  // Pass 1: unambiguous numerics + keywords
+  for (let i = 0; i < tokens.length; i++) {
+    if (consumed[i]) continue;
+    const t = tokens[i];
+
+    if (/^(19|20)\d{2}$/.test(t)) {
+      const y = Number(t);
+      if (y >= 1990 && y <= currentYear) { claim(i, 'year', y); continue; }
+    }
+
+    let m = t.match(/^(\d{2,4})(cv|hp|ps)$/);
+    if (m) { claim(i, 'power', Number(m[1])); continue; }
+    m = t.match(/^(\d{2,3})kw$/);
+    if (m) { claim(i, 'power', Math.round(Number(m[1]) * 1.36)); continue; }
+
+    m = t.match(/^(\d{2,3})k$/);
+    if (m) { claim(i, 'km', Number(m[1]) * 1000); continue; }
+    m = t.match(/^(\d{4,6})km$/);
+    if (m) { claim(i, 'km', Number(m[1])); continue; }
+
+    m = t.match(/^(\d{3,6})eur?s?$/);
+    if (m) { claim(i, 'price', Number(m[1])); continue; }
+
+    if (FUEL_MAP[t]) { claim(i, 'fuel', FUEL_MAP[t]); continue; }
+
+    // Engine displacement "1.5" optionally followed by code token
+    if (/^[1-6]\.\d$/.test(t)) {
+      if (result.engine == null) {
+        const next = i + 1 < tokens.length ? tokens[i + 1] : null;
+        const code = next && ENGINE_CODES[next] ? ENGINE_CODES[next] : null;
+        result.engine = code ? `${t} ${code}` : t;
+        consumed[i] = true;
+        if (code) consumed[i + 1] = true;
+      }
+      continue;
+    }
+    // Compact form "15dci" / "20tdi"
+    m = t.match(/^([1-6])(\d)([a-z]+)$/);
+    if (m && ENGINE_CODES[m[3]]) {
+      if (result.engine == null) {
+        result.engine = `${m[1]}.${m[2]} ${ENGINE_CODES[m[3]]}`;
+        consumed[i] = true;
+      }
+      continue;
+    }
+    // Split form "1-5-dci" arrives as tokens ["1","5","dci"] — handle: digit, ".digit", code
+    if (/^[1-6]$/.test(t) && i + 2 < tokens.length
+        && /^\d$/.test(tokens[i + 1]) && ENGINE_CODES[tokens[i + 2]]) {
+      if (result.engine == null) {
+        result.engine = `${t}.${tokens[i + 1]} ${ENGINE_CODES[tokens[i + 2]]}`;
+        consumed[i] = consumed[i + 1] = consumed[i + 2] = true;
+      }
+      continue;
+    }
+  }
+
+  // Pass 2: bare km numbers
+  for (let i = 0; i < tokens.length; i++) {
+    if (consumed[i]) continue;
+    if (/^\d+$/.test(tokens[i])) {
+      const n = Number(tokens[i]);
+      if (n >= 5000 && n <= 600000 && !(n >= 1990 && n <= currentYear)) {
+        if (claim(i, 'km', n)) continue;
+      }
+    }
+  }
+
+  // Pass 3: locations (multi-word first)
+  for (const { parts } of getLocationKeys()) {
+    for (let i = 0; i <= tokens.length - parts.length; i++) {
+      let hit = true;
+      for (let k = 0; k < parts.length; k++) {
+        if (consumed[i + k] || tokens[i + k] !== parts[k]) { hit = false; break; }
+      }
+      if (hit) {
+        result.location = parts.map(titleCaseToken).join(' ');
+        for (let k = 0; k < parts.length; k++) consumed[i + k] = true;
+        break;
+      }
+    }
+    if (result.location != null) break;
+  }
+
+  // Pass 4: make (multi-word first)
+  let makeIdx = -1, makeLen = 0;
+  for (const { parts, canonical } of getKnownMakes()) {
+    for (let i = 0; i <= tokens.length - parts.length; i++) {
+      let hit = true;
+      for (let k = 0; k < parts.length; k++) {
+        if (consumed[i + k] || tokens[i + k] !== parts[k]) { hit = false; break; }
+      }
+      if (hit) {
+        result.make = canonical;
+        for (let k = 0; k < parts.length; k++) consumed[i + k] = true;
+        makeIdx = i;
+        makeLen = parts.length;
+        break;
+      }
+    }
+    if (makeIdx >= 0) break;
+  }
+
+  // Pass 5: model — consume tokens immediately after make, stop at a claimed/junk token
+  if (makeIdx >= 0) {
+    const modelParts = [];
+    for (let i = makeIdx + makeLen; i < tokens.length && modelParts.length < 4; i++) {
+      if (consumed[i]) break;
+      const t = tokens[i];
+      if (/^\d+$/.test(t) && t.length > 3) break;  // long numbers = listing IDs
+      if (/^id\w*\d/.test(t)) break;                // "id123..." alphanumeric IDs
+      if (ENGINE_CODE_RE.test(t)) break;
+      modelParts.push(t);
+      consumed[i] = true;
+    }
+    if (modelParts.length) result.model = modelParts.map(titleCaseToken).join(' ');
+  }
+
+  return result;
 }
 
 function inferFromUrl(url) {
@@ -1436,47 +1710,50 @@ function inferFromUrl(url) {
   try { parsed = new URL(url); } catch { return; }
 
   const hostname = parsed.hostname.replace(/^www\./, '');
-  const sourceField = document.getElementById('form-source');
-  const makeField = document.getElementById('form-make');
-  const modelField = document.getElementById('form-model');
+  const inferred = {};
+  const src = SOURCE_MAP[hostname];
+  if (src) inferred.source = src;
 
-  // Source from domain
-  const inferredSource = SOURCE_MAP[hostname];
-  if (inferredSource && !sourceField.value) {
-    sourceField.value = inferredSource;
-    sourceField.classList.add('field-inferred');
+  const tokens = tokenizeUrl(url);
+  Object.assign(inferred, classifyTokens(tokens));
+
+  const FIELD_MAP = {
+    source:   'form-source',
+    make:     'form-make',
+    model:    'form-model',
+    year:     'form-year',
+    km:       'form-km',
+    price:    'form-price',
+    fuel:     'form-fuel',
+    engine:   'form-engine',
+    power:    'form-power',
+    location: 'form-location'
+  };
+
+  for (const [key, id] of Object.entries(FIELD_MAP)) {
+    if (inferred[key] == null) continue;
+    const el = document.getElementById(id);
+    if (!el || el.value) continue;
+    el.value = inferred[key];
+    el.classList.add('field-inferred');
   }
 
-  // Make/Model from URL path
-  let make = '', model = '';
-  const parts = parsed.pathname.toLowerCase().split('/').filter(Boolean);
+  updateModelDatalist(document.getElementById('form-make').value);
+  maybeAutoTitle();
+}
 
-  if (hostname === 'standvirtual.com' && parts[0] === 'anuncios' && parts[1]) {
-    const segments = parts[1].split('-');
-    make = capitalize(segments[0]);
-    model = capitalize(segments[1] || '');
-  } else if (hostname === 'autoscout24.pt') {
-    const carrosIdx = parts.indexOf('carros');
-    if (carrosIdx !== -1 && parts[carrosIdx + 1]) {
-      make = capitalize(parts[carrosIdx + 1]);
-      model = capitalize(parts[carrosIdx + 2] || '');
-    }
-  } else if (parts[0]) {
-    const segments = parts[0].split('-');
-    make = capitalize(segments[0]);
-    model = capitalize(segments[1] || '');
-  }
-
-  if (make && !makeField.value) {
-    makeField.value = make;
-    makeField.classList.add('field-inferred');
-  }
-  if (model && !modelField.value) {
-    modelField.value = model;
-    modelField.classList.add('field-inferred');
-  }
-
-  updateModelDatalist(make || makeField.value);
+function maybeAutoTitle() {
+  const titleEl = document.getElementById('form-title');
+  if (!titleEl) return;
+  if (titleEl.value && !titleEl.classList.contains('field-inferred')) return;
+  const make = document.getElementById('form-make').value.trim();
+  const model = document.getElementById('form-model').value.trim();
+  const engine = document.getElementById('form-engine').value.trim();
+  const year = document.getElementById('form-year').value.trim();
+  const parts = [make, model, engine, year].filter(Boolean);
+  if (!parts.length) return;
+  titleEl.value = parts.join(' ');
+  titleEl.classList.add('field-inferred');
 }
 
 function updateModelDatalist(make) {
@@ -1559,6 +1836,15 @@ function locationScore(location) {
     if (loc.includes(place)) return Math.max(0, Math.round(100 - (dist / 600) * 100));
   }
   return 50;
+}
+
+function locationKm(location) {
+  if (!location) return null;
+  const loc = location.toLowerCase().trim();
+  for (const [place, dist] of Object.entries(LOCATION_DISTANCES)) {
+    if (loc.includes(place)) return dist;
+  }
+  return null;
 }
 
 function getMakeReliability(make) {
@@ -2363,17 +2649,37 @@ function renderList() {
   wrap.innerHTML = html;
 }
 
+function setCompareFilter(v) {
+  compareFilter = v || '';
+  renderCompare();
+}
+
 function renderCompare() {
   const selEl = document.getElementById('compare-selectors');
   const clearBtn = document.getElementById('compare-clear-btn');
-  const comparableCars = cars.filter(c => c.status !== 'rejected');
+  const filterInput = document.getElementById('compare-filter');
+  if (filterInput && filterInput.value !== compareFilter) filterInput.value = compareFilter;
+
+  const comparableCars = cars
+    .filter(c => c.status !== 'rejected')
+    .map(c => ({ car: c, score: computeScore(c) }))
+    .sort((a, b) => b.score - a.score);
+
+  const needle = compareFilter.trim().toLowerCase();
+  const visible = needle
+    ? comparableCars.filter(({ car }) => {
+        const hay = [car.title, car.make, car.model].filter(Boolean).join(' ').toLowerCase();
+        return hay.includes(needle);
+      })
+    : comparableCars;
+
   const atLimit = selectedForCompare.size >= 5;
-  selEl.innerHTML = comparableCars.map(c => {
+  selEl.innerHTML = visible.map(({ car: c }) => {
     const isSelected = selectedForCompare.has(c.id);
     const active = isSelected ? ' active' : '';
     const disabled = !isSelected && atLimit ? ' disabled' : '';
     return `<button class="compare-toggle${active}${disabled}" onclick="toggleCompare('${c.id}')" title="${atLimit && !isSelected ? 'Max 5 cars to compare' : ''}">${esc(c.title)}</button>`;
-  }).join('');
+  }).join('') || '<div class="compare-no-matches">No cars match your filter.</div>';
   if (clearBtn) clearBtn.style.display = selectedForCompare.size > 0 ? '' : 'none';
 
   const wrap = document.getElementById('compare-table-wrap');
@@ -2384,9 +2690,17 @@ function renderCompare() {
   }
 
   const fields = [
-    { key: 'status', label: 'Status', format: v => STATUS_LABELS[v] || v },
     { key: 'source', label: 'Source' },
-    { key: 'year', label: 'Year', numeric: true, higherBetter: true },
+    {
+      key: 'year', label: 'Year', numeric: true, higherBetter: true,
+      getValue: c => c.year || null,
+      format: (v, car) => {
+        if (!v) return '\u2014';
+        const age = new Date().getFullYear() - v;
+        return `${v} <span class="compare-meta">\u00B7 ${age} yrs</span>`;
+      },
+      getCarForFormat: true
+    },
     { key: 'km', label: 'Km', numeric: true, higherBetter: false, format: v => v ? v.toLocaleString() : '\u2014' },
     {
       key: 'price', label: 'Price', numeric: true, higherBetter: false,
@@ -2399,6 +2713,11 @@ function renderCompare() {
       getValue: c => c.price,
       getCarForFormat: true
     },
+    {
+      key: 'eurPerKm', label: '\u20AC/km driven', numeric: true, higherBetter: false,
+      getValue: c => (c.price && c.km) ? c.price / c.km : null,
+      format: v => v == null ? '\u2014' : '\u20AC' + v.toFixed(3)
+    },
     { key: 'fuel', label: 'Fuel' },
     {
       key: 'engine', label: 'Engine',
@@ -2408,7 +2727,17 @@ function renderCompare() {
       },
       getCarForFormat: true
     },
-    { key: 'location', label: 'Location', format: v => v ? esc(v) : '\u2014' },
+    {
+      key: 'location', label: 'Location', numeric: true, higherBetter: false,
+      getValue: c => locationKm(c.location),
+      format: (v, car) => {
+        const place = car.location ? esc(car.location) : '';
+        const dist = v == null ? '' : `<span class="compare-meta">\u00B7 ${v} km</span>`;
+        if (!place && v == null) return '\u2014';
+        return place ? `${place} ${dist}` : dist;
+      },
+      getCarForFormat: true
+    },
     {
       key: 'score', label: 'Score', numeric: true, higherBetter: true,
       getValue: c => computeScore(c),
@@ -2418,9 +2747,7 @@ function renderCompare() {
       },
       isScoreRow: true
     },
-    { key: 'url', label: 'URL', format: v => v ? `<a href="${esc(v)}" target="_blank" style="color:var(--blue);text-decoration:none;font-weight:600;">Open \u2197</a>` : '\u2014' },
-    { key: 'notes', label: 'Notes', format: v => v || '\u2014' },
-    { key: 'addedAt', label: 'Date Added', format: v => v ? new Date(v).toLocaleDateString() : '\u2014' }
+    { key: 'notes', label: 'Notes', format: v => v || '\u2014' }
   ];
 
   const subscoreLabels = [
@@ -2432,33 +2759,59 @@ function renderCompare() {
     { key: 'value', label: '\u20AC/km value' }
   ];
 
-  let html = '<table class="compare-table"><thead><tr><th></th>';
-  selected.forEach(c => html += `<th onclick="openDetail('${c.id}')" title="Open detail">${esc(c.title)}</th>`);
+  // Winner = highest score; tiebreak by lower price, then lower km
+  const withScores = selected.map(c => ({ c, score: computeScore(c) }));
+  const topScore = Math.max(...withScores.map(x => x.score));
+  const tied = withScores.filter(x => x.score === topScore);
+  tied.sort((a, b) => (a.c.price || Infinity) - (b.c.price || Infinity) || (a.c.km || Infinity) - (b.c.km || Infinity));
+  const winnerId = tied.length && withScores.length > 1 ? tied[0].c.id : null;
+
+  // Mobile-only chip strip (hidden on desktop via CSS) — keeps remove + winner reachable
+  let html = '<div class="compare-chip-strip">';
+  selected.forEach(c => {
+    const isWinner = c.id === winnerId;
+    const pill = isWinner ? '<span class="compare-winner-pill">\u2605 Best</span>' : '';
+    html += `<div class="compare-chip${isWinner ? ' winner' : ''}">
+      <span class="compare-chip-title" onclick="openDetail('${c.id}')">${esc(c.title)}</span>${pill}
+      <button class="compare-remove-btn" onclick="event.stopPropagation();toggleCompare('${c.id}')" title="Remove" aria-label="Remove">\u00D7</button>
+    </div>`;
+  });
+  html += '</div>';
+  html += '<table class="compare-table"><thead><tr><th></th>';
+  selected.forEach(c => {
+    const isWinner = c.id === winnerId;
+    const pill = isWinner ? '<span class="compare-winner-pill">\u2605 Best</span>' : '';
+    html += `<th class="${isWinner ? 'winner' : ''}">
+      <div class="compare-th-inner" onclick="openDetail('${c.id}')" title="Open detail">
+        <span class="compare-th-title">${esc(c.title)}</span>${pill}
+      </div>
+      <button class="compare-remove-btn" onclick="event.stopPropagation();toggleCompare('${c.id}')" title="Remove from comparison" aria-label="Remove">\u00D7</button>
+    </th>`;
+  });
   html += '</tr></thead><tbody>';
+
+  const highlight = (vals, higherBetter) => {
+    const nums = vals.filter(v => typeof v === 'number' && isFinite(v));
+    if (nums.length < 2) return { best: null, worst: null };
+    const best = higherBetter ? Math.max(...nums) : Math.min(...nums);
+    const worst = higherBetter ? Math.min(...nums) : Math.max(...nums);
+    return best === worst ? { best: null, worst: null } : { best, worst };
+  };
 
   fields.forEach(f => {
     const values = selected.map(c => f.getValue ? f.getValue(c) : c[f.key]);
-    let best = null, worst = null;
-    if (f.numeric && !f.isScoreRow) {
-      const nums = values.filter(v => typeof v === 'number' && v > 0);
-      if (nums.length > 1) {
-        best = f.higherBetter ? Math.max(...nums) : Math.min(...nums);
-        worst = f.higherBetter ? Math.min(...nums) : Math.max(...nums);
-        if (best === worst) { best = null; worst = null; }
-      }
-    }
+    const { best, worst } = f.numeric ? highlight(values, f.higherBetter) : { best: null, worst: null };
     html += `<tr><th>${f.label}</th>`;
     values.forEach((v, i) => {
       const car = selected[i];
       let cls = '';
-      if (f.numeric && !f.isScoreRow && v === best) cls = ' class="best"';
-      else if (f.numeric && !f.isScoreRow && v === worst) cls = ' class="worst"';
+      if (f.numeric && v === best && best !== null) cls = ' class="best"';
+      else if (f.numeric && v === worst && worst !== null) cls = ' class="worst"';
       const display = f.format ? (f.getCarForFormat ? f.format(v, car) : f.format(v)) : (v || '\u2014');
-      html += `<td${cls}>${display}</td>`;
+      html += `<td${cls} data-car="${esc(car.title)}">${display}</td>`;
     });
     html += '</tr>';
 
-    // After score row, add per-subscore breakdown rows
     if (f.isScoreRow) {
       const breakdowns = selected.map(c => computeScoreBreakdown(c));
       subscoreLabels.forEach(sl => {
@@ -2466,11 +2819,15 @@ function renderCompare() {
         const subVals = breakdowns.map(b => sl.extract ? sl.extract(b) : b[sl.key]);
         const subMax = Math.max(...subVals);
         const subMin = Math.min(...subVals);
-        subVals.forEach(val => {
+        subVals.forEach((val, i) => {
+          const car = selected[i];
           const barClass = val >= 75 ? 'green' : val >= 50 ? 'yellow' : 'red';
-          const isBest = subMax !== subMin && val === subMax;
-          const tdCls = isBest ? ' class="best"' : '';
-          html += `<td${tdCls}><div class="compare-mini-bar"><div class="compare-mini-bar-fill ${barClass}" style="width:${val}%"></div></div></td>`;
+          let tdCls = '';
+          if (subMax !== subMin) {
+            if (val === subMax) tdCls = ' class="best"';
+            else if (val === subMin) tdCls = ' class="worst"';
+          }
+          html += `<td${tdCls} data-car="${esc(car.title)}"><div class="compare-mini-bar"><div class="compare-mini-bar-fill ${barClass}" style="width:${val}%"></div></div></td>`;
         });
         html += '</tr>';
       });
@@ -2562,9 +2919,7 @@ function closeDetail() {
 function openModal(id) {
   const form = document.getElementById('car-form');
   form.reset();
-  ['form-make', 'form-model', 'form-source'].forEach(id =>
-    document.getElementById(id).classList.remove('field-inferred')
-  );
+  form.querySelectorAll('.field-inferred').forEach(el => el.classList.remove('field-inferred'));
   document.getElementById('price-change-group').classList.remove('show');
   editingOriginalPrice = null;
 
@@ -3011,13 +3366,33 @@ function renderMobileSheetBody() {
 }
 
 // --- Init ---
-// URL inference
-document.getElementById('form-url').addEventListener('blur', e => inferFromUrl(e.target.value));
+// URL inference: fire on paste, debounced input, and blur
+(function () {
+  const urlInput = document.getElementById('form-url');
+  let debounceTimer = null;
+  const fire = () => inferFromUrl(urlInput.value);
+  urlInput.addEventListener('paste', () => setTimeout(fire, 0));
+  urlInput.addEventListener('input', () => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(fire, 250);
+  });
+  urlInput.addEventListener('blur', fire);
+})();
 
-// Clear inferred class on focus; update model datalist on make change
-['form-make', 'form-model', 'form-source'].forEach(id => {
-  document.getElementById(id).addEventListener('focus', e => e.target.classList.remove('field-inferred'));
+// Auto-generate title from make/model/engine/year while still inferred or empty
+['form-make', 'form-model', 'form-engine', 'form-year'].forEach(id => {
+  document.getElementById(id).addEventListener('input', maybeAutoTitle);
 });
+
+// Any user edit clears the inferred highlight on that field
+document.getElementById('car-form').addEventListener('input', e => {
+  const el = e.target;
+  if (el && el.classList && el.classList.contains('field-inferred')) {
+    el.classList.remove('field-inferred');
+  }
+});
+
+// Keep model datalist in sync with make
 document.getElementById('form-make').addEventListener('input', e => updateModelDatalist(e.target.value));
 
 // Escape closes modal / detail panel
