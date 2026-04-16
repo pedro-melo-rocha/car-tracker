@@ -776,12 +776,19 @@ tr.is-pending td { opacity: 0.65; }
   gap: 10px; margin-top: 8px;
 }
 .docs-weight-card {
-  background: var(--bg); padding: 12px 14px; border-radius: var(--radius);
-  border-left: 3px solid var(--accent);
+  background: var(--bg-card); padding: 14px 16px;
+  border-radius: var(--radius); border: 1px solid var(--border-strong);
 }
-.docs-weight-card .w-label { font-size: 0.74rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
-.docs-weight-card .w-value { font-family: var(--mono); font-size: 1.3rem; font-weight: 700; color: var(--text); letter-spacing: -0.02em; }
-.docs-weight-card .w-hint { font-size: 0.78rem; color: var(--text-secondary); margin-top: 4px; line-height: 1.4; }
+.docs-weight-card .w-top {
+  display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;
+}
+.docs-weight-card .w-label { font-size: 0.85rem; font-weight: 600; color: var(--text); letter-spacing: -0.01em; }
+.docs-weight-card .w-value {
+  font-family: var(--mono); font-size: 0.72rem; font-weight: 700;
+  color: var(--accent); background: var(--accent-light);
+  padding: 2px 7px; border-radius: 20px; flex-shrink: 0; margin-left: 8px;
+}
+.docs-weight-card .w-hint { font-size: 0.78rem; color: var(--text-muted); line-height: 1.4; }
 .docs-engines { display: grid; gap: 8px; margin-top: 8px; }
 .docs-engine-row {
   display: grid; grid-template-columns: 140px 60px 1fr;
@@ -1833,7 +1840,8 @@ function locationScore(location) {
   if (!location) return 50;
   const loc = location.toLowerCase().trim();
   for (const [place, dist] of Object.entries(LOCATION_DISTANCES)) {
-    if (loc.includes(place)) return Math.max(0, Math.round(100 - (dist / 600) * 100));
+    // Max 30 points lost across 600km so distance never buries an otherwise great car.
+    if (loc.includes(place)) return Math.max(0, Math.round(100 - (dist / 600) * 30));
   }
   return 50;
 }
@@ -1868,15 +1876,22 @@ function getEngineProfile(car) {
 
 function kmSubscore(car) {
   if (!car.km) return 50;
-  // Diesels tolerate more km than petrol in the Portuguese market
-  const baseline = car.fuel === 'Gasolina' ? 170000 : 230000;
-  return Math.max(0, Math.min(100, Math.round(100 - (car.km / baseline) * 100)));
+  // Sweet-spot plateau then linear decay to end-of-life. Petrol ages faster than diesel.
+  // Below the plateau we don't reward suspiciously low km (rollback is common on old cars).
+  const petrol = car.fuel === 'Gasolina';
+  const sweetUpper = petrol ? 90000 : 130000;
+  const endOfLife = petrol ? 200000 : 280000;
+  if (car.km <= sweetUpper) return 100;
+  if (car.km >= endOfLife) return 0;
+  return Math.round(100 - ((car.km - sweetUpper) / (endOfLife - sweetUpper)) * 100);
 }
 
 function priceSubscore(car) {
   if (!car.price) return 50;
-  // Target budget anchor: 8000€ is the upper bound of the ≤5–8k Portuguese used-car segment
-  return Math.max(0, Math.min(100, Math.round(100 - (car.price / 8000) * 100)));
+  // Plateau at 100 up to €2500 (anything cheaper is a scam risk, not a deal), decay to 0 at €5000 ceiling.
+  if (car.price <= 2500) return 100;
+  if (car.price >= 5000) return 0;
+  return Math.round(100 - ((car.price - 2500) / 2500) * 100);
 }
 
 function yearSubscore(car) {
@@ -1896,17 +1911,7 @@ function reliabilitySubscore(car) {
   };
 }
 
-function valueSubscore(car) {
-  // €/km-of-remaining-life — lower is better.
-  if (!car.price || !car.km) return 50;
-  const lifeKm = car.fuel === 'Gasolina' ? 230000 : 320000;
-  const remaining = Math.max(15000, lifeKm - car.km);
-  const eurPerKm = car.price / remaining;
-  // 0.02 €/km = 100, 0.12 €/km = 0
-  return Math.max(0, Math.min(100, Math.round(100 - ((eurPerKm - 0.02) / 0.10) * 100)));
-}
-
-const SCORE_WEIGHTS = { km: 0.22, price: 0.22, reliability: 0.22, year: 0.13, location: 0.13, value: 0.08 };
+const SCORE_WEIGHTS = { km: 0.22, price: 0.22, reliability: 0.30, year: 0.13, location: 0.13 };
 
 function computeScoreBreakdown(car) {
   const km = kmSubscore(car);
@@ -1914,16 +1919,14 @@ function computeScoreBreakdown(car) {
   const year = yearSubscore(car);
   const loc = locationScore(car.location);
   const rel = reliabilitySubscore(car);
-  const value = valueSubscore(car);
   const total = Math.round(
     km * SCORE_WEIGHTS.km +
     price * SCORE_WEIGHTS.price +
     rel.score * SCORE_WEIGHTS.reliability +
     year * SCORE_WEIGHTS.year +
-    loc * SCORE_WEIGHTS.location +
-    value * SCORE_WEIGHTS.value
+    loc * SCORE_WEIGHTS.location
   );
-  return { total, km, price, year, loc, rel, value };
+  return { total, km, price, year, loc, rel };
 }
 
 function computeScore(car) {
@@ -2369,18 +2372,19 @@ function renderError() {
 function renderDocs() {
   const el = document.getElementById('docs-view');
   const weights = [
-    { label: 'Kms',         pct: 22, hint: 'Baseline: 230k (diesel), 170k (gasolina). Km at baseline ⇒ 0.' },
-    { label: 'Price',       pct: 22, hint: '0€ ⇒ 100, 8000€ ⇒ 0. Anchored to the ≤5–8k segment.' },
-    { label: 'Reliability', pct: 22, hint: 'Make baseline (60–90) ± engine adjustment from known patterns.' },
+    { label: 'Kms',         pct: 22, hint: 'Fuel-aware sweet spot: diesel 0–130k ⇒ 100, 280k ⇒ 0. Petrol 0–90k ⇒ 100, 200k ⇒ 0.' },
+    { label: 'Price',       pct: 22, hint: '€0–€2500 ⇒ 100 (bargain plateau), €5000 ⇒ 0. Doesn\u2019t reward suspiciously cheap listings.' },
+    { label: 'Reliability', pct: 30, hint: 'Make baseline (60–90) ± engine adjustment. The dominant subscore — bad engines sink a cheap car.' },
     { label: 'Year',        pct: 13, hint: '2005 ⇒ 0, 2020 ⇒ 100. Rewards newer electronics & DPF maturity.' },
-    { label: 'Location',    pct: 13, hint: 'Driving distance from Viana do Castelo; 0 km ⇒ 100, 600+ km ⇒ 0.' },
-    { label: '€/km value',  pct: 8,  hint: 'Price divided by remaining life (300k diesel / 230k petrol). Captures price-vs-wear.' }
+    { label: 'Location',    pct: 13, hint: 'Driving distance from Viana do Castelo, dampened: max 30-point penalty at 600km.' }
   ];
 
   const weightsHTML = weights.map(w => `
     <div class="docs-weight-card">
-      <div class="w-label">${w.label}</div>
-      <div class="w-value">${w.pct}%</div>
+      <div class="w-top">
+        <span class="w-label">${w.label}</span>
+        <span class="w-value">${w.pct}%</span>
+      </div>
       <div class="w-hint">${w.hint}</div>
     </div>`).join('');
 
@@ -2414,7 +2418,7 @@ function renderDocs() {
 
   el.innerHTML = `
     <h2>Scoring Methodology</h2>
-    <p class="docs-sub">Every car gets a 0–100 score designed to surface the most promising leads in the ≤8k€ Portuguese used-car segment. Higher is better. The score blends objective facts (km, price, year, distance) with market reliability signals drawn from AutoTuga, Motorguia, Razão Automóvel and Furiamotor consensus.</p>
+    <p class="docs-sub">Every car gets a 0–100 score designed to surface the most promising leads in the ≤5k€ Portuguese used-car segment. Higher is better. The score blends objective facts (km, price, year, distance) with market reliability signals drawn from r/AutoTuga, Motorguia, Razão Automóvel and Furiamotor consensus.</p>
 
     <div class="docs-section">
       <h3>Weights</h3>
@@ -2423,12 +2427,11 @@ function renderDocs() {
 
     <div class="docs-section">
       <h3>How each subscore works</h3>
-      <p><strong>Kms.</strong> Diesels in this segment are expected to reach 300k km if well maintained, so the reference line sits at <code>230 000 km</code> (where the subscore hits 0). Petrol is more fragile at high mileage and the gasoline baseline is <code>170 000 km</code>. Below 50k km the score saturates at 100.</p>
-      <p><strong>Price.</strong> Linear anchor against an 8000€ budget ceiling. This market concentrates listings between 3–7k€, so the curve penalises anything creeping above 6k€.</p>
-      <p><strong>Reliability.</strong> Each make starts from a baseline (see table below) derived from consistent community consensus. The engine pattern matcher then applies a bonus or penalty based on the known track record of the block. Without an engine signal the score falls back to the pure make baseline.</p>
+      <p><strong>Kms.</strong> A fuel-aware sweet-spot curve. Diesels plateau at 100 between <code>0–130 000 km</code> and decay linearly to 0 at <code>280 000 km</code> (practical end of life). Petrol ages faster: plateau <code>0–90 000 km</code>, decay to 0 at <code>200 000 km</code>. Below the plateau the score stays flat — we don't reward suspiciously low km on an old car, since odometer rollback is a common fraud pattern in this segment.</p>
+      <p><strong>Price.</strong> Plateau at 100 from <code>€0 to €2500</code>, then linear decay to 0 at the <code>€5000</code> budget ceiling. The plateau exists because suspiciously cheap listings are usually scams, salvage, or mechanical wrecks — not bargains — so we don't award extra points for being cheaper than the realistic-bargain line.</p>
+      <p><strong>Reliability.</strong> Each make starts from a baseline (see table below) derived from consistent community consensus. The engine pattern matcher then applies a bonus or penalty based on the known track record of the block. Without an engine signal the score falls back to the pure make baseline. This carries the heaviest weight (30%) because in the ≤5k€ segment, a bad engine can cost more in repairs than the car itself.</p>
       <p><strong>Year.</strong> 2005 → 0, 2020 → 100. Newer cars tend to have better safety kit and more mature DPF/EGR systems, but nothing newer than 2020 usually appears in this budget.</p>
-      <p><strong>Location.</strong> Straight-line driving distance from <strong>Viana do Castelo</strong>. Cars in Minho, Porto, Braga score high; Algarve and Alentejo drop fast — you still have to drive there to see them.</p>
-      <p><strong>€/km value.</strong> Price divided by the estimated remaining lifespan in km (320k diesel, 230k petrol). Answers the question "how much am I paying per km of future use?". Anything under 0.04 €/km is excellent.</p>
+      <p><strong>Location.</strong> Straight-line driving distance from <strong>Viana do Castelo</strong>. Cars in Minho, Porto, Braga score near 100; the curve is dampened so the Algarve max penalty is around 30 points — distance shouldn't bury an otherwise excellent car.</p>
     </div>
 
     <div class="docs-section">
@@ -2755,8 +2758,7 @@ function renderCompare() {
     { key: 'price', label: 'Price' },
     { key: 'rel', label: 'Reliability', extract: b => b.rel.score },
     { key: 'year', label: 'Year' },
-    { key: 'loc', label: 'Location' },
-    { key: 'value', label: '\u20AC/km value' }
+    { key: 'loc', label: 'Location' }
   ];
 
   // Winner = highest score; tiebreak by lower price, then lower km
@@ -2861,7 +2863,6 @@ function scoreBreakdownHTML(car) {
   }
   html += row('Year', b.year, SCORE_WEIGHTS.year);
   html += row('Location', b.loc, SCORE_WEIGHTS.location);
-  html += row('€/km value', b.value, SCORE_WEIGHTS.value);
   html += '</div>';
   return html;
 }
