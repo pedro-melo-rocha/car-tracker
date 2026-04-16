@@ -52,7 +52,7 @@ This reads `data.json` and inserts every car into Supabase.
 
 ```bash
 npm install -g vercel   # one-time
-npm run dev             # runs `vercel dev`
+vercel dev
 ```
 
 Open the URL it prints. Enter your `API_SECRET` when prompted.

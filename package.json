@@ -6,7 +6,6 @@
     "node": ">=20"
   },
   "scripts": {
-    "dev": "vercel dev",
     "migrate": "node --env-file=.env scripts/migrate.js",
     "test": "vitest run",
     "test:watch": "vitest"
