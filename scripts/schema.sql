@@ -1,4 +1,5 @@
 -- Run this in Supabase SQL Editor once, to create the cars table.
+-- For existing databases, run scripts/migrations/*.sql in order instead.
 
 create table if not exists cars (
   id             text primary key,
@@ -7,19 +8,27 @@ create table if not exists cars (
   title          text,
   make           text,
   model          text,
-  year           int,
-  km             int,
-  price          int,
+  year           int check (year is null or (year between 1950 and 2100)),
+  km             int check (km is null or km >= 0),
+  price          int check (price is null or price >= 0),
   fuel           text,
   engine         text,
-  power          int,
+  power          int check (power is null or power >= 0),
   source         text,
-  status         text not null default 'to-contact',
+  status         text not null default 'to-contact'
+                 check (status in (
+                   'to-contact', 'contacted', 'inactive',
+                   'negotiating', 'rejected', 'bought'
+                 )),
   location       text,
   notes          text,
   "contactedAt"  timestamptz,
-  "priceHistory" jsonb not null default '[]'::jsonb
+  "priceHistory" jsonb not null default '[]'::jsonb,
+  version        int not null default 1
 );
+
+create index if not exists cars_status_idx on cars (status);
+create index if not exists cars_added_at_idx on cars ("addedAt" desc);
 
 -- RLS on, no policies = no client-side access.
 -- Serverless functions use the service role key which bypasses RLS.

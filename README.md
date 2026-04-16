@@ -76,10 +76,44 @@ In the Vercel dashboard, set the three env vars from `.env` under **Settings →
 ## Project Structure
 
 ```
-index.html        Single-file SPA (UI, styles, client logic)
-api/cars.js       Serverless GET + POST
-api/cars/[id].js  Serverless PUT + DELETE
-lib/              supabase client, auth, staleness logic
-scripts/          schema.sql, migrate.js
-vercel.json       Framework override
+index.html              Single-file SPA (UI, styles, client logic)
+api/cars.js             Serverless GET + POST
+api/cars/[id].js        Serverless PUT + DELETE
+lib/                    supabase client, auth, staleness, validation, rate-limit
+lib/__tests__/          Vitest unit tests
+scripts/schema.sql      Fresh-install schema
+scripts/migrations/     Incremental SQL migrations (run in order)
+scripts/migrate.js      One-time data import from data.json
+vercel.ts               Vercel project config
 ```
+
+## Running tests
+
+```bash
+npm test
+```
+
+## Applying schema migrations
+
+Fresh Supabase project: paste `scripts/schema.sql` into the SQL Editor.
+
+Existing project: paste the contents of each file in `scripts/migrations/` (in
+filename order) into the SQL Editor. Migrations are idempotent and safe to
+re-run.
+
+## Backup and restore
+
+Supabase automatically takes daily backups on Pro plans (Point-in-Time Recovery
+available). On the free tier, backups are **not** automatic — take a manual
+dump periodically:
+
+```bash
+# One-off: dump the cars table as CSV from Supabase dashboard:
+# Table editor → cars → ⋯ menu → Export as CSV
+
+# Or via psql with the connection string from Settings → Database:
+pg_dump "$SUPABASE_DB_URL" --data-only --table=cars > cars-backup.sql
+```
+
+Restore by running the dump back with `psql`. Store the dump somewhere outside
+the repo (iCloud, Drive, or a private gist).

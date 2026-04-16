@@ -2,10 +2,21 @@
   "name": "car-organizer",
   "version": "1.0.0",
   "description": "Car search tracker",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
-    "migrate": "node --env-file=.env scripts/migrate.js"
+    "dev": "vercel dev",
+    "migrate": "node --env-file=.env scripts/migrate.js",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.45.0"
+    "@supabase/supabase-js": "^2.45.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@vercel/config": "^0.2.0",
+    "vitest": "^2.1.8"
   }
 }

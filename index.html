@@ -20,11 +20,11 @@
   --accent-light: #E8F5F1;
   --accent-soft: #F0F8F5;
   --accent-hover: #0A5C4E;
-  --green: #2D8B6F;
+  --green: #1F6B54;
   --green-bg: #E8F5F1;
-  --yellow: #C4930A;
+  --yellow: #8A6508;
   --yellow-bg: #FFF8E1;
-  --red: #C0503A;
+  --red: #A83E2B;
   --red-bg: #FDEEEA;
   --blue: #3B7DD8;
   --blue-bg: #EBF2FC;
@@ -1362,17 +1362,17 @@ a, button { -webkit-tap-highlight-color: transparent; }
       <div class="form-row">
         <div class="form-group">
           <label>Year</label>
-          <input type="number" id="form-year" placeholder="2008">
+          <input type="number" id="form-year" placeholder="2008" min="1950" max="2100" step="1">
         </div>
         <div class="form-group">
           <label>Km</label>
-          <input type="number" id="form-km" placeholder="120000">
+          <input type="number" id="form-km" placeholder="120000" min="0" step="1">
         </div>
       </div>
       <div class="form-row">
         <div class="form-group">
           <label>Price (EUR)</label>
-          <input type="number" id="form-price" placeholder="5500">
+          <input type="number" id="form-price" placeholder="5500" min="0" step="1">
         </div>
         <div class="form-group">
           <label>Fuel</label>
@@ -1390,7 +1390,7 @@ a, button { -webkit-tap-highlight-color: transparent; }
         </div>
         <div class="form-group">
           <label>Power (cv)</label>
-          <input type="number" id="form-power" placeholder="90">
+          <input type="number" id="form-power" placeholder="90" min="0" step="1">
         </div>
       </div>
       <div class="form-row">
@@ -1836,21 +1836,25 @@ const ENGINE_PROFILES = [
   { re: /1\.2\s*tdi/i, delta: -4, reason: 'VW 1.2 TDI 3-cyl — fragile in cold starts, DPF issues on short trips.' }
 ];
 
+function normalizeLoc(s) {
+  return (s || '').toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '').trim();
+}
+
 function locationScore(location) {
   if (!location) return 50;
-  const loc = location.toLowerCase().trim();
+  const loc = normalizeLoc(location);
   for (const [place, dist] of Object.entries(LOCATION_DISTANCES)) {
     // Max 30 points lost across 600km so distance never buries an otherwise great car.
-    if (loc.includes(place)) return Math.max(0, Math.round(100 - (dist / 600) * 30));
+    if (loc.includes(normalizeLoc(place))) return Math.max(0, Math.round(100 - (dist / 600) * 30));
   }
   return 50;
 }
 
 function locationKm(location) {
   if (!location) return null;
-  const loc = location.toLowerCase().trim();
+  const loc = normalizeLoc(location);
   for (const [place, dist] of Object.entries(LOCATION_DISTANCES)) {
-    if (loc.includes(place)) return dist;
+    if (loc.includes(normalizeLoc(place))) return dist;
   }
   return null;
 }
@@ -2114,7 +2118,9 @@ async function refreshCars() {
       cars = data;
       render();
     }
-  } catch { /* silent */ }
+  } catch (e) {
+    if (e.message !== 'Unauthorized') console.warn('[refreshCars] background refresh failed:', e);
+  }
 }
 
 async function createCar(data) {
@@ -2183,10 +2189,12 @@ async function updateCar(id, data, { silent = false, statusMutation = false } = 
       return { prev };
     },
     request: async () => {
+      const payload = { ...data };
+      if (typeof prev.version === 'number') payload.version = prev.version;
       const res = await apiFetch(`/api/cars/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
+        body: JSON.stringify(payload)
       });
       const updated = await res.json();
       const i = cars.findIndex(c => c.id === id);
@@ -2305,6 +2313,25 @@ function esc(s) {
   const d = document.createElement('div');
   d.textContent = s || '';
   return d.innerHTML;
+}
+
+// --- Overlay state: body scroll lock + focus restore ---
+const _focusStack = [];
+let _scrollLockCount = 0;
+function lockScroll() {
+  _scrollLockCount++;
+  if (_scrollLockCount === 1) document.body.style.overflow = 'hidden';
+}
+function unlockScroll() {
+  _scrollLockCount = Math.max(0, _scrollLockCount - 1);
+  if (_scrollLockCount === 0) document.body.style.overflow = '';
+}
+function pushFocus() { _focusStack.push(document.activeElement); }
+function popFocus() {
+  const el = _focusStack.pop();
+  if (el && typeof el.focus === 'function') {
+    try { el.focus({ preventScroll: true }); } catch {}
+  }
 }
 
 // --- Render ---
@@ -2688,7 +2715,11 @@ function renderCompare() {
   const wrap = document.getElementById('compare-table-wrap');
   const selected = cars.filter(c => selectedForCompare.has(c.id));
   if (selected.length < 2) {
-    wrap.innerHTML = '<div class="empty-state"><div class="empty-state-icon">\u2194</div>Select at least 2 cars to compare</div>';
+    const missing = 2 - selected.length;
+    const prompt = selected.length === 0
+      ? 'Tap cars above to add them to the comparison. Pick at least 2 (up to 5).'
+      : `Pick ${missing} more car${missing === 1 ? '' : 's'} above to start comparing.`;
+    wrap.innerHTML = `<div class="empty-state"><div class="empty-state-icon">\u2194</div>${prompt}</div>`;
     return;
   }
 
@@ -2907,13 +2938,19 @@ function openDetail(id) {
     </div>
   `;
 
+  pushFocus();
+  lockScroll();
   document.getElementById('detail-overlay').classList.add('open');
   document.getElementById('detail-panel').classList.add('open');
 }
 
 function closeDetail() {
+  const panel = document.getElementById('detail-panel');
+  if (!panel.classList.contains('open')) return;
   document.getElementById('detail-overlay').classList.remove('open');
-  document.getElementById('detail-panel').classList.remove('open');
+  panel.classList.remove('open');
+  unlockScroll();
+  popFocus();
 }
 
 // --- Modal ---
@@ -2954,7 +2991,10 @@ function openModal(id) {
     updateModelDatalist('');
   }
 
+  pushFocus();
+  lockScroll();
   document.getElementById('modal-overlay').classList.add('open');
+  setTimeout(() => document.getElementById('form-title')?.focus(), 0);
 }
 
 function checkPriceChange() {
@@ -2969,9 +3009,13 @@ function checkPriceChange() {
 }
 
 function closeModal() {
-  document.getElementById('modal-overlay').classList.remove('open');
+  const overlay = document.getElementById('modal-overlay');
+  if (!overlay.classList.contains('open')) return;
+  overlay.classList.remove('open');
   document.getElementById('form-price').removeEventListener('input', checkPriceChange);
   editingOriginalPrice = null;
+  unlockScroll();
+  popFocus();
 }
 
 // --- Custom dialog (confirm / prompt) ---
@@ -2992,6 +3036,8 @@ const DialogUI = (() => {
   function close(result) {
     overlay.classList.remove('open');
     document.removeEventListener('keydown', onKey, true);
+    unlockScroll();
+    popFocus();
     const fn = pendingResolve;
     pendingResolve = null;
     if (fn) fn(result);
@@ -3029,6 +3075,8 @@ const DialogUI = (() => {
     } else {
       inputGroup.hidden = true;
     }
+    pushFocus();
+    lockScroll();
     overlay.classList.add('open');
     document.addEventListener('keydown', onKey, true);
     setTimeout(() => {
@@ -3049,20 +3097,31 @@ function showPrompt(opts) { return DialogUI.prompt(opts); }
 
 async function handleSubmit(e) {
   e.preventDefault();
+
+  const form = document.getElementById('car-form');
+  if (!form.reportValidity()) return;
+
+  const title = document.getElementById('form-title').value.trim();
+  if (!title) {
+    toast('Title is required', 'error');
+    document.getElementById('form-title').focus();
+    return;
+  }
+
   const data = {
-    url: document.getElementById('form-url').value,
-    title: document.getElementById('form-title').value,
-    make: document.getElementById('form-make').value,
-    model: document.getElementById('form-model').value,
+    url: document.getElementById('form-url').value.trim(),
+    title,
+    make: document.getElementById('form-make').value.trim(),
+    model: document.getElementById('form-model').value.trim(),
     year: document.getElementById('form-year').value,
     km: document.getElementById('form-km').value,
     price: document.getElementById('form-price').value,
     fuel: document.getElementById('form-fuel').value,
-    engine: document.getElementById('form-engine').value,
+    engine: document.getElementById('form-engine').value.trim(),
     power: document.getElementById('form-power').value,
     source: document.getElementById('form-source').value,
     status: document.getElementById('form-status').value,
-    location: document.getElementById('form-location').value,
+    location: document.getElementById('form-location').value.trim(),
     notes: document.getElementById('form-notes').value
   };
 
@@ -3286,12 +3345,18 @@ window.addEventListener('resize', () => closeColumnPopover());
 // --- Mobile filters sheet ---
 function openMobileFiltersSheet() {
   const overlay = ensureMobileSheet();
+  if (overlay.classList.contains('open')) return;
+  pushFocus();
+  lockScroll();
   overlay.classList.add('open');
   renderMobileSheetBody();
 }
 function closeMobileFiltersSheet() {
   const overlay = document.getElementById('mobile-filter-sheet');
-  if (overlay) overlay.classList.remove('open');
+  if (!overlay || !overlay.classList.contains('open')) return;
+  overlay.classList.remove('open');
+  unlockScroll();
+  popFocus();
 }
 function ensureMobileSheet() {
   let overlay = document.getElementById('mobile-filter-sheet');
