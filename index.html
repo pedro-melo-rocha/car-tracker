@@ -311,6 +311,8 @@ input, select, textarea { font-family: inherit; }
 .pipeline-col:nth-child(5) { animation-delay: 0.16s; }
 .pipeline-col:nth-child(6) { animation-delay: 0.20s; }
 .pipeline-col:nth-child(7) { animation-delay: 0.24s; }
+#pipeline-view.no-anim .pipeline-col { animation: none; }
+#pipeline-view.no-anim .car-card    { animation: none; }
 .pipeline-col-header {
   padding: 14px 16px 10px;
   display: flex; justify-content: space-between; align-items: center;
@@ -508,6 +510,7 @@ tr.is-pending td { opacity: 0.65; }
 .compare-mini-bar-fill.green { background: var(--green); }
 .compare-mini-bar-fill.yellow { background: var(--yellow); }
 .compare-mini-bar-fill.red { background: var(--red); }
+.compare-subscore-value { font-size: 0.71rem; color: var(--text-secondary); margin-top: 4px; }
 /* price drop badge */
 .price-drop-badge { display: inline-block; margin-left: 6px; font-size: 0.7rem; color: var(--green); font-weight: 700; }
 /* secondary metadata inline (age after year, distance after location) */
@@ -1457,6 +1460,7 @@ a, button { -webkit-tap-highlight-color: transparent; }
 // --- State ---
 let cars = [];
 let currentView = 'pipeline';
+let pipelineAnimate = true;
 let selectedForCompare = new Set();
 let compareFilter = '';
 let listSort = { field: 'addedAt', asc: false };
@@ -2515,6 +2519,10 @@ function renderPipeline() {
   const filtered = filterCars(cars, 'pipeline-search', fuel, source);
 
   const el = document.getElementById('pipeline-view');
+  const animate = pipelineAnimate;
+  pipelineAnimate = false;
+  if (animate) el.classList.remove('no-anim');
+  else el.classList.add('no-anim');
   el.innerHTML = STATUSES.map(s => {
     const colCars = filtered.filter(c => c.status === s.key);
     return `<div class="pipeline-col" data-status="${s.key}"
@@ -2735,23 +2743,6 @@ function renderCompare() {
       },
       getCarForFormat: true
     },
-    { key: 'km', label: 'Km', numeric: true, higherBetter: false, format: v => v ? v.toLocaleString() : '\u2014' },
-    {
-      key: 'price', label: 'Price', numeric: true, higherBetter: false,
-      format: (v, car) => {
-        if (!v) return '\u2014';
-        const drops = (car.priceHistory || []).length - 1;
-        const badge = drops > 0 ? `<span class="price-drop-badge">\u2193${drops}</span>` : '';
-        return '\u20AC' + v.toLocaleString() + badge;
-      },
-      getValue: c => c.price,
-      getCarForFormat: true
-    },
-    {
-      key: 'eurPerKm', label: '\u20AC/km driven', numeric: true, higherBetter: false,
-      getValue: c => (c.price && c.km) ? c.price / c.km : null,
-      format: v => v == null ? '\u2014' : '\u20AC' + v.toFixed(3)
-    },
     { key: 'fuel', label: 'Fuel' },
     {
       key: 'engine', label: 'Engine',
@@ -2785,8 +2776,13 @@ function renderCompare() {
   ];
 
   const subscoreLabels = [
-    { key: 'km', label: 'Kms' },
-    { key: 'price', label: 'Price' },
+    { key: 'km', label: 'Kms', getValue: c => c.km ? c.km.toLocaleString() + ' km' : null },
+    { key: 'price', label: 'Price', getValue: c => {
+        if (!c.price) return null;
+        const epm = c.km ? ' \u00B7 \u20AC' + (c.price / c.km).toFixed(3) + '/km' : '';
+        return '\u20AC' + c.price.toLocaleString() + epm;
+      }
+    },
     { key: 'rel', label: 'Reliability', extract: b => b.rel.score },
     { key: 'year', label: 'Year' },
     { key: 'loc', label: 'Location' }
@@ -2860,7 +2856,8 @@ function renderCompare() {
             if (val === subMax) tdCls = ' class="best"';
             else if (val === subMin) tdCls = ' class="worst"';
           }
-          html += `<td${tdCls} data-car="${esc(car.title)}"><div class="compare-mini-bar"><div class="compare-mini-bar-fill ${barClass}" style="width:${val}%"></div></div></td>`;
+          const valLabel = sl.getValue ? sl.getValue(car) : null;
+          html += `<td${tdCls} data-car="${esc(car.title)}"><div class="compare-mini-bar"><div class="compare-mini-bar-fill ${barClass}" style="width:${val}%"></div></div>${valLabel ? `<div class="compare-subscore-value">${valLabel}</div>` : ''}</td>`;
         });
         html += '</tr>';
       });
@@ -3168,6 +3165,7 @@ document.querySelectorAll('.nav-tab').forEach(tab => {
     document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
     tab.classList.add('active');
     currentView = tab.dataset.view;
+    if (currentView === 'pipeline') pipelineAnimate = true;
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
     document.getElementById(currentView + '-view').classList.add('active');
     document.getElementById('pipeline-filters').style.display = currentView === 'pipeline' ? 'flex' : 'none';
