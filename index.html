@@ -239,6 +239,12 @@ input, select, textarea { font-family: inherit; }
   letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 8px;
   flex: 0 0 auto;
 }
+.th-popover .pop-search {
+  width: 100%; box-sizing: border-box; padding: 5px 8px; margin-bottom: 6px;
+  background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px;
+  color: var(--text); font-size: 0.8rem; outline: none; flex: 0 0 auto;
+}
+.th-popover .pop-search:focus { border-color: var(--accent); }
 .th-popover .pop-options {
   display: flex; flex-direction: column; gap: 2px;
   overflow-y: auto; min-height: 0; flex: 1 1 auto;
@@ -313,6 +319,14 @@ input, select, textarea { font-family: inherit; }
 .pipeline-col:nth-child(7) { animation-delay: 0.24s; }
 #pipeline-view.no-anim .pipeline-col { animation: none; }
 #pipeline-view.no-anim .car-card    { animation: none; }
+.pipeline-end-group {
+  display: flex; flex-direction: column; gap: 8px;
+  min-width: 270px; max-width: 310px; flex: 1;
+  animation: fadeUp 0.4s ease both; animation-delay: 0.12s;
+}
+#pipeline-view.no-anim .pipeline-end-group { animation: none; }
+.pipeline-end-group .pipeline-col { min-width: unset; max-width: unset; flex: 1; }
+.pipeline-end-group .pipeline-col-body { max-height: calc((100vh - 248px) / 2); }
 .pipeline-col-header {
   padding: 14px 16px 10px;
   display: flex; justify-content: space-between; align-items: center;
@@ -677,10 +691,9 @@ tr.is-pending td { opacity: 0.65; }
 /* Status-specific column accents */
 .pipeline-col[data-status="to-contact"] .pipeline-col-header { border-left: 3px solid var(--text-muted); padding-left: 13px; }
 .pipeline-col[data-status="contacted"] .pipeline-col-header { border-left: 3px solid var(--blue); padding-left: 13px; }
-.pipeline-col[data-status="inactive"] .pipeline-col-header { border-left: 3px solid var(--yellow); padding-left: 13px; }
 .pipeline-col[data-status="negotiating"] .pipeline-col-header { border-left: 3px solid #E8873A; padding-left: 13px; }
-.pipeline-col[data-status="rejected"] .pipeline-col-header { border-left: 3px solid var(--red); padding-left: 13px; }
-.pipeline-col[data-status="bought"] .pipeline-col-header { border-left: 3px solid var(--green); padding-left: 13px; }
+.pipeline-col[data-status="dismissed"] .pipeline-col-header { border-left: 3px solid var(--red); padding-left: 13px; }
+.pipeline-col[data-status="final-offer"] .pipeline-col-header { border-left: 3px solid var(--green); padding-left: 13px; }
 
 /* Drag-and-drop */
 .pipeline-col {
@@ -707,10 +720,9 @@ tr.is-pending td { opacity: 0.65; }
 /* Status badge colors */
 .status-badge.to-contact { background: var(--bg-warm); color: var(--text-muted); }
 .status-badge.contacted { background: var(--blue-bg); color: var(--blue); }
-.status-badge.inactive { background: var(--yellow-bg); color: var(--yellow); }
 .status-badge.negotiating { background: #FFF0E5; color: #E8873A; }
-.status-badge.rejected { background: var(--red-bg); color: var(--red); }
-.status-badge.bought { background: var(--green-bg); color: var(--green); }
+.status-badge.dismissed { background: var(--red-bg); color: var(--red); }
+.status-badge.final-offer { background: var(--green-bg); color: var(--green); }
 
 /* Inferred field highlight */
 .field-inferred { border-left: 2px solid var(--accent) !important; }
@@ -1010,6 +1022,13 @@ tr.is-pending td { opacity: 0.65; }
   .pipeline-col-body {
     max-height: calc(100vh - 200px);
   }
+  .pipeline-end-group {
+    min-width: 82vw; max-width: 82vw;
+    scroll-snap-align: center;
+    scroll-snap-stop: always;
+  }
+  .pipeline-end-group .pipeline-col { min-width: unset; max-width: unset; }
+  .pipeline-end-group .pipeline-col-body { max-height: calc((100vh - 220px) / 2); }
 
   /* List: hide table, show cards */
   .list-table-wrap { box-shadow: none; }
@@ -1252,6 +1271,7 @@ a, button { -webkit-tap-highlight-color: transparent; }
   <option value="1.2 TSI">
   <option value="1.4 TSI">
   <option value="1.2 TDI">
+  <option value="1.4 TDI">
 </datalist>
 </head>
 <body>
@@ -1415,10 +1435,9 @@ a, button { -webkit-tap-highlight-color: transparent; }
           <select id="form-status">
             <option value="to-contact">To Contact</option>
             <option value="contacted">Contacted</option>
-            <option value="inactive">Inactive</option>
             <option value="negotiating">Negotiating</option>
-            <option value="rejected">Rejected</option>
-            <option value="bought">Bought</option>
+            <option value="dismissed">Dismissed</option>
+            <option value="final-offer">Final Offer</option>
           </select>
         </div>
       </div>
@@ -1512,10 +1531,9 @@ const isMobile = () => window.matchMedia('(max-width: 640px)').matches;
 const STATUSES = [
   { key: 'to-contact', label: 'To Contact' },
   { key: 'contacted', label: 'Contacted' },
-  { key: 'inactive', label: 'Inactive' },
   { key: 'negotiating', label: 'Negotiating' },
-  { key: 'rejected', label: 'Rejected' },
-  { key: 'bought', label: 'Bought' }
+  { key: 'dismissed', label: 'Dismissed' },
+  { key: 'final-offer', label: 'Final Offer' }
 ];
 
 const STATUS_LABELS = Object.fromEntries(STATUSES.map(s => [s.key, s.label]));
@@ -1837,7 +1855,8 @@ const ENGINE_PROFILES = [
   { re: /2\.0\s*tdi.*(cbab|cbdb|cfgb)|2\.0\s*tdi.*pd/i, delta: -6, reason: '2.0 TDI PD / early CR — oil pump balance-shaft failures, FAP issues.' },
   { re: /1\.2\s*tsi(?!.*ea211)/i, delta: -10, reason: 'VW 1.2 TSI (EA111, pre-2013) — timing chain stretch, tensioner failures.' },
   { re: /1\.4\s*tsi/i, delta: -10, reason: 'VW 1.4 TSI — timing chain, carbon build-up, oil consumption.' },
-  { re: /1\.2\s*tdi/i, delta: -4, reason: 'VW 1.2 TDI 3-cyl — fragile in cold starts, DPF issues on short trips.' }
+  { re: /1\.2\s*tdi/i, delta: -4, reason: 'VW 1.2 TDI 3-cyl — fragile in cold starts, DPF issues on short trips.' },
+  { re: /1\.4\s*tdi/i, delta: -7, reason: 'VW 1.4 TDI 3-cyl (PD / EA189 CR, pre-EA288) — DPF clogging on short trips, turbo failures from ~110k km, EGR coking; Dieselgate-era CR variants affected.' }
 ];
 
 function normalizeLoc(s) {
@@ -2188,7 +2207,7 @@ async function updateCar(id, data, { silent = false, statusMutation = false } = 
         if (data[k] !== undefined) merged[k] = ['year','km','price','power'].includes(k) ? Number(data[k]) || 0 : data[k];
       }
       if (data.status === 'contacted') merged.contactedAt = new Date().toISOString();
-      if (data.status && !['contacted','inactive'].includes(data.status)) merged.contactedAt = null;
+      if (data.status && !['contacted','dismissed'].includes(data.status)) merged.contactedAt = null;
       cars[idx] = merged;
       return { prev };
     },
@@ -2267,10 +2286,10 @@ function filterCarsForList(carsArr) {
     if (search && ![c.title, c.make, c.model, c.notes].some(x => (x || '').toLowerCase().includes(search))) return false;
     if (f.fuels.length && !f.fuels.includes(c.fuel)) return false;
     if (f.sources.length && !f.sources.includes(c.source)) return false;
-    if (f.makes.length && !f.makes.includes(c.make)) return false;
+    if (f.makes.length && !f.makes.includes((c.make || '').toLowerCase())) return false;
     if (f.statuses.length) {
       if (!f.statuses.includes(c.status)) return false;
-    } else if (c.status === 'rejected') {
+    } else if (c.status === 'dismissed') {
       return false;
     }
     if (!inRange(c.year, f.yearMin, f.yearMax)) return false;
@@ -2523,7 +2542,7 @@ function renderPipeline() {
   pipelineAnimate = false;
   if (animate) el.classList.remove('no-anim');
   else el.classList.add('no-anim');
-  el.innerHTML = STATUSES.map(s => {
+  const colHTML = s => {
     const colCars = filtered.filter(c => c.status === s.key);
     return `<div class="pipeline-col" data-status="${s.key}"
         ondragover="event.preventDefault();this.classList.add('drag-over')"
@@ -2532,7 +2551,11 @@ function renderPipeline() {
       <div class="pipeline-col-header">${s.label} <span class="count-badge">${colCars.length}</span></div>
       <div class="pipeline-col-body">${colCars.length ? colCars.map(cardHTML).join('') : '<div class="empty-state"><div class="empty-state-icon">\u2015</div>No cars</div>'}</div>
     </div>`;
-  }).join('');
+  };
+  const mainStatuses = STATUSES.slice(0, 3);
+  const endStatuses  = STATUSES.slice(3);
+  el.innerHTML = mainStatuses.map(colHTML).join('') +
+    `<div class="pipeline-end-group">${endStatuses.map(colHTML).join('')}</div>`;
 }
 function handleDrop(event, col) {
   const id = event.dataTransfer.getData('carId');
@@ -2558,7 +2581,7 @@ function listHeaderCell(label, sortField, filterCol) {
 
 function updateListCountAndControls(filteredCount) {
   const countEl = document.getElementById('list-count');
-  const total = cars.filter(c => c.status !== 'rejected' || listFilters.statuses.includes('rejected')).length;
+  const total = cars.filter(c => c.status !== 'dismissed' || listFilters.statuses.includes('dismissed')).length;
   if (countEl) {
     countEl.textContent = filteredCount === total
       ? `${filteredCount} ${filteredCount === 1 ? 'car' : 'cars'}`
@@ -2699,7 +2722,7 @@ function renderCompare() {
   if (filterInput && filterInput.value !== compareFilter) filterInput.value = compareFilter;
 
   const comparableCars = cars
-    .filter(c => c.status !== 'rejected')
+    .filter(c => c.status !== 'dismissed')
     .map(c => ({ car: c, score: computeScore(c) }))
     .sort((a, b) => b.score - a.score);
 
@@ -3133,6 +3156,15 @@ async function handleSubmit(e) {
       if (priceNote) data.priceNote = priceNote;
       await updateCar(id, data);
     } else {
+      if (data.url) {
+        const dup = cars.find(c => c.url && c.url.trim() === data.url.trim());
+        if (dup) {
+          toast(`URL already added: "${dup.title}"`, 'error');
+          submitBtn.classList.remove('btn-loading');
+          submitBtn.disabled = false;
+          return;
+        }
+      }
       await createCar(data);
     }
     closeModal();
@@ -3239,7 +3271,9 @@ function buildPopoverHTML(col, meta) {
   if (meta.type === 'categorical') {
     const selected = listFilters[meta.key] || [];
     const options = categoricalOptions(col);
+    const searchInput = col === 'make' ? `<input type="text" class="pop-search" placeholder="Search makes…" autocomplete="off">` : '';
     return `<div class="pop-title">Filter by ${meta.title}</div>
+      ${searchInput}
       <div class="pop-options">
         ${options.map(o => `
           <label class="pop-option">
@@ -3272,8 +3306,15 @@ function categoricalOptions(col) {
     return [...fixed, ...extra].map(v => ({ value: v, display: esc(v) }));
   }
   if (col === 'make') {
-    const makes = [...new Set(cars.map(c => c.make).filter(Boolean))].sort();
-    return makes.map(v => ({ value: v, display: esc(v) }));
+    const makeMap = new Map();
+    cars.forEach(c => {
+      if (!c.make) return;
+      const key = c.make.toLowerCase();
+      if (!makeMap.has(key)) makeMap.set(key, { best: c.make, count: 1 });
+      else { const e = makeMap.get(key); e.count++; if (e.count > makeMap.get(key).count) e.best = c.make; }
+    });
+    const makes = [...makeMap.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+    return makes.map(([key, e]) => ({ value: key, display: esc(e.best) }));
   }
   if (col === 'status') {
     return STATUSES.map(s => ({
@@ -3289,6 +3330,16 @@ function categoricalOptions(col) {
 function wirePopoverInputs(col, meta) {
   const pop = document.getElementById('th-popover');
   if (meta.type === 'categorical') {
+    const search = pop.querySelector('.pop-search');
+    if (search) {
+      search.addEventListener('input', () => {
+        const q = search.value.toLowerCase();
+        pop.querySelectorAll('label.pop-option').forEach(label => {
+          label.style.display = label.textContent.toLowerCase().includes(q) ? '' : 'none';
+        });
+      });
+      search.focus();
+    }
     pop.querySelectorAll('input[type="checkbox"]').forEach(cb => {
       cb.addEventListener('change', () => {
         const v = cb.dataset.value;

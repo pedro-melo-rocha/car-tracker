@@ -67,7 +67,7 @@ module.exports = async (req, res) => {
     if (body.status === 'contacted' && existing.status !== 'contacted') {
       car.contactedAt = new Date().toISOString();
     }
-    if (body.status && !['contacted', 'inactive'].includes(body.status)) {
+    if (body.status && !['contacted', 'dismissed'].includes(body.status)) {
       car.contactedAt = null;
     }
 

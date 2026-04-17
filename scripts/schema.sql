@@ -17,8 +17,8 @@ create table if not exists cars (
   source         text,
   status         text not null default 'to-contact'
                  check (status in (
-                   'to-contact', 'contacted', 'inactive',
-                   'negotiating', 'rejected', 'bought'
+                   'to-contact', 'contacted', 'negotiating',
+                   'dismissed', 'final-offer'
                  )),
   location       text,
   notes          text,
