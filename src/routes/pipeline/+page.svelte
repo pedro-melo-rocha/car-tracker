@@ -9,6 +9,7 @@
 
 	let draggingOver = $state<CarStatus | null>(null);
 	let isMobile = $state(false);
+	let movingIds = $state<Set<string>>(new Set());
 
 	$effect(() => {
 		const mq = window.matchMedia('(max-width: 640px)');
@@ -49,18 +50,40 @@
 		goto(url.pathname + url.search, { keepFocus: true, noScroll: true });
 	}
 
+	async function moveCar(id: string, nextStatus: CarStatus) {
+		const car = $cars.find((c) => c.id === id);
+		if (!car || car.status === nextStatus) return;
+		if (movingIds.has(id)) return;
+		const previousStatus = car.status;
+
+		movingIds = new Set(movingIds).add(id);
+		cars.update((list) =>
+			list.map((c) => (c.id === id ? { ...c, status: nextStatus } : c))
+		);
+
+		try {
+			await updateCar(id, { status: nextStatus });
+		} catch {
+			cars.update((list) =>
+				list.map((c) => (c.id === id ? { ...c, status: previousStatus } : c))
+			);
+		} finally {
+			const next = new Set(movingIds);
+			next.delete(id);
+			movingIds = next;
+		}
+	}
+
 	async function handleDrop(e: DragEvent, status: CarStatus) {
 		e.preventDefault();
 		draggingOver = null;
 		const id = e.dataTransfer?.getData('carId');
 		if (!id) return;
-		const car = $cars.find((c) => c.id === id);
-		if (!car || car.status === status) return;
-		await updateCar(id, { status });
+		await moveCar(id, status);
 	}
 
 	function handleStatusChange(id: string, next: string) {
-		updateCar(id, { status: next as CarStatus });
+		void moveCar(id, next as CarStatus);
 	}
 </script>
 
@@ -115,13 +138,22 @@
 				</div>
 				<div class="col-body">
 					{#each list as car (car.id)}
-						<div class="card-wrap">
-							<CarCard
-								{car}
-								draggable={!isMobile}
-								onopen={openDetail}
-								onedit={openEdit}
-							/>
+						{@const moving = movingIds.has(car.id)}
+						<div class="card-wrap" class:moving>
+							<div class="card-shell">
+								<CarCard
+									{car}
+									draggable={!isMobile && !moving}
+									onopen={openDetail}
+									onedit={openEdit}
+								/>
+								{#if moving}
+									<div class="move-overlay" aria-live="polite">
+										<div class="spinner" aria-hidden="true"></div>
+										<span class="sr-only">Moving…</span>
+									</div>
+								{/if}
+							</div>
 							{#if isMobile}
 								<div class="mobile-status">
 									<CustomSelect
@@ -220,6 +252,62 @@
 		display: flex;
 		flex-direction: column;
 		gap: 6px;
+		animation: cardSlideIn 180ms var(--ease);
+	}
+	.card-wrap.moving .card-shell {
+		pointer-events: none;
+	}
+	.card-shell {
+		position: relative;
+	}
+	.move-overlay {
+		position: absolute;
+		inset: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: color-mix(in oklab, var(--card) 72%, transparent);
+		backdrop-filter: blur(1px);
+		-webkit-backdrop-filter: blur(1px);
+		border-radius: var(--radius-lg);
+		animation: fadeIn 120ms var(--ease);
+		z-index: 2;
+	}
+	.move-overlay .spinner {
+		width: 22px;
+		height: 22px;
+		border: 2px solid var(--border-strong);
+		border-top-color: var(--accent);
+		border-radius: 50%;
+		animation: spin 800ms linear infinite;
+	}
+	.sr-only {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		padding: 0;
+		overflow: hidden;
+		clip: rect(0 0 0 0);
+		white-space: nowrap;
+		border: 0;
+	}
+	@keyframes cardSlideIn {
+		from {
+			opacity: 0;
+			transform: translateY(-4px);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	}
+	@keyframes fadeIn {
+		from {
+			opacity: 0;
+		}
+		to {
+			opacity: 1;
+		}
 	}
 	.mobile-status {
 		width: 100%;

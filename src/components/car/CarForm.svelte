@@ -280,9 +280,14 @@
 	{/if}
 
 	<div class="form-actions">
-		<button type="button" class="btn secondary" onclick={onclose}>Cancel</button>
+		<button type="button" class="btn secondary" onclick={onclose} disabled={submitting}>Cancel</button>
 		<button type="submit" class="btn primary" disabled={submitting}>
-			{isEdit ? 'Save Changes' : 'Add Car'}
+			{#if submitting}
+				<span class="btn-spinner" aria-hidden="true"></span>
+				<span>{isEdit ? 'Saving…' : 'Adding…'}</span>
+			{:else}
+				<span>{isEdit ? 'Save Changes' : 'Add Car'}</span>
+			{/if}
 		</button>
 	</div>
 </form>
@@ -354,13 +359,32 @@
 	.btn.primary {
 		background: var(--accent);
 		color: #fff;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: 8px;
+		min-width: 128px;
 	}
 	.btn.primary:hover {
 		background: var(--accent-hover);
 	}
 	.btn.primary:disabled {
-		opacity: 0.6;
+		opacity: 0.85;
 		cursor: not-allowed;
+	}
+	.btn.secondary:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+	.btn-spinner {
+		width: 14px;
+		height: 14px;
+		border: 2px solid rgba(255, 255, 255, 0.35);
+		border-top-color: #fff;
+		border-radius: 50%;
+		animation: spin 800ms linear infinite;
+		display: inline-block;
+		flex-shrink: 0;
 	}
 	.btn.secondary {
 		background: transparent;
