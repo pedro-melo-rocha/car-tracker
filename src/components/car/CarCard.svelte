@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Car } from '$lib/types';
 	import { computeScore, locationKm } from '$lib/scoring';
+	import { netPriceDrop } from '$lib/price';
 	import { timeAgo } from '$lib/staleness';
 	import ScoreBadge from '$components/ui/ScoreBadge.svelte';
 	import StatusPill from '$components/ui/StatusPill.svelte';
@@ -22,19 +23,7 @@
 	} = $props();
 
 	const score = $derived(computeScore(car));
-	const latestDrop = $derived.by(() => {
-		const drops = (car.priceHistory ?? []).filter((h, i, arr) => {
-			const prev = i === 0 ? undefined : arr[i - 1].price;
-			return prev !== undefined && h.price < prev;
-		});
-		return drops[drops.length - 1];
-	});
-	const dropAmount = $derived.by(() => {
-		const hist = car.priceHistory ?? [];
-		if (hist.length < 2 || !latestDrop) return 0;
-		const idx = hist.indexOf(latestDrop);
-		return hist[idx - 1].price - latestDrop.price;
-	});
+	const dropAmount = $derived(netPriceDrop(car.priceHistory));
 	const distance = $derived(locationKm(car.location));
 	const kmLabel = $derived(car.km != null ? Math.round(car.km / 1000) + 'k\u00A0km' : '—');
 </script>

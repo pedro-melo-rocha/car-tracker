@@ -6,6 +6,7 @@
 		{ href: '/pipeline', label: 'Pipeline' },
 		{ href: '/list', label: 'List' },
 		{ href: '/compare', label: 'Compare' },
+		{ href: '/score-lab', label: 'Score Lab' },
 		{ href: '/docs', label: 'Docs' }
 	];
 

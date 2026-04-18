@@ -2,6 +2,7 @@
 	import type { Car } from '$lib/types';
 	import { STATUSES, STATUS_LABELS, type CarStatus } from '$lib/types';
 	import { computeScore, computeScoreBreakdown, locationKm } from '$lib/scoring';
+	import { netPriceDrop } from '$lib/price';
 	import { SCORE_WEIGHTS } from '$lib/constants';
 	import PriceHistoryTimeline from './PriceHistoryTimeline.svelte';
 	import { deleteCar as removeCar, updateCar } from '$lib/stores/cars';
@@ -23,14 +24,7 @@
 		[car.engine, car.power ? car.power + 'cv' : ''].filter(Boolean).join(' · ')
 	);
 	const distance = $derived(locationKm(car.location));
-	const priceDrop = $derived.by(() => {
-		const h = car.priceHistory ?? [];
-		if (h.length < 2) return 0;
-		const sorted = [...h].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-		const first = sorted[0].price;
-		const last = sorted[sorted.length - 1].price;
-		return first > last ? first - last : 0;
-	});
+	const priceDrop = $derived(netPriceDrop(car.priceHistory));
 
 	const scoreTone = $derived(score >= 70 ? 'good' : score >= 50 ? 'warn' : 'bad');
 	const scoreColor = $derived(

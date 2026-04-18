@@ -33,31 +33,33 @@
 	<td class="soft">{car.fuel ?? '—'}</td>
 	<td><StatusPill status={car.status} /></td>
 	<td><ScoreBadge {score} size="sm" /></td>
-	<td class="actions" onclick={(e) => e.stopPropagation()}>
-		{#if car.url}
-			<a
-				href={car.url}
-				target="_blank"
-				rel="noopener noreferrer"
-				class="icon-btn"
-				title="Open listing"
-				aria-label="Open listing"
-			>
-				<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
-					<path d="M6 3H3v10h10v-3M9 1h6v6M7 9L15 1" />
+	<td class="actions-cell" onclick={(e) => e.stopPropagation()}>
+		<div class="actions">
+			{#if car.url}
+				<a
+					href={car.url}
+					target="_blank"
+					rel="noopener noreferrer"
+					class="icon-btn"
+					title="Open listing"
+					aria-label="Open listing"
+				>
+					<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+						<path d="M6 3H3v10h10v-3M9 1h6v6M7 9L15 1" />
+					</svg>
+				</a>
+			{/if}
+			<button type="button" class="icon-btn" onclick={() => onedit?.(car.id)} title="Edit" aria-label="Edit">
+				<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8">
+					<path d="M11 2l3 3-8 8H3v-3L11 2z" />
 				</svg>
-			</a>
-		{/if}
-		<button type="button" class="icon-btn" onclick={() => onedit?.(car.id)} title="Edit" aria-label="Edit">
-			<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8">
-				<path d="M11 2l3 3-8 8H3v-3L11 2z" />
-			</svg>
-		</button>
-		<button type="button" class="icon-btn" onclick={() => ondelete?.(car.id)} title="Delete" aria-label="Delete">
-			<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8">
-				<path d="M3 4h10M6 4V2h4v2M5 4v9h6V4" />
-			</svg>
-		</button>
+			</button>
+			<button type="button" class="icon-btn" onclick={() => ondelete?.(car.id)} title="Delete" aria-label="Delete">
+				<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8">
+					<path d="M3 4h10M6 4V2h4v2M5 4v9h6V4" />
+				</svg>
+			</button>
+		</div>
 	</td>
 </tr>
 
@@ -70,6 +72,7 @@
 		font-size: 0.82rem;
 		color: var(--ink);
 		vertical-align: middle;
+		height: 60px;
 	}
 	td.soft {
 		color: var(--ink-soft);
@@ -97,10 +100,14 @@
 		color: var(--ink);
 		font-variant-numeric: tabular-nums;
 	}
+	.actions-cell {
+		text-align: right;
+	}
 	.actions {
-		display: flex;
+		display: inline-flex;
 		gap: 4px;
 		justify-content: flex-end;
+		align-items: center;
 	}
 	.icon-btn {
 		background: transparent;
