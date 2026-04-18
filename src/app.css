@@ -1,0 +1,153 @@
+:root {
+	--bg: #f6f5f1;
+	--bg-warm: #edecea;
+	--bg-card: #ffffff;
+	--bg-overlay: rgba(30, 28, 24, 0.4);
+	--text: #1e1c18;
+	--text-secondary: #6b6760;
+	--text-muted: #a09b93;
+	--accent: #0c6e5d;
+	--accent-light: #e8f5f1;
+	--accent-soft: #f0f8f5;
+	--accent-hover: #0a5c4e;
+	--green: #1f6b54;
+	--green-bg: #e8f5f1;
+	--yellow: #8a6508;
+	--yellow-bg: #fff8e1;
+	--red: #a83e2b;
+	--red-bg: #fdeeea;
+	--blue: #3b7dd8;
+	--blue-bg: #ebf2fc;
+	--border: rgba(0, 0, 0, 0.06);
+	--border-strong: rgba(0, 0, 0, 0.1);
+	--shadow-sm: 0 1px 2px rgba(16, 14, 10, 0.04);
+	--shadow: 0 4px 14px -4px rgba(16, 14, 10, 0.08);
+	--shadow-lg: 0 18px 48px -12px rgba(16, 14, 10, 0.14);
+	--shadow-xl: 0 24px 70px -14px rgba(16, 14, 10, 0.2);
+	--radius-xs: 4px;
+	--radius-sm: 6px;
+	--radius-md: 10px;
+	--radius: 12px;
+	--radius-lg: 16px;
+	--radius-xl: 20px;
+	--ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+	--dur-fast: 120ms;
+	--dur: 200ms;
+	--fs-xs: 0.72rem;
+	--fs-sm: 0.82rem;
+	--fs-md: 0.92rem;
+	--fs-lg: 1.05rem;
+	--font: 'Plus Jakarta Sans', -apple-system, sans-serif;
+	--mono: 'DM Mono', 'SF Mono', monospace;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation-duration: 1ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 1ms !important;
+		scroll-behavior: auto !important;
+	}
+}
+
+* {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+}
+body {
+	font-family: var(--font);
+	background: var(--bg);
+	color: var(--text);
+	min-height: 100vh;
+	-webkit-font-smoothing: antialiased;
+}
+button {
+	cursor: pointer;
+	font-family: inherit;
+}
+input,
+select,
+textarea {
+	font-family: inherit;
+}
+
+@keyframes fadeUp {
+	from {
+		opacity: 0;
+		transform: translateY(8px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+@keyframes slideIn {
+	from {
+		opacity: 0;
+		transform: translateX(20px);
+	}
+	to {
+		opacity: 1;
+		transform: translateX(0);
+	}
+}
+@keyframes slideInUp {
+	from {
+		opacity: 0;
+		transform: translateY(12px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+@keyframes slideInDown {
+	from {
+		opacity: 0;
+		transform: translateY(-12px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+@keyframes slideOutRight {
+	to {
+		opacity: 0;
+		transform: translateX(20px);
+	}
+}
+@keyframes scaleIn {
+	from {
+		opacity: 0;
+		transform: scale(0.97);
+	}
+	to {
+		opacity: 1;
+		transform: scale(1);
+	}
+}
+@keyframes shimmer {
+	0% {
+		background-position: -400px 0;
+	}
+	100% {
+		background-position: 400px 0;
+	}
+}
+@keyframes spin {
+	to {
+		transform: rotate(360deg);
+	}
+}
+@keyframes sheetUp {
+	from {
+		transform: translateY(100%);
+	}
+	to {
+		transform: translateY(0);
+	}
+}
