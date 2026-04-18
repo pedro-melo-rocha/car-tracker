@@ -20,17 +20,18 @@
 
 	const isEdit = $derived(!!car);
 
+	type NumField = string | number | null;
 	type FormState = {
 		url: string;
 		title: string;
 		make: string;
 		model: string;
-		year: string;
-		km: string;
-		price: string;
+		year: NumField;
+		km: NumField;
+		price: NumField;
 		fuel: string;
 		engine: string;
-		power: string;
+		power: NumField;
 		source: string;
 		status: string;
 		location: string;
@@ -65,7 +66,7 @@
 	let submitting = $state(false);
 
 	const priceChanged = $derived(
-		isEdit && f.price !== '' && Number(f.price) !== originalPrice
+		isEdit && f.price != null && f.price !== '' && Number(f.price) !== originalPrice
 	);
 
 	const fuelOptions = [
@@ -102,7 +103,9 @@
 		if (!f.location && inferred.location) f.location = inferred.location;
 	}
 
-	function toNumber(v: string): number | undefined {
+	function toNumber(v: string | number | null | undefined): number | undefined {
+		if (v === null || v === undefined) return undefined;
+		if (typeof v === 'number') return isNaN(v) ? undefined : v;
 		if (v.trim() === '') return undefined;
 		const n = Number(v);
 		return isNaN(n) ? undefined : n;
