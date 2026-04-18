@@ -4,29 +4,33 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Car Tracker is a hosted car search tracker for browsing used car listings in Portugal. It uses a no-framework stack: plain HTML/JS frontend (single `index.html` with inline CSS/JS), Vercel serverless functions for the API (`api/*`), and Supabase Postgres for persistence.
+Car Tracker is a hosted car search tracker for browsing used car listings in Portugal. SvelteKit + TypeScript frontend, SvelteKit endpoints for the API, Supabase Postgres for persistence, deployed on Vercel (Node 22, Fluid Compute).
 
 ## Commands
 
 - **Install deps:** `npm install`
-- **Local dev:** `vercel dev` (run from project root; needs Vercel CLI: `npm i -g vercel`)
+- **Local dev:** `npm run dev`
+- **Type check:** `npm run check`
+- **Tests:** `npm test`
+- **Build:** `npm run build`
 - **Migrate `data.json` → Supabase:** `npm run migrate` (one-time, script kept in case of re-seeding)
 - **Deploy to prod:** `vercel --prod`
 
-No tests, linter, or build step.
-
 ## Architecture
 
-- **`index.html`** — Single-file SPA with all CSS and JS inline. Three views: Pipeline (Kanban), List (grid with sort/filter), Compare (side-by-side table). Includes a detail side panel and add/edit modal. `apiFetch()` wrapper injects `x-api-secret` header on every request; on 401 it clears `localStorage.apiSecret` and re-prompts.
-- **`api/cars.js`** — Serverless function: `GET` (list) and `POST` (create). On GET, applies staleness migration and persists any status flips.
-- **`api/cars/[id].js`** — Serverless function: `PUT` (update) and `DELETE` (delete).
-- **`lib/supabase.js`** — Shared Supabase client using service role key (bypasses RLS).
-- **`lib/auth.js`** — `requireSecret(req, res)` guard — checks `x-api-secret` header against `API_SECRET` env var; 401s on mismatch.
-- **`lib/staleness.js`** — Pure function `applyStaleness(cars)` that mutates in place and returns the list of rows whose status changed (for the handler to persist).
+- **`src/routes/+layout.svelte`** — Mounts Header, overlays (`?car=<id>`, `?edit=new|<id>`), toasts, dialogs, password prompt.
+- **`src/routes/{pipeline,list,compare,docs}/+page.svelte`** — One URL per view.
+- **`src/routes/api/cars/+server.ts`** — `GET` (list + staleness flip) and `POST` (create).
+- **`src/routes/api/cars/[id]/+server.ts`** — `PUT` (optimistic-lock on `version`) and `DELETE`.
+- **`src/hooks.server.ts`** — Runs `requireSecret` + `rateLimit` on every `/api/*` request.
+- **`src/lib/server/*`** — Server-only module boundary. SvelteKit prevents client imports at build time. Holds `supabase.ts` (service-role client), `auth.ts`, `rate-limit.ts`.
+- **`src/lib/scoring/*`** — Pure client-side score computation (km, price, reliability, year, location). Runs in the browser because the `cars` table has no `score` column.
+- **`src/lib/stores/*`** — Svelte writable stores: cars, filters, compare, ui (toasts/dialog/pending), auth.
+- **`src/lib/api.ts`** — `apiFetch` wrapper that injects `x-api-secret` header and handles 401 by re-prompting.
 - **`scripts/schema.sql`** — Run once in Supabase SQL Editor to create the `cars` table.
+- **`scripts/migrations/`** — Incremental SQL patches; run in filename order.
 - **`scripts/migrate.js`** — One-time import from `data.json` into Supabase.
-- **`vercel.json`** — Forces `framework: null` so Vercel doesn't auto-detect any preset.
-- **`car-tracker-prompt.md`** — Original specification document (data model, scoring formula, UI intent).
+- **`scripts/capture-baselines.mjs`** — Re-run to re-pin score fixtures in `tests/scoring/index.test.ts` (run via `npx tsx --env-file=.env scripts/capture-baselines.mjs`).
 
 ## Environment Variables
 
@@ -36,22 +40,26 @@ No tests, linter, or build step.
 ## Key Domain Concepts
 
 - **Car Score (0-100):** Computed client-side from km (22%), price (22%), reliability (30%), year (13%), location (13%). `kmSubscore` uses a fuel-aware sweet-spot curve (petrol plateau 0–90k → 0 at 200k; diesel plateau 0–130k → 0 at 280k) and deliberately does not reward suspiciously low km (rollback fraud). `priceSubscore` plateaus at 100 from €0–€2500, decays to 0 at the €5k ceiling. `locationScore` uses a dampened curve (max 30-point penalty across 600km from Viana do Castelo). `reliabilitySubscore` combines a make baseline with an engine-specific delta. Cars with missing km, price, or location return a neutral 50.
-- **Status pipeline:** `to-contact → contacted → negotiating → rejected → bought`. Auto-generated: `inactive` (contacted with no response for 3+ days). `rejected` cars are hidden from List and Compare views (visible only in Pipeline).
+- **Status pipeline:** `to-contact → contacted → visit-scheduled → visited → negotiating → rejected → bought`. Auto-generated: `inactive` (contacted with no response for 3+ days). `rejected` cars are hidden from List and Compare views (visible only in Pipeline).
 - **Price history:** Appended on PUT when price changes. The `priceNote` field is accepted in requests but stripped from the stored object.
 - **`contactedAt` and staleness clock:** Set automatically when status becomes `contacted`. Reset if status is rolled back to `contacted` (e.g., from `inactive`). Cleared when status moves outside the staleness chain (`contacted`/`inactive`).
+- **Version field:** Every car has an integer `version`. PUT requires the client's seen version; mismatch returns 409 and the client refreshes.
 - **Sources:** StandVirtual, AutoScout24, OLX, Facebook Marketplace, PiscaPisca, Other.
 - **Fuel types:** Diesel, Gasolina.
 
 ## Design Notes
 
-- Dark theme with CSS variables for all colors.
-- No external frontend dependencies — everything is inline in `index.html`.
+- Dark theme with CSS variables defined in `src/app.css`.
+- Component styles live in scoped `<style>` blocks inside each `.svelte` file. `:global(...)` only where necessary.
 - Portuguese-market context: prices in euros, Portuguese car listing sources. All status labels are in English.
+- No Tailwind, no CSS framework, no UI library.
 
 ## Gotchas
 
 - **Supabase column names are camelCase and quoted** (`"addedAt"`, `"contactedAt"`, `"priceHistory"`) so JS objects pass through unchanged. Any new column with a capital letter must be created with double quotes in SQL.
-- **RLS is enabled with no policies.** All access goes through serverless functions using the service role key. Do not expose the service role key client-side.
-- **`index.html` is 1600+ lines:** All CSS and JS are inline in one file. When editing, search by function name or CSS variable rather than scrolling.
+- **RLS is enabled with no policies.** All access goes through SvelteKit endpoints using the service role key. Never import from `$lib/server/*` in a client module — SvelteKit enforces this at build time.
+- **Initial cars load is client-side** (`+layout.ts` guards with `if (browser)`). The API requires `x-api-secret` which only exists in localStorage; SSR cannot fetch cars.
 - **`priceNote` is transient:** Accepted in PUT requests but `delete`d from the stored car object before writing — it only appears in the `priceHistory` entry's `note` field.
+- **Rate-limit bucket is per-instance** (Fluid Compute). Matches legacy behaviour. Move to Upstash if ever needed.
+- **Score parity fixtures** in `tests/scoring/index.test.ts` are regression guards. If they drift, investigate before updating — the algorithm changed.
 - **Two humans share one list:** Pedro and his girlfriend both use the same `API_SECRET`; there is no per-user data scoping.

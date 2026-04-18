@@ -7,9 +7,10 @@ Shared car search tracker for browsing used car listings in Portugal. Deployed t
 - **Pipeline view** — Kanban board organized by status
 - **List view** — Sortable and filterable grid of all listings
 - **Compare view** — Side-by-side comparison table
+- **Docs view** — Scoring weights + make/engine reliability reference
 - **Detail panel** — Slide-out panel with full car details
 - **Price tracking** — Automatic price history when prices change
-- **Car scoring** — 0-100 score based on km, price, year, and location
+- **Car scoring** — 0-100 score based on km, price, reliability, year, and location
 - **Auto-staleness** — Cars in `contacted` status auto-transition to `inactive` after 3 days
 
 ## Status Pipeline
@@ -51,8 +52,8 @@ This reads `data.json` and inserts every car into Supabase.
 ### 4. Local dev
 
 ```bash
-npm install -g vercel   # one-time
-vercel dev
+npm install
+npm run dev
 ```
 
 Open the URL it prints. Enter your `API_SECRET` when prompted.
@@ -60,6 +61,7 @@ Open the URL it prints. Enter your `API_SECRET` when prompted.
 ### 5. Deploy to Vercel
 
 ```bash
+npm install -g vercel   # one-time
 vercel --prod
 ```
 
@@ -69,28 +71,58 @@ In the Vercel dashboard, set the three env vars from `.env` under **Settings →
 
 ## Tech Stack
 
-- **Frontend:** Single `index.html` with inline CSS and JS (no build step)
-- **Backend:** Vercel serverless functions (`api/*`) + Supabase Postgres
+- **Framework:** SvelteKit (Svelte 5 + runes) on `@sveltejs/adapter-vercel`
+- **Language:** TypeScript everywhere
+- **Backend:** SvelteKit endpoints (`src/routes/api/*`) + Supabase Postgres
+- **Runtime:** Node.js 22 (Vercel Fluid Compute)
 - **Auth:** Shared secret in `x-api-secret` header
 
 ## Project Structure
 
 ```
-index.html              Single-file SPA (UI, styles, client logic)
-api/cars.js             Serverless GET + POST
-api/cars/[id].js        Serverless PUT + DELETE
-lib/                    supabase client, auth, staleness, validation, rate-limit
-lib/__tests__/          Vitest unit tests
-scripts/schema.sql      Fresh-install schema
-scripts/migrations/     Incremental SQL migrations (run in order)
-scripts/migrate.js      One-time data import from data.json
-vercel.ts               Vercel project config
+src/
+  app.html                      Document shell
+  app.css                       Global tokens + resets
+  hooks.server.ts               Auth + rate-limit gate on /api/*
+  lib/
+    types.ts                    Car, CarStatus, inputs
+    validation.ts               Zod schemas
+    staleness.ts                applyStaleness() — 3-day contacted → inactive
+    inference.ts                URL → inferred fields
+    constants.ts                Locations, make/engine reliability
+    scoring/                    km, price, year, reliability, location subscores
+    api.ts                      Client apiFetch wrapper
+    server/                     Server-only: supabase, auth, rate-limit
+    stores/                     cars, filters, compare, ui, auth
+  components/
+    layout/                     Header, toasts, dialogs, password prompt
+    ui/                         Selects, combobox, score badge, filters
+    car/                        Card, row, detail panel, form, timeline
+  routes/
+    +layout.svelte              Header + overlay mounts
+    +page.ts                    '/' → '/pipeline'
+    pipeline/+page.svelte
+    list/+page.svelte
+    compare/+page.svelte
+    docs/+page.svelte
+    api/cars/+server.ts         GET + POST
+    api/cars/[id]/+server.ts    PUT + DELETE
+
+tests/                          Vitest suites mirroring src/lib/
+scripts/
+  schema.sql                    Fresh-install schema
+  migrations/                   Incremental SQL migrations
+  migrate.js                    One-time data.json import
+  capture-baselines.mjs         Score parity fixture capture
+svelte.config.js                Adapter config
+vercel.json                     Framework declaration
 ```
 
-## Running tests
+## Running checks and tests
 
 ```bash
-npm test
+npm run check   # svelte-check + TS type check
+npm test        # Vitest unit tests
 ```
 
 ## Applying schema migrations
