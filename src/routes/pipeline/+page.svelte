@@ -33,9 +33,6 @@
 		{ value: 'Gasolina', label: 'Gasolina' }
 	];
 
-	const mainStatuses = STATUSES.slice(0, 3);
-	const endStatuses = STATUSES.slice(3);
-
 	function carsFor(status: CarStatus) {
 		return $filteredPipelineCars.filter((c) => c.status === status);
 	}
@@ -99,10 +96,10 @@
 	</div>
 
 	<div class="columns">
-		{#each mainStatuses as status (status)}
+		{#each STATUSES as status (status)}
 			{@const list = carsFor(status)}
 			<div
-				class="pipeline-col"
+				class="col"
 				class:drag-over={draggingOver === status}
 				ondragover={(e) => {
 					e.preventDefault();
@@ -113,7 +110,7 @@
 				role="list"
 			>
 				<div class="col-head">
-					<span>{STATUS_LABELS[status]}</span>
+					<span class="col-label">{STATUS_LABELS[status]}</span>
 					<span class="count">{list.length}</span>
 				</div>
 				<div class="col-body">
@@ -137,153 +134,114 @@
 							{/if}
 						</div>
 					{:else}
-						<div class="empty">—<br />No cars</div>
+						<div class="empty">No cars</div>
 					{/each}
 				</div>
 			</div>
 		{/each}
-		<div class="end-group">
-			{#each endStatuses as status (status)}
-				{@const list = carsFor(status)}
-				<div
-					class="pipeline-col end"
-					class:drag-over={draggingOver === status}
-					ondragover={(e) => {
-						e.preventDefault();
-						draggingOver = status;
-					}}
-					ondragleave={() => (draggingOver = null)}
-					ondrop={(e) => handleDrop(e, status)}
-					role="list"
-				>
-					<div class="col-head">
-						<span>{STATUS_LABELS[status]}</span>
-						<span class="count">{list.length}</span>
-					</div>
-					<div class="col-body">
-						{#each list as car (car.id)}
-							<div class="card-wrap">
-								<CarCard
-									{car}
-									draggable={!isMobile}
-									onopen={openDetail}
-									onedit={openEdit}
-								/>
-								{#if isMobile}
-									<div class="mobile-status">
-										<CustomSelect
-											options={STATUSES.map((s) => ({
-												value: s,
-												label: STATUS_LABELS[s]
-											}))}
-											value={car.status}
-											ariaLabel="Move status"
-											onchange={(v) => handleStatusChange(car.id, v)}
-										/>
-									</div>
-								{/if}
-							</div>
-						{:else}
-							<div class="empty">—<br />No cars</div>
-						{/each}
-					</div>
-				</div>
-			{/each}
-		</div>
 	</div>
 </div>
 
 <style>
 	.pipeline-view {
-		padding: 0.5rem 0;
+		padding: 8px 0 24px;
 	}
 	.filter-bar {
 		display: flex;
-		gap: 0.5rem;
+		gap: 8px;
 		align-items: center;
-		margin-bottom: 1rem;
+		margin-bottom: 16px;
 		flex-wrap: wrap;
 	}
 	.search {
 		flex: 1;
 		min-width: 200px;
-		padding: 0.55rem 0.85rem;
-		border: 1px solid var(--border-strong);
-		border-radius: var(--radius-md);
-		font-size: var(--fs-sm);
+		padding: 9px 14px;
+		background: var(--card);
+		border: 1px solid var(--rule);
+		border-radius: 10px;
+		font-size: 0.82rem;
+		color: var(--ink);
+		outline: none;
+	}
+	.search:focus {
+		border-color: var(--accent);
 	}
 	.select-slot {
 		width: 180px;
 	}
 	.columns {
 		display: grid;
-		grid-template-columns: repeat(3, 1fr) auto;
-		gap: 0.75rem;
+		grid-template-columns: repeat(5, minmax(0, 1fr));
+		gap: 16px;
 		align-items: flex-start;
 	}
-	.end-group {
-		display: grid;
-		grid-template-columns: repeat(2, minmax(180px, 220px));
-		gap: 0.75rem;
-	}
-	.pipeline-col {
-		background: var(--bg);
-		border-radius: var(--radius-md);
-		padding: 0.6rem 0.55rem;
+	.col {
+		background: var(--card-2);
+		border-radius: 16px;
+		padding: 14px;
 		min-width: 0;
+		min-height: 400px;
+		transition: background var(--dur-fast) var(--ease);
 	}
-	.pipeline-col.drag-over {
-		outline: 2px dashed var(--accent);
+	.col.drag-over {
+		background: var(--accent-bg);
 	}
 	.col-head {
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		padding: 0 0.25rem 0.5rem;
-		font-size: 0.78rem;
-		font-weight: 700;
-		text-transform: uppercase;
-		letter-spacing: 0.05em;
-		color: var(--text-secondary);
+		margin-bottom: 14px;
+		padding: 0 4px;
+		gap: 8px;
+	}
+	.col-label {
+		font-size: 0.82rem;
+		font-weight: 600;
+		color: var(--ink);
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
 	}
 	.count {
-		background: var(--bg-card);
-		padding: 2px 7px;
+		background: var(--card);
+		padding: 2px 8px;
 		border-radius: 999px;
-		font-family: var(--mono);
-		color: var(--text-muted);
+		font-size: 0.72rem;
+		color: var(--ink-dim);
+		flex-shrink: 0;
 	}
 	.col-body {
 		display: flex;
 		flex-direction: column;
-		gap: 0.5rem;
-		min-height: 80px;
+		gap: 10px;
 	}
 	.card-wrap {
 		display: flex;
 		flex-direction: column;
-		gap: 0.35rem;
+		gap: 6px;
 	}
 	.mobile-status {
 		width: 100%;
 	}
 	.empty {
 		text-align: center;
-		padding: 1rem;
-		color: var(--text-muted);
-		font-size: 0.82rem;
-		line-height: 1.6;
+		padding: 16px 8px;
+		color: var(--ink-dim);
+		font-size: 0.78rem;
+	}
+	@media (max-width: 1200px) {
+		.columns {
+			grid-template-columns: repeat(3, 1fr);
+		}
 	}
 	@media (max-width: 960px) {
 		.columns {
-			grid-template-columns: 1fr;
-		}
-		.end-group {
-			grid-template-columns: 1fr 1fr;
+			grid-template-columns: repeat(2, 1fr);
 		}
 	}
 	@media (max-width: 640px) {
-		.end-group {
+		.columns {
 			grid-template-columns: 1fr;
 		}
 		.select-slot {

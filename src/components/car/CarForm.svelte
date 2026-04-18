@@ -58,7 +58,9 @@
 		};
 	}
 
+	// svelte-ignore state_referenced_locally
 	let f = $state<FormState>(toForm(car));
+	// svelte-ignore state_referenced_locally
 	let originalPrice = $state<number | undefined>(car?.price ?? undefined);
 	let submitting = $state(false);
 
@@ -299,49 +301,52 @@
 		gap: 4px;
 	}
 	label {
-		font-size: 0.72rem;
-		color: var(--text-muted);
+		font-size: 0.7rem;
+		color: var(--ink-dim);
 		text-transform: uppercase;
-		letter-spacing: 0.03em;
+		letter-spacing: 0.08em;
 		font-weight: 600;
 	}
 	input,
 	textarea {
-		padding: 0.55rem 0.85rem;
-		border: 1px solid var(--border-strong);
-		border-radius: var(--radius-md);
-		font-size: var(--fs-sm);
-		background: var(--bg-card);
-		color: var(--text);
+		padding: 10px 14px;
+		border: 1px solid var(--rule);
+		border-radius: 10px;
+		font-size: 0.85rem;
+		background: var(--card-2);
+		color: var(--ink);
 		font-family: inherit;
+		transition: border-color var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease);
 	}
 	input:focus,
 	textarea:focus {
-		outline: 2px solid var(--accent);
-		outline-offset: 1px;
+		outline: none;
+		border-color: var(--accent);
+		background: var(--card);
 	}
 	textarea {
 		min-height: 80px;
 		resize: vertical;
 	}
 	.price-change {
-		background: var(--yellow-bg, var(--bg-warm));
-		padding: 0.6rem 0.8rem;
-		border-radius: var(--radius-md);
+		background: var(--warn-bg);
+		padding: 10px 12px;
+		border-radius: 10px;
 	}
 	.form-actions {
 		display: flex;
-		gap: 0.5rem;
+		gap: 8px;
 		justify-content: flex-end;
-		margin-top: 0.5rem;
+		margin-top: 8px;
 	}
 	.btn {
-		padding: 0.55rem 1.1rem;
+		padding: 10px 18px;
 		border: 0;
-		border-radius: var(--radius-md);
-		font-size: var(--fs-sm);
+		border-radius: 10px;
+		font-size: 0.85rem;
 		font-weight: 600;
 		cursor: pointer;
+		transition: all var(--dur-fast) var(--ease);
 	}
 	.btn.primary {
 		background: var(--accent);
@@ -355,8 +360,13 @@
 		cursor: not-allowed;
 	}
 	.btn.secondary {
-		background: var(--bg-warm);
-		color: var(--text);
+		background: transparent;
+		color: var(--ink-soft);
+		border: 1px solid var(--rule);
+	}
+	.btn.secondary:hover {
+		background: var(--card-2);
+		color: var(--ink);
 	}
 	@media (max-width: 640px) {
 		.form-row {

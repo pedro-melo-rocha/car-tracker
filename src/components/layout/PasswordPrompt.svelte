@@ -4,6 +4,11 @@
 	import { refreshCars } from '$lib/stores/cars';
 
 	let value = $state('');
+	let inputEl: HTMLInputElement | undefined = $state();
+
+	$effect(() => {
+		if ($needsSecret) queueMicrotask(() => inputEl?.focus());
+	});
 
 	function onSubmit(e: Event) {
 		e.preventDefault();
@@ -24,7 +29,7 @@
 				class="input"
 				type="password"
 				bind:value
-				autofocus
+				bind:this={inputEl}
 				autocomplete="off"
 				spellcheck="false"
 			/>

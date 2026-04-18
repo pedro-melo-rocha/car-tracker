@@ -41,7 +41,7 @@ export function computeScore(car: ScoreableCar): number {
 }
 
 export function scoreClass(score: number): 'green' | 'yellow' | 'red' {
-	if (score >= 75) return 'green';
+	if (score >= 70) return 'green';
 	if (score >= 50) return 'yellow';
 	return 'red';
 }

@@ -18,15 +18,30 @@
 
 <header class="header">
 	<div class="inner">
-		<a href="/pipeline" class="brand">Car Tracker</a>
-		<nav class="tabs">
+		<a href="/pipeline" class="brand">
+			<span class="brand-mark" aria-hidden="true"></span>
+			<span class="brand-name">Car Tracker</span>
+		</a>
+		<div class="spacer"></div>
+		<nav class="switcher" aria-label="Views">
 			{#each tabs as tab (tab.href)}
-				<a href={tab.href} class="tab" class:active={page.url.pathname === tab.href}>
+				<a
+					href={tab.href}
+					class="seg"
+					class:active={page.url.pathname === tab.href}
+					data-sveltekit-preload-data="hover"
+				>
 					{tab.label}
 				</a>
 			{/each}
 		</nav>
-		<button type="button" class="add-btn" onclick={openAdd}>+ Add Car</button>
+		<button type="button" class="add-btn" onclick={openAdd}>
+			<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+				<line x1="12" y1="5" x2="12" y2="19" />
+				<line x1="5" y1="12" x2="19" y2="12" />
+			</svg>
+			Add car
+		</button>
 	</div>
 </header>
 
@@ -35,54 +50,78 @@
 		position: sticky;
 		top: 0;
 		z-index: 30;
-		background: var(--bg);
-		border-bottom: 1px solid var(--border);
+		background: rgba(255, 255, 255, 0.72);
+		backdrop-filter: saturate(160%) blur(8px);
+		-webkit-backdrop-filter: saturate(160%) blur(8px);
+		border-bottom: 1px solid var(--rule);
 	}
 	.inner {
 		max-width: 1400px;
 		margin: 0 auto;
 		display: flex;
 		align-items: center;
-		gap: 1.25rem;
-		padding: 0.75rem 1.25rem;
+		gap: 12px;
+		padding: 10px 24px;
 	}
 	.brand {
-		font-weight: 800;
-		font-size: 1.1rem;
-		color: var(--text);
+		display: inline-flex;
+		align-items: baseline;
+		gap: 10px;
 		text-decoration: none;
-		margin-right: 0.5rem;
+		color: var(--ink);
 	}
-	.tabs {
-		display: flex;
-		gap: 0.25rem;
+	.brand-mark {
+		width: 10px;
+		height: 10px;
+		background: var(--accent);
+		display: inline-block;
+		transform: rotate(45deg) translateY(1px);
+		border-radius: 2px;
+	}
+	.brand-name {
+		font-size: 0.9rem;
+		font-weight: 700;
+		letter-spacing: -0.01em;
+	}
+	.spacer {
 		flex: 1;
 	}
-	.tab {
-		padding: 0.45rem 0.85rem;
-		border-radius: var(--radius-md);
-		color: var(--text-secondary);
-		text-decoration: none;
-		font-size: var(--fs-md);
+	.switcher {
+		display: flex;
+		background: var(--card-2);
+		padding: 3px;
+		border-radius: 10px;
+		border: 1px solid var(--rule);
+		gap: 2px;
+	}
+	.seg {
+		padding: 5px 14px;
+		border-radius: 8px;
+		font-size: 0.78rem;
 		font-weight: 500;
+		color: var(--ink-soft);
+		text-decoration: none;
 		transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
 	}
-	.tab:hover {
-		background: var(--bg-warm);
-		color: var(--text);
+	.seg:hover {
+		color: var(--ink);
 	}
-	.tab.active {
-		background: var(--accent-light);
-		color: var(--accent);
+	.seg.active {
+		background: var(--card);
+		color: var(--ink);
+		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
 	}
 	.add-btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		padding: 7px 14px;
+		border-radius: 10px;
 		background: var(--accent);
 		color: #fff;
 		border: 0;
-		border-radius: var(--radius-md);
-		padding: 0.55rem 1rem;
-		font-weight: 600;
-		font-size: var(--fs-sm);
+		font-size: 0.78rem;
+		font-weight: 500;
 		transition: background var(--dur-fast) var(--ease);
 	}
 	.add-btn:hover {
@@ -91,19 +130,19 @@
 	@media (max-width: 640px) {
 		.inner {
 			flex-wrap: wrap;
-			gap: 0.5rem;
-			padding: 0.6rem 0.75rem;
+			gap: 8px;
+			padding: 10px 14px;
 		}
-		.brand {
-			flex: 0 0 auto;
+		.spacer {
+			display: none;
 		}
-		.add-btn {
-			padding: 0.4rem 0.7rem;
-		}
-		.tabs {
+		.switcher {
 			order: 3;
 			width: 100%;
 			overflow-x: auto;
+		}
+		.seg {
+			padding: 5px 10px;
 		}
 	}
 </style>

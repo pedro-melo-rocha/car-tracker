@@ -1,7 +1,9 @@
 <script lang="ts">
 	import type { Car } from '$lib/types';
-	import { computeScore } from '$lib/scoring';
+	import { computeScore, locationKm } from '$lib/scoring';
+	import { timeAgo } from '$lib/staleness';
 	import ScoreBadge from '$components/ui/ScoreBadge.svelte';
+	import StatusPill from '$components/ui/StatusPill.svelte';
 
 	let {
 		car,
@@ -20,9 +22,21 @@
 	} = $props();
 
 	const score = $derived(computeScore(car));
-	const notesPreview = $derived(
-		car.notes ? (car.notes.length > 80 ? car.notes.slice(0, 80) + '...' : car.notes) : ''
-	);
+	const latestDrop = $derived.by(() => {
+		const drops = (car.priceHistory ?? []).filter((h, i, arr) => {
+			const prev = i === 0 ? undefined : arr[i - 1].price;
+			return prev !== undefined && h.price < prev;
+		});
+		return drops[drops.length - 1];
+	});
+	const dropAmount = $derived.by(() => {
+		const hist = car.priceHistory ?? [];
+		if (hist.length < 2 || !latestDrop) return 0;
+		const idx = hist.indexOf(latestDrop);
+		return hist[idx - 1].price - latestDrop.price;
+	});
+	const distance = $derived(locationKm(car.location));
+	const kmLabel = $derived(car.km != null ? Math.round(car.km / 1000) + 'k\u00A0km' : '—');
 </script>
 
 <div
@@ -44,120 +58,191 @@
 	}}
 	ondragend={() => ondragend?.()}
 >
-	<div class="card-header">
-		<span class="card-title">{car.title}</span>
-		{#if car.source}
-			<span class="source-tag">{car.source}</span>
+	<div class="head">
+		<ScoreBadge {score} size="md" />
+		<div class="head-text">
+			<div class="meta">
+				{car.source ?? '—'} · {timeAgo(car.addedAt)}
+			</div>
+			<h3 class="title">{car.title}</h3>
+		</div>
+	</div>
+
+	<div class="price-row">
+		<span class="price">{car.price ? '€' + car.price.toLocaleString('pt-PT') : '—'}</span>
+		{#if dropAmount > 0}
+			<span class="drop">
+				<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+					<polyline points="22 17 13.5 8.5 8.5 13.5 2 7" />
+					<polyline points="16 17 22 17 22 11" />
+				</svg>
+				€{dropAmount.toLocaleString('pt-PT')} off
+			</span>
 		{/if}
 	</div>
-	<div class="card-chips">
-		<span class="chip">{car.year ?? '—'}</span>
-		<span class="chip">{car.km ? car.km.toLocaleString() + ' km' : '—'}</span>
-		<span class="chip">{car.fuel ?? '—'}</span>
-		<span class="chip chip-price">€{car.price ? car.price.toLocaleString() : '—'}</span>
-		<ScoreBadge {score} size="sm" />
+
+	<div class="facts">
+		<span>{kmLabel}</span>
+		<span class="dot">·</span>
+		<span>{car.year ?? '—'}</span>
+		<span class="dot">·</span>
+		<span>{car.fuel ?? '—'}</span>
 	</div>
-	{#if car.location}
-		<div class="card-notes" style="margin-bottom:6px;">📍 {car.location}</div>
-	{/if}
-	{#if notesPreview}
-		<div class="card-notes">{notesPreview}</div>
-	{/if}
-	<div class="card-actions">
-		<button
-			type="button"
-			class="card-btn"
-			onclick={(e) => {
-				e.stopPropagation();
-				onedit?.(car.id);
-			}}>Edit</button
-		>
+
+	<div class="foot">
+		<span class="loc">
+			<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+				<path d="M12 22s-7-7.5-7-13a7 7 0 0 1 14 0c0 5.5-7 13-7 13z" />
+				<circle cx="12" cy="9" r="2.5" />
+			</svg>
+			<span class="loc-text">
+				{car.location ?? '—'}
+				{#if distance != null}<span class="dim"> · {distance}km</span>{/if}
+			</span>
+		</span>
+		<div class="foot-right">
+			<button
+				type="button"
+				class="edit-btn"
+				aria-label="Edit car"
+				onclick={(e) => {
+					e.stopPropagation();
+					onedit?.(car.id);
+				}}
+			>
+				<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+					<path d="M4 20h4L20 8l-4-4L4 16v4z" />
+					<line x1="14" y1="6" x2="18" y2="10" />
+				</svg>
+			</button>
+			<StatusPill status={car.status} />
+		</div>
 	</div>
 </div>
 
 <style>
 	.car-card {
-		background: var(--bg-card);
-		border-radius: var(--radius-md);
-		padding: 12px 14px;
-		border: 1px solid var(--border);
+		background: var(--card);
+		border: 1px solid var(--rule);
+		border-radius: var(--radius-lg);
+		padding: 16px;
 		cursor: pointer;
-		transition: border-color var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease);
+		box-shadow: var(--shadow-sm);
+		transition:
+			transform 160ms var(--ease),
+			box-shadow 160ms var(--ease),
+			border-color 160ms var(--ease);
 	}
 	.car-card:hover {
-		border-color: var(--border-strong);
+		transform: translateY(-1px);
+		box-shadow: var(--shadow-lg);
 	}
-	.card-header {
+	.car-card:focus-visible {
+		outline: 2px solid var(--accent);
+		outline-offset: 2px;
+	}
+	.head {
 		display: flex;
-		justify-content: space-between;
-		gap: 8px;
+		gap: 12px;
 		align-items: flex-start;
-		margin-bottom: 8px;
 	}
-	.card-title {
-		font-size: 0.88rem;
-		font-weight: 700;
+	.head-text {
 		flex: 1;
-		letter-spacing: -0.02em;
-		line-height: 1.3;
-		color: var(--text);
+		min-width: 0;
 	}
-	.source-tag {
-		background: var(--blue-bg);
-		color: var(--blue);
-		padding: 3px 8px;
-		border-radius: 20px;
+	.meta {
 		font-size: 0.68rem;
-		font-weight: 600;
-		white-space: nowrap;
-		letter-spacing: -0.01em;
-		flex-shrink: 0;
+		color: var(--ink-dim);
+		margin-bottom: 2px;
 	}
-	.card-chips {
+	.title {
+		font-size: 0.94rem;
+		font-weight: 600;
+		letter-spacing: -0.015em;
+		line-height: 1.25;
+		color: var(--ink);
+	}
+	.price-row {
+		display: flex;
+		align-items: baseline;
+		gap: 8px;
+		margin-top: 12px;
+	}
+	.price {
+		font-size: 1.35rem;
+		font-weight: 600;
+		letter-spacing: -0.02em;
+		color: var(--ink);
+	}
+	.drop {
+		font-size: 0.68rem;
+		color: var(--good);
+		display: inline-flex;
+		align-items: center;
+		gap: 3px;
+	}
+	.facts {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 5px;
-		margin-bottom: 10px;
+		gap: 6px;
+		margin-top: 8px;
+		font-size: 0.76rem;
+		color: var(--ink-soft);
 	}
-	.chip {
-		padding: 3px 9px;
-		border-radius: 20px;
-		font-size: 0.72rem;
-		font-family: var(--mono);
-		font-weight: 500;
-		background: var(--bg);
-		color: var(--text-secondary);
+	.facts .dot {
+		color: var(--ink-dim);
 	}
-	.chip-price {
-		background: var(--green-bg);
-		color: var(--green);
-		font-weight: 600;
-		box-shadow: inset 0 0 0 1px rgba(45, 139, 111, 0.12);
-	}
-	.card-notes {
-		font-size: 0.78rem;
-		color: var(--text-muted);
-		margin-bottom: 10px;
-		line-height: 1.45;
-		letter-spacing: -0.01em;
-	}
-	.card-actions {
+	.foot {
+		margin-top: 12px;
+		padding-top: 12px;
+		border-top: 1px solid var(--rule);
 		display: flex;
-		gap: 5px;
+		justify-content: space-between;
+		align-items: center;
+		gap: 8px;
 	}
-	.card-btn {
-		background: var(--bg);
-		border: none;
-		color: var(--text-muted);
-		padding: 4px 10px;
-		border-radius: var(--radius-sm);
-		font-size: 0.72rem;
-		font-weight: 600;
-		cursor: pointer;
-		transition: all 0.15s;
+	.loc {
+		display: inline-flex;
+		align-items: center;
+		gap: 4px;
+		font-size: 0.76rem;
+		color: var(--ink-soft);
+		min-width: 0;
+		overflow: hidden;
 	}
-	.card-btn:hover {
-		background: var(--bg-warm);
-		color: var(--text-secondary);
+	.loc-text {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.dim {
+		color: var(--ink-dim);
+	}
+	.foot-right {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		flex-shrink: 0;
+	}
+	.edit-btn {
+		background: transparent;
+		border: 0;
+		width: 22px;
+		height: 22px;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		border-radius: 6px;
+		color: var(--ink-dim);
+		opacity: 0;
+		transition: opacity var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease);
+	}
+	.car-card:hover .edit-btn,
+	.car-card:focus-within .edit-btn {
+		opacity: 1;
+	}
+	.edit-btn:hover {
+		background: var(--card-2);
+		color: var(--ink);
 	}
 </style>

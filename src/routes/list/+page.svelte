@@ -367,73 +367,82 @@
 
 <style>
 	.list-view {
-		padding: 0.5rem 0;
+		padding: 8px 0 24px;
 	}
 	.filter-bar {
 		display: flex;
-		gap: 0.5rem;
+		gap: 10px;
 		align-items: center;
-		margin-bottom: 1rem;
+		margin-bottom: 14px;
 		flex-wrap: wrap;
 	}
 	.search {
 		flex: 1;
-		min-width: 200px;
-		padding: 0.55rem 0.85rem;
-		border: 1px solid var(--border-strong);
-		border-radius: var(--radius-md);
-		font-size: var(--fs-sm);
+		min-width: 260px;
+		padding: 9px 14px;
+		background: var(--card);
+		border: 1px solid var(--rule);
+		border-radius: 10px;
+		font-size: 0.82rem;
+		color: var(--ink);
+		outline: none;
+	}
+	.search:focus {
+		border-color: var(--accent);
 	}
 	.count {
-		font-size: 0.82rem;
-		color: var(--text-muted);
-		font-family: var(--mono);
+		font-size: 0.78rem;
+		color: var(--ink-dim);
 	}
 	.clear-btn {
-		background: var(--bg-warm);
-		border: 0;
-		padding: 0.45rem 0.85rem;
-		border-radius: var(--radius-sm);
-		font-size: 0.78rem;
-		color: var(--text-secondary);
+		background: transparent;
+		border: 1px solid var(--rule);
+		padding: 7px 12px;
+		border-radius: 8px;
+		font-size: 0.76rem;
+		color: var(--ink-soft);
 		cursor: pointer;
+	}
+	.clear-btn:hover {
+		background: var(--card-2);
+		color: var(--ink);
 	}
 	.mobile-filter-btn {
 		display: none;
 		background: var(--accent);
 		color: #fff;
 		border: 0;
-		padding: 0.45rem 0.85rem;
-		border-radius: var(--radius-sm);
-		font-size: 0.78rem;
-		font-weight: 600;
+		padding: 7px 14px;
+		border-radius: 8px;
+		font-size: 0.76rem;
+		font-weight: 500;
 		cursor: pointer;
 	}
 	.list-cards {
 		display: none;
 		flex-direction: column;
-		gap: 0.5rem;
+		gap: 8px;
 	}
 	.list-table-wrap {
 		overflow-x: auto;
-		border-radius: var(--radius-md);
-		box-shadow: var(--shadow);
-		background: var(--bg-card);
+		border-radius: var(--radius);
+		background: transparent;
 	}
 	.list-table {
 		width: 100%;
-		border-collapse: collapse;
+		border-collapse: separate;
+		border-spacing: 0 8px;
 	}
 	.list-table th {
-		background: var(--bg);
-		padding: 10px 12px;
-		font-size: 0.72rem;
+		background: transparent;
+		padding: 6px 14px;
+		font-size: 0.68rem;
 		text-transform: uppercase;
-		letter-spacing: 0.05em;
-		color: var(--text-muted);
-		font-weight: 700;
+		letter-spacing: 0.06em;
+		color: var(--ink-dim);
+		font-weight: 500;
 		text-align: left;
-		border-bottom: 1px solid var(--border);
+		border: 0;
 		position: relative;
 	}
 	.th-inner {
@@ -443,7 +452,7 @@
 		position: relative;
 	}
 	.th-label {
-		font-weight: 700;
+		font-weight: 500;
 	}
 	.th-filter {
 		background: transparent;
@@ -453,7 +462,7 @@
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-		color: var(--text-muted);
+		color: var(--ink-dim);
 		border-radius: 4px;
 		cursor: pointer;
 	}
@@ -462,20 +471,23 @@
 		height: 11px;
 	}
 	.th-filter:hover {
-		background: var(--bg-warm);
+		background: var(--card-2);
 		color: var(--accent);
 	}
 	.th-filter.active {
 		color: var(--accent);
-		background: var(--accent-light);
+		background: var(--accent-bg);
 	}
 	.empty {
 		text-align: center;
-		padding: 3rem 1rem;
-		color: var(--text-muted);
+		padding: 64px 16px;
+		color: var(--ink-dim);
+		background: var(--card);
+		border: 1px solid var(--rule);
+		border-radius: var(--radius);
 	}
 	.empty .icon {
-		font-size: 2rem;
+		font-size: 1.5rem;
 		margin-bottom: 0.5rem;
 	}
 	@media (max-width: 640px) {
@@ -491,5 +503,29 @@
 		.clear-btn {
 			display: none;
 		}
+	}
+	:global(.list-table tbody tr) {
+		background: var(--card);
+		transition:
+			border-color var(--dur-fast) var(--ease),
+			transform var(--dur-fast) var(--ease),
+			box-shadow var(--dur-fast) var(--ease);
+	}
+	:global(.list-table tbody tr > td:first-child) {
+		border-left: 1px solid var(--rule);
+		border-top-left-radius: var(--radius);
+		border-bottom-left-radius: var(--radius);
+	}
+	:global(.list-table tbody tr > td:last-child) {
+		border-right: 1px solid var(--rule);
+		border-top-right-radius: var(--radius);
+		border-bottom-right-radius: var(--radius);
+	}
+	:global(.list-table tbody tr > td) {
+		border-top: 1px solid var(--rule);
+		border-bottom: 1px solid var(--rule);
+	}
+	:global(.list-table tbody tr:hover > td) {
+		border-color: var(--accent);
 	}
 </style>

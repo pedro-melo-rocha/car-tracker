@@ -66,7 +66,11 @@
 			role="dialog"
 			aria-modal="true"
 			aria-label={editCar ? 'Edit car' : 'Add car'}
+			tabindex="-1"
 			onclick={(e) => e.stopPropagation()}
+			onkeydown={(e) => {
+				if (e.key === 'Escape') closeOverlay('edit');
+			}}
 		>
 			<div class="modal-head">
 				<h2>{editCar ? 'Edit Car' : 'Add Car'}</h2>

@@ -6,37 +6,49 @@
 	const label = $derived(STATUS_LABELS[status as CarStatus] ?? status);
 </script>
 
-<span class="status-badge {status}">{label}</span>
+<span class="status-pill {status}">
+	<span class="dot"></span>
+	{label}
+</span>
 
 <style>
-	.status-badge {
-		padding: 4px 12px;
-		border-radius: 20px;
-		font-size: 0.76rem;
-		font-weight: 600;
-		background: var(--bg);
-		color: var(--text-secondary);
-		display: inline-block;
+	.status-pill {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		padding: 3px 10px;
+		border-radius: 999px;
+		font-size: 0.7rem;
+		font-weight: 500;
 		white-space: nowrap;
-	}
-	.status-badge.to-contact {
 		background: var(--bg-warm);
-		color: var(--text-muted);
+		color: var(--text-secondary);
 	}
-	.status-badge.contacted {
-		background: var(--blue-bg);
-		color: var(--blue);
+	.dot {
+		width: 5px;
+		height: 5px;
+		border-radius: 50%;
+		background: currentColor;
+		flex-shrink: 0;
 	}
-	.status-badge.negotiating {
-		background: #fff0e5;
-		color: #e8873a;
+	.status-pill.to-contact {
+		background: var(--status-to-contact-bg);
+		color: var(--status-to-contact-fg);
 	}
-	.status-badge.dismissed {
-		background: var(--red-bg);
-		color: var(--red);
+	.status-pill.contacted {
+		background: var(--status-contacted-bg);
+		color: var(--status-contacted-fg);
 	}
-	.status-badge.final-offer {
-		background: var(--green-bg);
-		color: var(--green);
+	.status-pill.negotiating {
+		background: var(--status-negotiating-bg);
+		color: var(--status-negotiating-fg);
+	}
+	.status-pill.final-offer {
+		background: var(--status-final-offer-bg);
+		color: var(--status-final-offer-fg);
+	}
+	.status-pill.dismissed {
+		background: var(--status-dismissed-bg);
+		color: var(--status-dismissed-fg);
 	}
 </style>

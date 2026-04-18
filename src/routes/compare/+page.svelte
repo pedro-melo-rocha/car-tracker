@@ -3,7 +3,8 @@
 	import { goto } from '$app/navigation';
 	import { cars } from '$lib/stores/cars';
 	import { compareIds, toggleCompare, clearCompare } from '$lib/stores/compare';
-	import { computeScore, computeScoreBreakdown, scoreClass, locationKm } from '$lib/scoring';
+	import { computeScore, computeScoreBreakdown, locationKm } from '$lib/scoring';
+	import ScoreBadge from '$components/ui/ScoreBadge.svelte';
 	import type { Car } from '$lib/types';
 
 	let filter = $state('');
@@ -27,58 +28,113 @@
 	const selected = $derived($cars.filter((c) => $compareIds.includes(c.id)));
 	const atLimit = $derived($compareIds.length >= 5);
 
-	const scoresByCar = $derived(
-		new Map(selected.map((c) => [c.id, computeScore(c)] as const))
-	);
+	function scoreOf(c: Car) {
+		return computeScore(c);
+	}
+	function relOf(c: Car) {
+		return computeScoreBreakdown(c).rel.score;
+	}
+	function distOf(c: Car) {
+		return locationKm(c.location);
+	}
 
-	const topScore = $derived(
-		selected.length ? Math.max(...selected.map((c) => scoresByCar.get(c.id) ?? 0)) : 0
-	);
-	const tied = $derived(selected.filter((c) => (scoresByCar.get(c.id) ?? 0) === topScore));
-	const winnerId = $derived.by(() => {
-		if (tied.length <= 1) return tied[0]?.id;
+	type Row = {
+		key: string;
+		label: string;
+		get: (c: Car) => string;
+		winner?: (cars: Car[]) => string | null;
+		big?: boolean;
+	};
+
+	const rows: Row[] = [
+		{
+			key: 'price',
+			label: 'Price',
+			big: true,
+			get: (c) => (c.price ? '€' + c.price.toLocaleString('pt-PT') : '—'),
+			winner: (list) => {
+				const vals = list.map((c) => ({ id: c.id, v: c.price ?? null })).filter((x) => x.v != null);
+				if (!vals.length) return null;
+				return vals.reduce((a, b) => (a.v! < b.v! ? a : b)).id;
+			}
+		},
+		{
+			key: 'km',
+			label: 'Kilometres',
+			get: (c) => (c.km ? c.km.toLocaleString('pt-PT') + ' km' : '—'),
+			winner: (list) => {
+				const vals = list.map((c) => ({ id: c.id, v: c.km ?? null })).filter((x) => x.v != null);
+				if (!vals.length) return null;
+				return vals.reduce((a, b) => (a.v! < b.v! ? a : b)).id;
+			}
+		},
+		{
+			key: 'year',
+			label: 'Year',
+			get: (c) => (c.year ? String(c.year) : '—'),
+			winner: (list) => {
+				const vals = list.map((c) => ({ id: c.id, v: c.year ?? null })).filter((x) => x.v != null);
+				if (!vals.length) return null;
+				return vals.reduce((a, b) => (a.v! > b.v! ? a : b)).id;
+			}
+		},
+		{ key: 'fuel', label: 'Fuel', get: (c) => c.fuel ?? '—' },
+		{ key: 'engine', label: 'Engine', get: (c) => c.engine ?? '—' },
+		{ key: 'power', label: 'Power', get: (c) => (c.power ? c.power + ' cv' : '—') },
+		{ key: 'location', label: 'Location', get: (c) => c.location ?? '—' },
+		{
+			key: 'distance',
+			label: 'Distance',
+			get: (c) => {
+				const d = distOf(c);
+				return d != null ? d + ' km' : '—';
+			},
+			winner: (list) => {
+				const vals = list.map((c) => ({ id: c.id, v: distOf(c) })).filter((x) => x.v != null);
+				if (!vals.length) return null;
+				return vals.reduce((a, b) => (a.v! < b.v! ? a : b)).id;
+			}
+		},
+		{
+			key: 'reliability',
+			label: 'Reliability',
+			get: (c) => relOf(c) + '/100',
+			winner: (list) => {
+				if (!list.length) return null;
+				return list.reduce((a, b) => (relOf(a) > relOf(b) ? a : b)).id;
+			}
+		},
+		{ key: 'source', label: 'Source', get: (c) => c.source ?? '—' },
+		{ key: 'notes', label: 'Notes', get: (c) => c.notes ?? '—' }
+	];
+
+	const topPickId = $derived.by(() => {
+		if (selected.length < 2) return null;
+		const tops = [...selected].sort((a, b) => scoreOf(b) - scoreOf(a));
+		const topScore = scoreOf(tops[0]);
+		const tied = tops.filter((c) => scoreOf(c) === topScore);
+		if (tied.length === 1) return tied[0].id;
 		const sorted = [...tied].sort((a, b) => {
 			const pa = a.price ?? Infinity;
 			const pb = b.price ?? Infinity;
 			if (pa !== pb) return pa - pb;
-			const ka = a.km ?? Infinity;
-			const kb = b.km ?? Infinity;
-			return ka - kb;
+			return (a.km ?? Infinity) - (b.km ?? Infinity);
 		});
-		return sorted[0]?.id;
+		return sorted[0].id;
+	});
+
+	const bestByRow = $derived.by(() => {
+		const out: Record<string, string | null> = {};
+		for (const r of rows) {
+			out[r.key] = r.winner ? r.winner(selected) : null;
+		}
+		return out;
 	});
 
 	function openDetail(id: string) {
 		const url = new URL(page.url);
 		url.searchParams.set('car', id);
 		goto(url.pathname + url.search, { keepFocus: true, noScroll: true });
-	}
-
-	function fmtPrice(c: Car) {
-		if (!c.price) return '—';
-		const epm = c.km ? ` · €${(c.price / c.km).toFixed(3)}/km` : '';
-		return `€${c.price.toLocaleString()}${epm}`;
-	}
-
-	function fmtKm(c: Car) {
-		return c.km ? c.km.toLocaleString() + ' km' : '—';
-	}
-
-	function fmtYear(c: Car) {
-		if (!c.year) return '—';
-		const age = new Date().getFullYear() - c.year;
-		return `${c.year} · ${age} yrs`;
-	}
-
-	function fmtEngine(c: Car) {
-		const parts = [c.engine, c.power ? c.power + 'cv' : ''].filter(Boolean);
-		return parts.length ? parts.join(' · ') : '—';
-	}
-
-	function fmtLocation(c: Car) {
-		const dist = locationKm(c.location);
-		const parts = [c.location, dist != null ? `${dist} km` : ''].filter(Boolean);
-		return parts.length ? parts.join(' · ') : '—';
 	}
 </script>
 
@@ -97,290 +153,294 @@
 	</div>
 
 	<div class="selectors">
+		<div class="selectors-label">Tap to add up to 5</div>
 		{#if visible.length === 0}
 			<div class="empty-inline">No cars match your filter.</div>
 		{:else}
-			{#each visible as { car } (car.id)}
-				{@const isSelected = $compareIds.includes(car.id)}
-				{@const disabled = !isSelected && atLimit}
-				<button
-					type="button"
-					class="compare-toggle"
-					class:active={isSelected}
-					class:disabled
-					title={disabled ? 'Max 5 cars to compare' : ''}
-					onclick={() => toggleCompare(car.id)}
-				>
-					{car.title}
-				</button>
-			{/each}
+			<div class="pills">
+				{#each visible as { car } (car.id)}
+					{@const isSelected = $compareIds.includes(car.id)}
+					{@const disabled = !isSelected && atLimit}
+					<button
+						type="button"
+						class="pill"
+						class:active={isSelected}
+						class:disabled
+						title={disabled ? 'Max 5 cars to compare' : ''}
+						onclick={() => toggleCompare(car.id)}
+					>
+						{car.title}
+					</button>
+				{/each}
+			</div>
 		{/if}
 	</div>
 
-	{#if selected.length < 2}
+	{#if selected.length === 0}
+		<div class="empty">Choose cars to compare.</div>
+	{:else if selected.length < 2}
 		<div class="empty">
-			<div class="icon">↔</div>
-			{selected.length === 0
-				? 'Tap cars above to add them to the comparison. Pick at least 2 (up to 5).'
-				: `Pick ${2 - selected.length} more car${selected.length === 1 ? '' : 's'} above to start comparing.`}
+			Pick {2 - selected.length} more car to start comparing.
 		</div>
 	{:else}
-		<div class="table-wrap">
-			<table class="compare-table">
-				<thead>
-					<tr>
-						<th></th>
-						{#each selected as c (c.id)}
-							<th class:winner={c.id === winnerId}>
-								<button type="button" class="header-btn" onclick={() => openDetail(c.id)}>
+		<div class="cards" style="grid-template-columns: repeat({selected.length}, 1fr)">
+			{#each selected as c (c.id)}
+				<article class="card">
+					<header class="card-head">
+						<div class="head-row">
+							<ScoreBadge score={scoreOf(c)} size="lg" />
+							<div class="head-text">
+								<div class="head-meta">{c.source ?? '—'}</div>
+								<button type="button" class="head-title" onclick={() => openDetail(c.id)}>
 									{c.title}
 								</button>
-								<button
-									type="button"
-									class="remove-btn"
-									aria-label="Remove from compare"
-									onclick={() => toggleCompare(c.id)}>×</button
-								>
-							</th>
+							</div>
+							<button
+								type="button"
+								class="remove"
+								aria-label="Remove from compare"
+								onclick={() => toggleCompare(c.id)}
+							>
+								×
+							</button>
+						</div>
+						{#if topPickId === c.id}
+							<div class="top-pick">
+								<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+									<polygon points="12 2 15 9 22 10 17 15 18 22 12 19 6 22 7 15 2 10 9 9" />
+								</svg>
+								Top pick overall
+							</div>
+						{/if}
+					</header>
+					<div class="rows">
+						{#each rows as r (r.key)}
+							{@const isWinner = bestByRow[r.key] === c.id}
+							<div class="row" class:winner={isWinner}>
+								<span class="row-label">{r.label}</span>
+								<span class="row-value" class:big={r.big}>
+									{r.get(c)}
+									{#if isWinner}<span class="star">★</span>{/if}
+								</span>
+							</div>
 						{/each}
-					</tr>
-				</thead>
-				<tbody>
-					<tr>
-						<th class="row-label">Score</th>
-						{#each selected as c (c.id)}
-							{@const s = scoresByCar.get(c.id) ?? 0}
-							<td
-								><span class="chip-score {scoreClass(s)}">{s}</span>
-								{#if c.id === winnerId}
-									<span class="winner-tag">Winner</span>
-								{/if}
-							</td>
-						{/each}
-					</tr>
-					<tr>
-						<th class="row-label">Price</th>
-						{#each selected as c (c.id)}
-							<td>{fmtPrice(c)}</td>
-						{/each}
-					</tr>
-					<tr>
-						<th class="row-label">Km</th>
-						{#each selected as c (c.id)}
-							<td>{fmtKm(c)}</td>
-						{/each}
-					</tr>
-					<tr>
-						<th class="row-label">Year</th>
-						{#each selected as c (c.id)}
-							<td>{fmtYear(c)}</td>
-						{/each}
-					</tr>
-					<tr>
-						<th class="row-label">Fuel</th>
-						{#each selected as c (c.id)}
-							<td>{c.fuel ?? '—'}</td>
-						{/each}
-					</tr>
-					<tr>
-						<th class="row-label">Engine</th>
-						{#each selected as c (c.id)}
-							<td>{fmtEngine(c)}</td>
-						{/each}
-					</tr>
-					<tr>
-						<th class="row-label">Location</th>
-						{#each selected as c (c.id)}
-							<td>{fmtLocation(c)}</td>
-						{/each}
-					</tr>
-					<tr>
-						<th class="row-label">Source</th>
-						{#each selected as c (c.id)}
-							<td>{c.source ?? '—'}</td>
-						{/each}
-					</tr>
-					<tr>
-						<th class="row-label">Reliability</th>
-						{#each selected as c (c.id)}
-							{@const rel = computeScoreBreakdown(c).rel}
-							<td>{rel.score}{rel.reason ? ` · ${rel.reason}` : ''}</td>
-						{/each}
-					</tr>
-					<tr>
-						<th class="row-label">Notes</th>
-						{#each selected as c (c.id)}
-							<td class="notes">{c.notes ?? '—'}</td>
-						{/each}
-					</tr>
-				</tbody>
-			</table>
+					</div>
+				</article>
+			{/each}
 		</div>
 	{/if}
 </div>
 
 <style>
 	.compare-view {
-		padding: 0.5rem 0;
+		padding: 8px 0 24px;
 	}
 	.filter-bar {
 		display: flex;
-		gap: 0.5rem;
+		gap: 10px;
 		align-items: center;
-		margin-bottom: 0.75rem;
+		margin-bottom: 12px;
 		flex-wrap: wrap;
 	}
 	.search {
 		flex: 1;
-		min-width: 200px;
-		padding: 0.55rem 0.85rem;
-		border: 1px solid var(--border-strong);
-		border-radius: var(--radius-md);
-		font-size: var(--fs-sm);
+		min-width: 240px;
+		padding: 9px 14px;
+		background: var(--card);
+		border: 1px solid var(--rule);
+		border-radius: 10px;
+		font-size: 0.82rem;
+		color: var(--ink);
+		outline: none;
+	}
+	.search:focus {
+		border-color: var(--accent);
 	}
 	.count {
-		font-size: 0.82rem;
-		color: var(--text-muted);
-		font-family: var(--mono);
+		font-size: 0.78rem;
+		color: var(--ink-dim);
 	}
 	.clear-btn {
-		background: var(--bg-warm);
-		border: 0;
-		padding: 0.45rem 0.85rem;
-		border-radius: var(--radius-sm);
-		font-size: 0.78rem;
+		background: transparent;
+		border: 1px solid var(--rule);
+		padding: 7px 12px;
+		border-radius: 8px;
+		font-size: 0.76rem;
+		color: var(--ink-soft);
 		cursor: pointer;
 	}
+	.clear-btn:hover {
+		background: var(--card-2);
+		color: var(--ink);
+	}
 	.selectors {
+		margin-bottom: 24px;
+	}
+	.selectors-label {
+		font-size: 0.72rem;
+		color: var(--ink-dim);
+		margin-bottom: 8px;
+	}
+	.pills {
 		display: flex;
 		flex-wrap: wrap;
 		gap: 6px;
-		margin-bottom: 1rem;
 	}
-	.compare-toggle {
-		background: var(--bg-card);
-		border: 1px solid var(--border);
-		border-radius: var(--radius-sm);
-		padding: 0.35rem 0.75rem;
-		font-size: 0.78rem;
-		color: var(--text-secondary);
+	.pill {
+		padding: 6px 12px;
+		border-radius: 999px;
+		background: var(--card);
+		color: var(--ink);
+		border: 1px solid var(--rule);
+		font-size: 0.76rem;
+		font-family: inherit;
 		cursor: pointer;
+		transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
 	}
-	.compare-toggle:hover {
-		background: var(--bg-warm);
-		color: var(--text);
+	.pill:hover {
+		background: var(--card-2);
 	}
-	.compare-toggle.active {
+	.pill.active {
 		background: var(--accent);
 		color: #fff;
 		border-color: var(--accent);
 	}
-	.compare-toggle.disabled {
+	.pill.disabled {
 		opacity: 0.45;
 		cursor: not-allowed;
 	}
 	.empty-inline {
-		color: var(--text-muted);
+		color: var(--ink-dim);
 		font-size: 0.82rem;
-		padding: 0.5rem;
+		padding: 8px;
 	}
 	.empty {
 		text-align: center;
-		padding: 3rem 1rem;
-		color: var(--text-muted);
+		padding: 60px 16px;
+		color: var(--ink-dim);
+		background: var(--card);
+		border: 1px solid var(--rule);
+		border-radius: var(--radius-xl);
 	}
-	.empty .icon {
-		font-size: 1.75rem;
-		margin-bottom: 0.5rem;
+	.cards {
+		display: grid;
+		gap: 16px;
 	}
-	.table-wrap {
-		overflow-x: auto;
-		border-radius: var(--radius-md);
-		background: var(--bg-card);
-		box-shadow: var(--shadow);
+	.card {
+		background: var(--card);
+		border: 1px solid var(--rule);
+		border-radius: var(--radius-xl);
+		overflow: hidden;
+		display: flex;
+		flex-direction: column;
 	}
-	.compare-table {
-		width: 100%;
-		border-collapse: collapse;
+	.card-head {
+		padding: 20px;
+		border-bottom: 1px solid var(--rule);
 	}
-	.compare-table th,
-	.compare-table td {
-		padding: 10px 14px;
-		font-size: 0.85rem;
-		border-bottom: 1px solid var(--border);
-		color: var(--text-secondary);
-		vertical-align: top;
-		text-align: left;
+	.head-row {
+		display: flex;
+		gap: 14px;
+		align-items: flex-start;
 	}
-	.compare-table thead th {
-		background: var(--bg);
-		position: relative;
+	.head-text {
+		flex: 1;
+		min-width: 0;
 	}
-	.compare-table thead th.winner {
-		background: var(--green-bg);
+	.head-meta {
+		font-size: 0.68rem;
+		color: var(--ink-dim);
 	}
-	.header-btn {
+	.head-title {
 		background: transparent;
 		border: 0;
-		font-weight: 700;
-		color: var(--text);
 		text-align: left;
-		cursor: pointer;
 		padding: 0;
+		margin-top: 2px;
+		font-size: 1rem;
+		font-weight: 600;
+		letter-spacing: -0.015em;
+		color: var(--ink);
+		cursor: pointer;
 	}
-	.header-btn:hover {
+	.head-title:hover {
 		color: var(--accent);
 	}
-	.remove-btn {
-		position: absolute;
-		top: 6px;
-		right: 8px;
+	.remove {
 		background: transparent;
 		border: 0;
-		font-size: 1.1rem;
+		font-size: 1.2rem;
 		line-height: 1;
-		color: var(--text-muted);
+		color: var(--ink-dim);
 		cursor: pointer;
+		padding: 2px 6px;
+	}
+	.remove:hover {
+		color: var(--ink);
+	}
+	.top-pick {
+		display: inline-flex;
+		align-items: center;
+		gap: 4px;
+		margin-top: 10px;
+		padding: 4px 10px;
+		background: var(--good-bg);
+		color: var(--good);
+		border-radius: 999px;
+		font-size: 0.68rem;
+		font-weight: 500;
+	}
+	.rows {
+		display: flex;
+		flex-direction: column;
+	}
+	.row {
+		padding: 10px 20px;
+		border-bottom: 1px solid var(--rule);
+		display: flex;
+		justify-content: space-between;
+		align-items: baseline;
+		gap: 10px;
+	}
+	.row:last-child {
+		border-bottom: 0;
+	}
+	.row.winner {
+		background: var(--good-bg);
 	}
 	.row-label {
-		color: var(--text-muted);
 		font-size: 0.72rem;
-		text-transform: uppercase;
-		letter-spacing: 0.05em;
-		background: var(--bg);
-		white-space: nowrap;
+		color: var(--ink-soft);
 	}
-	.notes {
+	.row.winner .row-label {
+		color: var(--good);
+		font-weight: 600;
+	}
+	.row-value {
+		font-size: 0.82rem;
+		font-weight: 500;
+		color: var(--ink);
+		letter-spacing: -0.01em;
+		text-align: right;
+		max-width: 60%;
 		white-space: pre-wrap;
 	}
-	.winner-tag {
-		display: inline-block;
-		font-size: 0.68rem;
-		text-transform: uppercase;
-		letter-spacing: 0.05em;
-		background: var(--green);
-		color: #fff;
-		padding: 2px 7px;
-		border-radius: 999px;
+	.row-value.big {
+		font-size: 1.05rem;
+		font-weight: 600;
+		letter-spacing: -0.02em;
+	}
+	.row.winner .row-value {
+		color: var(--good);
+		font-weight: 600;
+	}
+	.star {
 		margin-left: 6px;
+		font-size: 0.7rem;
 	}
-	.chip-score {
-		font-weight: 700;
-		padding: 3px 11px;
-		border-radius: 999px;
-		font-family: var(--mono);
-		box-shadow: inset 0 0 0 1px currentColor;
-	}
-	.chip-score.green {
-		background: var(--green-bg);
-		color: var(--green);
-	}
-	.chip-score.yellow {
-		background: var(--yellow-bg);
-		color: var(--yellow);
-	}
-	.chip-score.red {
-		background: var(--red-bg);
-		color: var(--red);
+	@media (max-width: 900px) {
+		.cards {
+			grid-template-columns: 1fr !important;
+		}
 	}
 </style>

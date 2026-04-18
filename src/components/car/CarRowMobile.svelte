@@ -32,103 +32,124 @@
 	}}
 >
 	<div class="lc-top">
-		<span class="lc-title">{car.title}</span>
 		<ScoreBadge {score} size="sm" />
+		<div class="lc-title-block">
+			<div class="lc-meta">{car.source ?? '—'}</div>
+			<div class="lc-title">{car.title}</div>
+		</div>
 	</div>
-	<div class="lc-meta">
-		<span class="chip chip-price">€{car.price ? car.price.toLocaleString() : '—'}</span>
-		<span class="chip">{car.km ? car.km.toLocaleString() + ' km' : '—'}</span>
-		<span class="chip">{car.year ?? '—'}</span>
+	<div class="lc-price-row">
+		<span class="lc-price">{car.price ? '€' + car.price.toLocaleString('pt-PT') : '—'}</span>
+		<span class="lc-facts">
+			{car.km ? Math.round(car.km / 1000) + 'k km' : '—'} · {car.year ?? '—'} · {car.fuel ?? '—'}
+		</span>
+	</div>
+	<div class="lc-foot">
 		<StatusPill status={car.status} />
-	</div>
-	<!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-	<div class="lc-actions" onclick={(e) => e.stopPropagation()}>
-		{#if car.url}
-			<a
-				href={car.url}
-				target="_blank"
-				rel="noopener noreferrer"
-				class="icon-btn"
-				title="Open listing"
-			>
-				<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
-					<path d="M6 3H3v10h10v-3M9 1h6v6M7 9L15 1" />
+		<!-- svelte-ignore a11y_click_events_have_key_events -->
+		<div class="lc-actions" role="presentation" onclick={(e) => e.stopPropagation()}>
+			{#if car.url}
+				<a
+					href={car.url}
+					target="_blank"
+					rel="noopener noreferrer"
+					class="icon-btn"
+					title="Open listing"
+					aria-label="Open listing"
+				>
+					<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+						<path d="M6 3H3v10h10v-3M9 1h6v6M7 9L15 1" />
+					</svg>
+				</a>
+			{/if}
+			<button type="button" class="icon-btn" onclick={() => onedit?.(car.id)} title="Edit" aria-label="Edit">
+				<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8">
+					<path d="M11 2l3 3-8 8H3v-3L11 2z" />
 				</svg>
-			</a>
-		{/if}
-		<button type="button" class="icon-btn" onclick={() => onedit?.(car.id)} title="Edit">
-			<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8">
-				<path d="M11 2l3 3-8 8H3v-3L11 2z" />
-			</svg>
-		</button>
-		<button type="button" class="icon-btn" onclick={() => ondelete?.(car.id)} title="Delete">
-			<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8">
-				<path d="M3 4h10M6 4V2h4v2M5 4v9h6V4" />
-			</svg>
-		</button>
+			</button>
+			<button type="button" class="icon-btn" onclick={() => ondelete?.(car.id)} title="Delete" aria-label="Delete">
+				<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8">
+					<path d="M3 4h10M6 4V2h4v2M5 4v9h6V4" />
+				</svg>
+			</button>
+		</div>
 	</div>
 </div>
 
 <style>
 	.list-card {
-		background: var(--bg-card);
-		border: 1px solid var(--border);
-		border-radius: var(--radius-md);
-		padding: 0.7rem 0.85rem;
+		background: var(--card);
+		border: 1px solid var(--rule);
+		border-radius: var(--radius);
+		padding: 12px 14px;
 		display: flex;
 		flex-direction: column;
-		gap: 6px;
+		gap: 10px;
+		cursor: pointer;
 	}
 	.lc-top {
 		display: flex;
-		align-items: center;
+		gap: 10px;
+		align-items: flex-start;
+	}
+	.lc-title-block {
+		flex: 1;
+		min-width: 0;
+	}
+	.lc-meta {
+		font-size: 0.68rem;
+		color: var(--ink-dim);
+		margin-bottom: 2px;
+	}
+	.lc-title {
+		font-weight: 600;
+		color: var(--ink);
+		font-size: 0.9rem;
+		letter-spacing: -0.01em;
+	}
+	.lc-price-row {
+		display: flex;
+		align-items: baseline;
 		justify-content: space-between;
 		gap: 8px;
 	}
-	.lc-title {
-		font-weight: 700;
-		color: var(--text);
-		font-size: 0.9rem;
-	}
-	.lc-meta {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 5px;
-	}
-	.chip {
-		padding: 3px 9px;
-		border-radius: 20px;
-		font-size: 0.72rem;
-		font-family: var(--mono);
-		font-weight: 500;
-		background: var(--bg);
-		color: var(--text-secondary);
-	}
-	.chip-price {
-		background: var(--green-bg);
-		color: var(--green);
+	.lc-price {
+		font-size: 1.15rem;
 		font-weight: 600;
+		letter-spacing: -0.02em;
+		color: var(--ink);
+	}
+	.lc-facts {
+		font-size: 0.76rem;
+		color: var(--ink-soft);
+	}
+	.lc-foot {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		gap: 8px;
+		padding-top: 10px;
+		border-top: 1px solid var(--rule);
 	}
 	.lc-actions {
 		display: flex;
 		gap: 4px;
-		justify-content: flex-end;
 	}
 	.icon-btn {
-		background: var(--bg);
+		background: transparent;
 		border: 0;
 		width: 28px;
 		height: 28px;
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-		border-radius: var(--radius-sm);
-		color: var(--text-muted);
+		border-radius: 6px;
+		color: var(--ink-dim);
 		cursor: pointer;
 	}
 	.icon-btn:hover {
-		background: var(--bg-warm);
-		color: var(--text);
+		background: var(--card-2);
+		color: var(--ink);
 	}
 	.icon-btn svg {
 		width: 14px;

@@ -2,10 +2,12 @@
 	import { dialog, resolveDialog } from '$lib/stores/ui';
 
 	let inputValue = $state('');
+	let inputEl: HTMLInputElement | undefined = $state();
 
 	$effect(() => {
 		if ($dialog?.kind === 'prompt') {
 			inputValue = $dialog.defaultValue ?? '';
+			queueMicrotask(() => inputEl?.focus());
 		}
 	});
 
@@ -41,7 +43,7 @@
 					class="input"
 					type="text"
 					bind:value={inputValue}
-					autofocus
+					bind:this={inputEl}
 				/>
 			{/if}
 			<div class="actions">

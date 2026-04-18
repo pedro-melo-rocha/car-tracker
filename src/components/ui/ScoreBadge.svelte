@@ -1,42 +1,71 @@
 <script lang="ts">
-	import { scoreClass } from '$lib/scoring';
-
 	let { score, size = 'md' }: { score: number; size?: 'sm' | 'md' | 'lg' } = $props();
-	const cls = $derived(scoreClass(score));
+
+	const px = $derived(size === 'sm' ? 36 : size === 'lg' ? 56 : 46);
+	const tone = $derived(score >= 70 ? 'good' : score >= 50 ? 'warn' : 'bad');
+	const radius = $derived(px / 2 - 2);
+	const circumference = $derived(2 * Math.PI * radius);
+	const dash = $derived((circumference * score) / 100);
+	const fontSize = $derived(px * 0.4);
 </script>
 
-<span class="chip-score {cls} size-{size}">{score}</span>
+<span
+	class="score-chip {tone} size-{size}"
+	style="width:{px}px;height:{px}px;font-size:{fontSize}px;"
+>
+	<svg width={px} height={px} class="ring">
+		<circle cx={px / 2} cy={px / 2} r={radius} class="track" stroke-width="2" fill="none" />
+		<circle
+			cx={px / 2}
+			cy={px / 2}
+			r={radius}
+			class="fill"
+			stroke-width="2"
+			fill="none"
+			stroke-linecap="round"
+			stroke-dasharray="{dash} {circumference}"
+		/>
+	</svg>
+	<span class="num">{score}</span>
+</span>
 
 <style>
-	.chip-score {
-		font-weight: 700;
-		padding: 3px 11px;
-		border-radius: 999px;
-		font-family: var(--mono);
-		box-shadow: inset 0 0 0 1px currentColor;
-		display: inline-block;
+	.score-chip {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		border-radius: 50%;
+		font-weight: 600;
+		letter-spacing: -0.02em;
+		position: relative;
+		flex-shrink: 0;
 	}
-	.chip-score.green {
-		background: var(--green-bg);
-		color: var(--green);
+	.score-chip.good {
+		background: var(--good-bg);
+		color: var(--good);
 	}
-	.chip-score.yellow {
-		background: var(--yellow-bg);
-		color: var(--yellow);
+	.score-chip.warn {
+		background: var(--warn-bg);
+		color: var(--warn);
 	}
-	.chip-score.red {
-		background: var(--red-bg);
-		color: var(--red);
+	.score-chip.bad {
+		background: var(--bad-bg);
+		color: var(--bad);
 	}
-	.size-sm {
-		font-size: 0.72rem;
-		padding: 2px 8px;
+	.ring {
+		position: absolute;
+		inset: 0;
+		transform: rotate(-90deg);
 	}
-	.size-md {
-		font-size: 0.78rem;
+	.track {
+		stroke: currentColor;
+		opacity: 0.25;
 	}
-	.size-lg {
-		font-size: 0.95rem;
-		padding: 4px 14px;
+	.fill {
+		stroke: currentColor;
+	}
+	.num {
+		position: relative;
+		line-height: 1;
 	}
 </style>
