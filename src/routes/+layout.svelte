@@ -60,14 +60,13 @@
 {/if}
 
 {#if isEditing}
-	<div class="modal-overlay" onclick={() => closeOverlay('edit')} role="presentation">
+	<div class="modal-overlay" role="presentation">
 		<div
 			class="modal"
 			role="dialog"
 			aria-modal="true"
 			aria-label={editCar ? 'Edit car' : 'Add car'}
 			tabindex="-1"
-			onclick={(e) => e.stopPropagation()}
 			onkeydown={(e) => {
 				if (e.key === 'Escape') closeOverlay('edit');
 			}}
