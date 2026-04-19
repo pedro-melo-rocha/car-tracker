@@ -207,13 +207,14 @@
 
 <style>
 	.docs-view {
-		padding: 30px 32px 60px;
-		max-width: 880px;
-		margin: 0 auto;
+		padding: 8px 0 24px;
 	}
 	.docs-view h2 {
-		font-size: 1.4rem;
-		margin-bottom: 0.5rem;
+		font-size: 1.625rem;
+		font-weight: 700;
+		letter-spacing: -0.02em;
+		line-height: 1.2;
+		margin: 0 0 0.5rem 0;
 	}
 	.docs-sub {
 		color: var(--text-secondary);

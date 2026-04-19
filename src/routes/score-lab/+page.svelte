@@ -420,11 +420,12 @@
 		gap: 20px;
 	}
 	.intro h1 {
-		font-size: 1.5rem;
+		font-size: 1.625rem;
 		font-weight: 700;
 		letter-spacing: -0.02em;
+		line-height: 1.2;
 		color: var(--ink);
-		margin: 0 0 4px 0;
+		margin: 0 0 0.5rem 0;
 	}
 	.lede {
 		font-size: 0.88rem;

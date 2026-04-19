@@ -204,14 +204,16 @@
 								×
 							</button>
 						</div>
-						{#if topPickId === c.id}
-							<div class="top-pick">
-								<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-									<polygon points="12 2 15 9 22 10 17 15 18 22 12 19 6 22 7 15 2 10 9 9" />
-								</svg>
-								Top pick overall
-							</div>
-						{/if}
+						<div class="top-pick-slot">
+							{#if topPickId === c.id}
+								<div class="top-pick">
+									<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+										<polygon points="12 2 15 9 22 10 17 15 18 22 12 19 6 22 7 15 2 10 9 9" />
+									</svg>
+									Top pick overall
+								</div>
+							{/if}
+						</div>
 					</header>
 					<div class="rows">
 						{#each rows as r (r.key)}
@@ -239,8 +241,8 @@
 		display: flex;
 		gap: 10px;
 		align-items: center;
-		margin-bottom: 12px;
 		flex-wrap: wrap;
+		padding: 8px 0 14px;
 	}
 	.search {
 		flex: 1;
@@ -378,11 +380,16 @@
 	.remove:hover {
 		color: var(--ink);
 	}
+	.top-pick-slot {
+		margin-top: 10px;
+		min-height: 24px;
+		display: flex;
+		align-items: center;
+	}
 	.top-pick {
 		display: inline-flex;
 		align-items: center;
 		gap: 4px;
-		margin-top: 10px;
 		padding: 4px 10px;
 		background: var(--good-bg);
 		color: var(--good);
