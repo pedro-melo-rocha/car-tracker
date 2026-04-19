@@ -460,7 +460,7 @@
 		display: grid;
 		grid-template-columns: minmax(0, 1fr) minmax(320px, 420px);
 		gap: 20px;
-		align-items: start;
+		align-items: stretch;
 	}
 	.form {
 		display: flex;
