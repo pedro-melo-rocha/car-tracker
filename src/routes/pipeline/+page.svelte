@@ -10,6 +10,16 @@
 	let draggingOver = $state<CarStatus | null>(null);
 	let isMobile = $state(false);
 	let movingIds = $state<Set<string>>(new Set());
+	let dismissedCollapsed = $state(true);
+
+	$effect(() => {
+		const stored = localStorage.getItem('pipeline.dismissedCollapsed');
+		if (stored !== null) dismissedCollapsed = stored === '1';
+	});
+
+	$effect(() => {
+		localStorage.setItem('pipeline.dismissedCollapsed', dismissedCollapsed ? '1' : '0');
+	});
 
 	$effect(() => {
 		const mq = window.matchMedia('(max-width: 640px)');
@@ -118,12 +128,16 @@
 		</div>
 	</div>
 
-	<div class="columns">
+	<div class="columns" class:dismissed-collapsed={dismissedCollapsed}>
 		{#each STATUSES as status (status)}
 			{@const list = carsFor(status)}
+			{@const isDismissed = status === 'dismissed'}
+			{@const collapsed = isDismissed && dismissedCollapsed}
 			<div
 				class="col"
 				class:drag-over={draggingOver === status}
+				class:dismissed-col={isDismissed}
+				class:collapsed
 				ondragover={(e) => {
 					e.preventDefault();
 					draggingOver = status;
@@ -135,7 +149,35 @@
 				<div class="col-head">
 					<span class="col-label">{STATUS_LABELS[status]}</span>
 					<span class="count">{list.length}</span>
+					{#if isDismissed}
+						<button
+							type="button"
+							class="collapse-btn"
+							onclick={() => (dismissedCollapsed = !dismissedCollapsed)}
+							aria-label={collapsed ? 'Expand dismissed column' : 'Collapse dismissed column'}
+							aria-expanded={!collapsed}
+						>
+							<svg
+								width="14"
+								height="14"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2.5"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true"
+							>
+								{#if collapsed}
+									<polyline points="9 18 15 12 9 6"></polyline>
+								{:else}
+									<polyline points="15 18 9 12 15 6"></polyline>
+								{/if}
+							</svg>
+						</button>
+					{/if}
 				</div>
+				{#if !collapsed}
 				<div class="col-body">
 					{#each list as car (car.id)}
 						{@const moving = movingIds.has(car.id)}
@@ -169,6 +211,7 @@
 						<div class="empty">No cars</div>
 					{/each}
 				</div>
+				{/if}
 			</div>
 		{/each}
 	</div>
@@ -182,8 +225,12 @@
 		display: flex;
 		gap: 8px;
 		align-items: center;
-		margin-bottom: 16px;
 		flex-wrap: wrap;
+		position: sticky;
+		top: var(--header-h);
+		z-index: 20;
+		background: var(--bg);
+		padding: 8px 0 16px;
 	}
 	.search {
 		flex: 1;
@@ -208,6 +255,10 @@
 		gap: 16px;
 		align-items: flex-start;
 	}
+	.columns.dismissed-collapsed {
+		grid-template-columns:
+			minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) 56px minmax(0, 1fr);
+	}
 	.col {
 		background: var(--card-2);
 		border-radius: 16px;
@@ -219,13 +270,58 @@
 	.col.drag-over {
 		background: var(--accent-bg);
 	}
+	.col.collapsed {
+		min-height: 0;
+		padding: 0;
+	}
+	.col.collapsed .col-head {
+		margin: 0;
+		padding: 12px 8px;
+		flex-direction: column;
+		gap: 10px;
+		border-radius: 16px;
+		position: static;
+	}
+	.col.collapsed .col-label {
+		writing-mode: vertical-rl;
+		transform: rotate(180deg);
+		font-size: 0.78rem;
+	}
+	.collapse-btn {
+		margin-left: auto;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 24px;
+		height: 24px;
+		padding: 0;
+		background: var(--card);
+		color: var(--ink-soft);
+		border: 1px solid var(--rule);
+		border-radius: 8px;
+		cursor: pointer;
+		transition: background var(--dur-fast) var(--ease),
+			color var(--dur-fast) var(--ease);
+	}
+	.collapse-btn:hover {
+		background: var(--bg-warm);
+		color: var(--ink);
+	}
+	.col.collapsed .collapse-btn {
+		margin-left: 0;
+	}
 	.col-head {
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		margin-bottom: 14px;
-		padding: 0 4px;
 		gap: 8px;
+		position: sticky;
+		top: calc(var(--header-h) + var(--filters-h));
+		z-index: 15;
+		background: var(--card-2);
+		margin: -14px -14px 10px;
+		padding: 12px 18px 10px;
+		border-radius: 16px 16px 0 0;
 	}
 	.col-label {
 		font-size: 0.82rem;
@@ -319,17 +415,27 @@
 		font-size: 0.78rem;
 	}
 	@media (max-width: 1200px) {
-		.columns {
+		.columns,
+		.columns.dismissed-collapsed {
 			grid-template-columns: repeat(3, 1fr);
+		}
+		.col.collapsed .col-head {
+			flex-direction: row;
+		}
+		.col.collapsed .col-label {
+			writing-mode: horizontal-tb;
+			transform: none;
 		}
 	}
 	@media (max-width: 960px) {
-		.columns {
+		.columns,
+		.columns.dismissed-collapsed {
 			grid-template-columns: repeat(2, 1fr);
 		}
 	}
 	@media (max-width: 640px) {
-		.columns {
+		.columns,
+		.columns.dismissed-collapsed {
 			grid-template-columns: 1fr;
 		}
 		.select-slot {

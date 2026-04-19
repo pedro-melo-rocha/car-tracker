@@ -64,6 +64,8 @@
 	--fs-lg: 1.05rem;
 	--font: 'Plus Jakarta Sans', -apple-system, sans-serif;
 	--mono: 'DM Mono', 'SF Mono', monospace;
+	--header-h: 45px;
+	--filters-h: 56px;
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -11,22 +11,42 @@
 		options,
 		placeholder = 'Select…',
 		ariaLabel,
-		onchange
+		onchange,
+		filterable = false,
+		filterPlaceholder = 'Search…'
 	}: {
 		value?: string;
 		options: Option[];
 		placeholder?: string;
 		ariaLabel?: string;
 		onchange?: (v: string) => void;
+		filterable?: boolean;
+		filterPlaceholder?: string;
 	} = $props();
 
 	let open = $state(false);
+	let query = $state('');
 	let wrap: HTMLDivElement | undefined;
 	let trigger: HTMLButtonElement | undefined;
+	let filterInput = $state<HTMLInputElement | undefined>(undefined);
 
 	const selected = $derived(options.find((o) => o.value === value));
 	const triggerLabel = $derived(selected?.label ?? placeholder);
 	const isPlaceholder = $derived(!selected || selected.value === '');
+	const visibleOptions = $derived.by(() => {
+		if (!filterable) return options;
+		const q = query.trim().toLowerCase();
+		if (!q) return options;
+		return options.filter((o) => o.value === '' || o.label.toLowerCase().includes(q));
+	});
+
+	$effect(() => {
+		if (open && filterable) {
+			tick().then(() => filterInput?.focus());
+		} else if (!open) {
+			query = '';
+		}
+	});
 
 	function toggle() {
 		open = !open;
@@ -104,22 +124,42 @@
 	</button>
 	{#if open}
 		<div class="custom-select-dropdown" role="listbox">
-			{#each options as opt (opt.value)}
-				<div
-					class="custom-select-option"
-					class:is-placeholder={opt.value === ''}
-					class:selected={opt.value === value}
-					role="option"
-					aria-selected={opt.value === value}
-					tabindex="-1"
-					onmousedown={(e) => {
-						e.preventDefault();
-						pick(opt.value);
-					}}
-				>
-					{opt.label}
+			{#if filterable}
+				<div class="custom-select-filter">
+					<input
+						bind:this={filterInput}
+						type="search"
+						placeholder={filterPlaceholder}
+						bind:value={query}
+						onkeydown={(e) => {
+							if (e.key === 'Escape') {
+								e.preventDefault();
+								open = false;
+							}
+						}}
+					/>
 				</div>
-			{/each}
+			{/if}
+			{#if visibleOptions.length === 0}
+				<div class="custom-select-empty">No matches</div>
+			{:else}
+				{#each visibleOptions as opt (opt.value)}
+					<div
+						class="custom-select-option"
+						class:is-placeholder={opt.value === ''}
+						class:selected={opt.value === value}
+						role="option"
+						aria-selected={opt.value === value}
+						tabindex="-1"
+						onmousedown={(e) => {
+							e.preventDefault();
+							pick(opt.value);
+						}}
+					>
+						{opt.label}
+					</div>
+				{/each}
+			{/if}
 		</div>
 	{/if}
 </div>
@@ -181,6 +221,36 @@
 		z-index: 50;
 		max-height: 260px;
 		overflow-y: auto;
+	}
+	.custom-select-filter {
+		position: sticky;
+		top: 0;
+		background: var(--card);
+		padding: 8px;
+		border-bottom: 1px solid var(--rule);
+		z-index: 1;
+	}
+	.custom-select-filter input {
+		width: 100%;
+		padding: 8px 12px;
+		border: 1px solid var(--rule);
+		border-radius: 8px;
+		background: var(--card-2);
+		color: var(--ink);
+		font-size: 0.82rem;
+		font-family: inherit;
+		outline: none;
+		transition: border-color var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease);
+	}
+	.custom-select-filter input:focus {
+		border-color: var(--accent);
+		background: var(--card);
+	}
+	.custom-select-empty {
+		padding: 14px 12px;
+		font-size: 0.8rem;
+		color: var(--ink-dim);
+		text-align: center;
 	}
 	.custom-select-option {
 		padding: 0.5rem 0.85rem;

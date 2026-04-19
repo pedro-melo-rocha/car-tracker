@@ -68,16 +68,31 @@
 		loadFrom(sourceId);
 	}
 
-	const sourceCar = $derived(sourceId ? $cars.find((c) => c.id === sourceId) ?? null : null);
-	const sourceBreakdown = $derived(sourceCar ? computeScoreBreakdown(sourceCar) : null);
 	const breakdown = $derived(computeScoreBreakdown(draft));
-	const scoreDelta = $derived(
-		sourceBreakdown ? breakdown.total - sourceBreakdown.total : null
-	);
 	const distance = $derived(locationKm(draft.location));
 	const engineProfile = $derived(
 		getEngineProfile({ title: draft.title, notes: draft.notes, engine: draft.engine })
 	);
+
+	const hasMinForScore = $derived(
+		draft.km != null ||
+			draft.price != null ||
+			!!draft.location ||
+			draft.year != null ||
+			!!draft.make
+	);
+	const metaLine = $derived(
+		[draft.make, draft.model, draft.year != null ? String(draft.year) : '']
+			.filter(Boolean)
+			.join(' · ')
+	);
+	const displayTitle = $derived(draft.title || 'Untitled draft');
+	const now = new Date();
+	const stampDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
+	function fmtNum(n: number | null) {
+		return n == null ? '—' : n.toLocaleString('en-US').replace(/,/g, ' ');
+	}
 
 	const carOptions = $derived([
 		{ value: '', label: '— Blank (test from scratch) —' },
@@ -114,6 +129,8 @@
 					options={carOptions}
 					value={sourceId}
 					ariaLabel="Load from existing car"
+					filterable
+					filterPlaceholder="Search cars…"
 					onchange={(v) => loadFrom(v)}
 				/>
 			</div>
@@ -125,16 +142,6 @@
 
 	<div class="grid">
 		<form class="form" onsubmit={(e) => e.preventDefault()}>
-			<div class="form-group">
-				<label for="lab-title">Title</label>
-				<input
-					id="lab-title"
-					type="text"
-					placeholder="e.g. Renault Clio III 1.5 dCi 2008"
-					bind:value={draft.title}
-				/>
-			</div>
-
 			<div class="form-row">
 				<div class="form-group">
 					<label for="lab-make">Make</label>
@@ -256,58 +263,111 @@
 			</div>
 		</form>
 
-		<aside class="panel">
-			<div class="score-head">
-				<ScoreBadge score={breakdown.total} size="lg" />
-				<div class="score-head-text">
-					<div class="score-total">{breakdown.total}<span class="score-div">/100</span></div>
-					{#if sourceBreakdown && scoreDelta != null}
-						<div class="score-delta" class:pos={scoreDelta > 0} class:neg={scoreDelta < 0}>
-							source {sourceBreakdown.total}
-							<span class="arrow">→</span>
-							{breakdown.total}
-							<span class="delta-num">
-								({scoreDelta > 0 ? '+' : ''}{scoreDelta})
-							</span>
-						</div>
+		<aside class="panel" class:empty={!hasMinForScore}>
+			<header class="card-head">
+				<div class="card-head-text">
+					<div class="eyebrow">Score card</div>
+					{#if hasMinForScore}
+						<h2 class="card-meta">{metaLine || 'Untitled draft'}</h2>
 					{:else}
-						<div class="score-sub">Live score</div>
+						<h2 class="card-meta muted">Fill the form to score a car</h2>
 					{/if}
 				</div>
+				<div class="card-head-score">
+					{#if hasMinForScore}
+						<ScoreBadge score={breakdown.total} size="lg" />
+					{:else}
+						<span class="score-empty" aria-label="No score yet">—</span>
+					{/if}
+					<span class="score-div">/100</span>
+				</div>
+			</header>
+
+			<div class="specs">
+				<div class="spec">
+					<span class="spec-label">Km</span>
+					<span class="spec-value" class:muted={draft.km == null}>{fmtNum(draft.km)}</span>
+				</div>
+				<div class="spec">
+					<span class="spec-label">Price</span>
+					<span class="spec-value" class:muted={draft.price == null}
+						>{draft.price == null ? '—' : `€${fmtNum(draft.price)}`}</span
+					>
+				</div>
+				<div class="spec">
+					<span class="spec-label">Year</span>
+					<span class="spec-value" class:muted={draft.year == null}>{draft.year ?? '—'}</span>
+				</div>
+				<div class="spec">
+					<span class="spec-label">Fuel</span>
+					<span class="spec-value" class:muted={!draft.fuel}>{draft.fuel || '—'}</span>
+				</div>
+				<div class="spec">
+					<span class="spec-label">Engine</span>
+					<span class="spec-value" class:muted={!draft.engine}>{draft.engine || '—'}</span>
+				</div>
+				<div class="spec">
+					<span class="spec-label">Power</span>
+					<span class="spec-value" class:muted={draft.power == null}
+						>{draft.power == null ? '—' : `${draft.power} cv`}</span
+					>
+				</div>
+				<div class="spec spec-wide">
+					<span class="spec-label">Location</span>
+					<span class="spec-value" class:muted={!draft.location}>{draft.location || '—'}</span>
+					{#if distance != null}
+						<span class="spec-sub">{distance} km from Viana</span>
+					{/if}
+				</div>
+				{#if draft.notes}
+					<div class="spec spec-wide spec-multi">
+						<span class="spec-label">Notes</span>
+						<span class="spec-value">{draft.notes}</span>
+					</div>
+				{/if}
 			</div>
 
 			<div class="breakdown">
 				<div class="br-row">
 					<span class="br-label">Kms</span>
 					<span class="br-weight">{Math.round(SCORE_WEIGHTS.km * 100)}%</span>
-					<span class="br-value">{breakdown.km}<span class="br-div">/100</span></span>
+					<span class="br-value"
+						>{hasMinForScore ? breakdown.km : '—'}<span class="br-div">/100</span></span
+					>
 					<span class="br-bar"
-						><span class="br-fill {barCls(breakdown.km)}" style="width:{breakdown.km}%"></span></span
+						><span
+							class="br-fill {barCls(breakdown.km)}"
+							style="width:{hasMinForScore ? breakdown.km : 0}%"
+						></span></span
 					>
 				</div>
 				<div class="br-row">
 					<span class="br-label">Price</span>
 					<span class="br-weight">{Math.round(SCORE_WEIGHTS.price * 100)}%</span>
-					<span class="br-value">{breakdown.price}<span class="br-div">/100</span></span>
+					<span class="br-value"
+						>{hasMinForScore ? breakdown.price : '—'}<span class="br-div">/100</span></span
+					>
 					<span class="br-bar"
 						><span
 							class="br-fill {barCls(breakdown.price)}"
-							style="width:{breakdown.price}%"
+							style="width:{hasMinForScore ? breakdown.price : 0}%"
 						></span></span
 					>
 				</div>
 				<div class="br-row">
 					<span class="br-label">Reliability</span>
 					<span class="br-weight">{Math.round(SCORE_WEIGHTS.reliability * 100)}%</span>
-					<span class="br-value">{breakdown.rel.score}<span class="br-div">/100</span></span>
+					<span class="br-value"
+						>{hasMinForScore ? breakdown.rel.score : '—'}<span class="br-div">/100</span></span
+					>
 					<span class="br-bar"
 						><span
 							class="br-fill {barCls(breakdown.rel.score)}"
-							style="width:{breakdown.rel.score}%"
+							style="width:{hasMinForScore ? breakdown.rel.score : 0}%"
 						></span></span
 					>
 				</div>
-				{#if breakdown.rel.reason}
+				{#if hasMinForScore && breakdown.rel.reason}
 					<div
 						class="br-reason"
 						class:pos={breakdown.rel.delta > 0}
@@ -319,23 +379,35 @@
 				<div class="br-row">
 					<span class="br-label">Year</span>
 					<span class="br-weight">{Math.round(SCORE_WEIGHTS.year * 100)}%</span>
-					<span class="br-value">{breakdown.year}<span class="br-div">/100</span></span>
+					<span class="br-value"
+						>{hasMinForScore ? breakdown.year : '—'}<span class="br-div">/100</span></span
+					>
 					<span class="br-bar"
 						><span
 							class="br-fill {barCls(breakdown.year)}"
-							style="width:{breakdown.year}%"
+							style="width:{hasMinForScore ? breakdown.year : 0}%"
 						></span></span
 					>
 				</div>
 				<div class="br-row">
 					<span class="br-label">Location</span>
 					<span class="br-weight">{Math.round(SCORE_WEIGHTS.location * 100)}%</span>
-					<span class="br-value">{breakdown.loc}<span class="br-div">/100</span></span>
+					<span class="br-value"
+						>{hasMinForScore ? breakdown.loc : '—'}<span class="br-div">/100</span></span
+					>
 					<span class="br-bar"
-						><span class="br-fill {barCls(breakdown.loc)}" style="width:{breakdown.loc}%"></span></span
+						><span
+							class="br-fill {barCls(breakdown.loc)}"
+							style="width:{hasMinForScore ? breakdown.loc : 0}%"
+						></span></span
 					>
 				</div>
 			</div>
+
+			<footer class="card-foot">
+				<span class="stamp">Score Lab · car-tracker</span>
+				<span class="stamp-date">{stampDate}</span>
+			</footer>
 		</aside>
 	</div>
 </div>
@@ -465,59 +537,136 @@
 		padding: 20px;
 		display: flex;
 		flex-direction: column;
-		gap: 18px;
+		gap: 16px;
 		position: sticky;
 		top: 80px;
 	}
-	.score-head {
+	.card-head {
 		display: flex;
 		gap: 14px;
-		align-items: center;
+		align-items: flex-start;
+		justify-content: space-between;
 	}
-	.score-head-text {
+	.card-head-text {
 		display: flex;
 		flex-direction: column;
-		gap: 2px;
+		gap: 4px;
 		min-width: 0;
+		flex: 1;
 	}
-	.score-total {
-		font-size: 1.5rem;
+	.eyebrow {
+		font-size: 0.68rem;
 		font-weight: 700;
-		letter-spacing: -0.02em;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		color: var(--ink-dim);
+	}
+	.card-meta {
+		font-size: 1.05rem;
+		font-weight: 700;
+		letter-spacing: -0.01em;
+		line-height: 1.25;
 		color: var(--ink);
-		line-height: 1;
+		margin: 0;
+		word-break: break-word;
+	}
+	.card-meta.muted {
+		color: var(--ink-dim);
+		font-weight: 500;
+	}
+	.card-head-score {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		flex-shrink: 0;
+	}
+	.score-empty {
+		width: 56px;
+		height: 56px;
+		border-radius: 50%;
+		background: var(--card-2);
+		color: var(--ink-dim);
+		font-size: 1.4rem;
+		font-weight: 600;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		border: 1px dashed var(--rule);
 	}
 	.score-div {
 		font-size: 0.9rem;
-		font-weight: 400;
+		font-weight: 500;
 		color: var(--ink-dim);
-	}
-	.score-sub {
-		font-size: 0.7rem;
-		color: var(--ink-dim);
-		text-transform: uppercase;
-		letter-spacing: 0.08em;
-		font-weight: 600;
-	}
-	.score-delta {
-		font-size: 0.78rem;
-		color: var(--ink-soft);
 		font-variant-numeric: tabular-nums;
 	}
-	.score-delta .arrow {
-		color: var(--ink-dim);
-		margin: 0 2px;
+	.specs {
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: 8px;
 	}
-	.score-delta .delta-num {
-		margin-left: 4px;
+	.spec {
+		background: var(--card-2);
+		border-radius: 8px;
+		padding: 10px 12px;
+		display: flex;
+		flex-direction: column;
+		gap: 3px;
+		min-width: 0;
+	}
+	.spec-wide {
+		grid-column: 1 / -1;
+	}
+	.spec-multi .spec-value {
+		white-space: pre-wrap;
+		overflow: visible;
+		font-weight: 500;
+		font-size: 0.82rem;
+		line-height: 1.45;
+		color: var(--ink-soft);
+	}
+	.spec-label {
+		font-size: 0.66rem;
 		font-weight: 600;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
 		color: var(--ink-dim);
 	}
-	.score-delta.pos .delta-num {
-		color: var(--good);
+	.spec-value {
+		font-size: 0.9rem;
+		font-weight: 600;
+		color: var(--ink);
+		font-variant-numeric: tabular-nums;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
-	.score-delta.neg .delta-num {
-		color: var(--bad);
+	.spec-value.muted {
+		color: var(--ink-dim);
+		font-weight: 500;
+	}
+	.spec-sub {
+		font-size: 0.7rem;
+		color: var(--ink-dim);
+		margin-top: 1px;
+	}
+	.card-foot {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding-top: 10px;
+		border-top: 1px solid var(--rule);
+	}
+	.stamp,
+	.stamp-date {
+		font-size: 0.66rem;
+		font-weight: 600;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		color: var(--ink-dim);
+		font-variant-numeric: tabular-nums;
+	}
+	.panel.empty .br-row {
+		opacity: 0.55;
 	}
 	.breakdown {
 		display: flex;
@@ -622,6 +771,9 @@
 	@media (max-width: 640px) {
 		.form-row {
 			grid-template-columns: 1fr;
+		}
+		.specs {
+			grid-template-columns: repeat(2, 1fr);
 		}
 	}
 </style>

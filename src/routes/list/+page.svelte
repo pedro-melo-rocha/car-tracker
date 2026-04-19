@@ -373,8 +373,12 @@
 		display: flex;
 		gap: 10px;
 		align-items: center;
-		margin-bottom: 14px;
 		flex-wrap: wrap;
+		position: sticky;
+		top: var(--header-h);
+		z-index: 20;
+		background: var(--bg);
+		padding: 8px 0 14px;
 	}
 	.search {
 		flex: 1;
@@ -424,7 +428,7 @@
 		gap: 8px;
 	}
 	.list-table-wrap {
-		overflow-x: auto;
+		overflow-x: clip;
 		border-radius: var(--radius);
 		background: transparent;
 	}
@@ -434,8 +438,8 @@
 		border-spacing: 0 8px;
 	}
 	.list-table th {
-		background: transparent;
-		padding: 6px 14px;
+		background: var(--bg);
+		padding: 10px 14px;
 		font-size: 0.68rem;
 		text-transform: uppercase;
 		letter-spacing: 0.06em;
@@ -443,7 +447,9 @@
 		font-weight: 500;
 		text-align: left;
 		border: 0;
-		position: relative;
+		position: sticky;
+		top: calc(var(--header-h) + var(--filters-h));
+		z-index: 10;
 	}
 	.th-inner {
 		display: inline-flex;
