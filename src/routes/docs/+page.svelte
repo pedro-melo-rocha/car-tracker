@@ -264,7 +264,7 @@
 	}
 	.docs-weights {
 		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+		grid-template-columns: repeat(5, 1fr);
 		gap: 10px;
 	}
 	.docs-weight-card {
@@ -385,6 +385,9 @@
 	@media (max-width: 640px) {
 		.docs-view {
 			padding: 24px 20px 60px;
+		}
+		.docs-weights {
+			grid-template-columns: repeat(2, 1fr);
 		}
 	}
 </style>

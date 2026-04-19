@@ -46,37 +46,42 @@
 		big?: boolean;
 	};
 
+	function uniqueBest<T>(
+		list: T[],
+		idOf: (t: T) => string,
+		valueOf: (t: T) => number | null | undefined,
+		direction: 'min' | 'max'
+	): string | null {
+		const vals = list
+			.map((t) => ({ id: idOf(t), v: valueOf(t) }))
+			.filter((x): x is { id: string; v: number } => x.v != null);
+		if (!vals.length) return null;
+		const best = vals.reduce((a, b) =>
+			direction === 'min' ? (a.v < b.v ? a : b) : (a.v > b.v ? a : b)
+		);
+		const tied = vals.filter((x) => x.v === best.v);
+		return tied.length === 1 ? best.id : null;
+	}
+
 	const rows: Row[] = [
 		{
 			key: 'price',
 			label: 'Price',
 			big: true,
 			get: (c) => (c.price ? '€' + c.price.toLocaleString('pt-PT') : '—'),
-			winner: (list) => {
-				const vals = list.map((c) => ({ id: c.id, v: c.price ?? null })).filter((x) => x.v != null);
-				if (!vals.length) return null;
-				return vals.reduce((a, b) => (a.v! < b.v! ? a : b)).id;
-			}
+			winner: (list) => uniqueBest(list, (c) => c.id, (c) => c.price, 'min')
 		},
 		{
 			key: 'km',
 			label: 'Kilometres',
 			get: (c) => (c.km ? c.km.toLocaleString('pt-PT') + ' km' : '—'),
-			winner: (list) => {
-				const vals = list.map((c) => ({ id: c.id, v: c.km ?? null })).filter((x) => x.v != null);
-				if (!vals.length) return null;
-				return vals.reduce((a, b) => (a.v! < b.v! ? a : b)).id;
-			}
+			winner: (list) => uniqueBest(list, (c) => c.id, (c) => c.km, 'min')
 		},
 		{
 			key: 'year',
 			label: 'Year',
 			get: (c) => (c.year ? String(c.year) : '—'),
-			winner: (list) => {
-				const vals = list.map((c) => ({ id: c.id, v: c.year ?? null })).filter((x) => x.v != null);
-				if (!vals.length) return null;
-				return vals.reduce((a, b) => (a.v! > b.v! ? a : b)).id;
-			}
+			winner: (list) => uniqueBest(list, (c) => c.id, (c) => c.year, 'max')
 		},
 		{ key: 'fuel', label: 'Fuel', get: (c) => c.fuel ?? '—' },
 		{ key: 'engine', label: 'Engine', get: (c) => c.engine ?? '—' },
@@ -89,22 +94,14 @@
 				const d = distOf(c);
 				return d != null ? d + ' km' : '—';
 			},
-			winner: (list) => {
-				const vals = list.map((c) => ({ id: c.id, v: distOf(c) })).filter((x) => x.v != null);
-				if (!vals.length) return null;
-				return vals.reduce((a, b) => (a.v! < b.v! ? a : b)).id;
-			}
+			winner: (list) => uniqueBest(list, (c) => c.id, (c) => distOf(c), 'min')
 		},
 		{
 			key: 'reliability',
 			label: 'Reliability',
 			get: (c) => relOf(c) + '/100',
-			winner: (list) => {
-				if (!list.length) return null;
-				return list.reduce((a, b) => (relOf(a) > relOf(b) ? a : b)).id;
-			}
+			winner: (list) => uniqueBest(list, (c) => c.id, (c) => relOf(c), 'max')
 		},
-		{ key: 'source', label: 'Source', get: (c) => c.source ?? '—' },
 		{ key: 'notes', label: 'Notes', get: (c) => c.notes ?? '—' }
 	];
 
@@ -185,12 +182,22 @@
 	{:else}
 		<div class="cards" style="grid-template-columns: repeat({selected.length}, 1fr)">
 			{#each selected as c (c.id)}
-				<article class="card">
+				<article class="card" class:is-top-pick={topPickId === c.id}>
 					<header class="card-head">
 						<div class="head-row">
 							<ScoreBadge score={scoreOf(c)} size="lg" />
 							<div class="head-text">
-								<div class="head-meta">{c.source ?? '—'}</div>
+								<div class="head-meta">
+									<span>{c.source ?? '—'}</span>
+									{#if topPickId === c.id}
+										<span class="pick-tag" aria-label="Top pick overall">
+											<svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+												<polygon points="12 2 15 9 22 10 17 15 18 22 12 19 6 22 7 15 2 10 9 9" />
+											</svg>
+											Top pick
+										</span>
+									{/if}
+								</div>
 								<button type="button" class="head-title" onclick={() => openDetail(c.id)}>
 									{c.title}
 								</button>
@@ -203,16 +210,6 @@
 							>
 								×
 							</button>
-						</div>
-						<div class="top-pick-slot">
-							{#if topPickId === c.id}
-								<div class="top-pick">
-									<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-										<polygon points="12 2 15 9 22 10 17 15 18 22 12 19 6 22 7 15 2 10 9 9" />
-									</svg>
-									Top pick overall
-								</div>
-							{/if}
 						</div>
 					</header>
 					<div class="rows">
@@ -336,6 +333,10 @@
 		display: flex;
 		flex-direction: column;
 	}
+	.card.is-top-pick {
+		border-color: var(--accent);
+		box-shadow: 0 0 0 1px var(--accent-light);
+	}
 	.card-head {
 		padding: 20px;
 		border-bottom: 1px solid var(--rule);
@@ -350,8 +351,25 @@
 		min-width: 0;
 	}
 	.head-meta {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		flex-wrap: wrap;
 		font-size: 0.68rem;
 		color: var(--ink-dim);
+	}
+	.pick-tag {
+		display: inline-flex;
+		align-items: center;
+		gap: 3px;
+		padding: 2px 7px;
+		border-radius: 999px;
+		background: var(--good-bg);
+		color: var(--good);
+		font-size: 0.62rem;
+		font-weight: 600;
+		letter-spacing: 0.02em;
+		text-transform: uppercase;
 	}
 	.head-title {
 		background: transparent;
@@ -379,23 +397,6 @@
 	}
 	.remove:hover {
 		color: var(--ink);
-	}
-	.top-pick-slot {
-		margin-top: 10px;
-		min-height: 24px;
-		display: flex;
-		align-items: center;
-	}
-	.top-pick {
-		display: inline-flex;
-		align-items: center;
-		gap: 4px;
-		padding: 4px 10px;
-		background: var(--good-bg);
-		color: var(--good);
-		border-radius: 999px;
-		font-size: 0.68rem;
-		font-weight: 500;
 	}
 	.rows {
 		display: flex;
