@@ -221,3 +221,9 @@ export const ENGINE_PROFILES: EngineProfile[] = [
 ];
 
 export const SCORE_WEIGHTS = { km: 0.22, price: 0.22, reliability: 0.3, year: 0.13, location: 0.13 };
+
+export const PRICE_THRESHOLDS = {
+	sweetSpot: 2500,
+	budget: 5000,
+	ceiling: 7500
+};

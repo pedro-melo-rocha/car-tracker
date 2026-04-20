@@ -3,7 +3,7 @@
 
 	const weights = [
 		{ label: 'Kms', pct: 22, hint: 'Fuel-aware sweet spot: diesel 0–130k ⇒ 100, 280k ⇒ 0. Petrol 0–90k ⇒ 100, 200k ⇒ 0.' },
-		{ label: 'Price', pct: 22, hint: '€0–€2500 ⇒ 100 (bargain plateau), €5000 ⇒ 0. Doesn\u2019t reward suspiciously cheap listings.' },
+		{ label: 'Price', pct: 22, hint: '€0–€2500 ⇒ 100 (bargain plateau), €5000 ⇒ 50 (budget), €7500 ⇒ 0. Doesn\u2019t reward suspiciously cheap listings.' },
 		{ label: 'Reliability', pct: 30, hint: 'Make baseline (60–90) ± engine adjustment. The dominant subscore — bad engines sink a cheap car.' },
 		{ label: 'Year', pct: 13, hint: '2005 ⇒ 0, 2020 ⇒ 100. Rewards newer electronics & DPF maturity.' },
 		{ label: 'Location', pct: 13, hint: 'Driving distance from Viana do Castelo, dampened: max 30-point penalty at 600km.' }
@@ -81,10 +81,13 @@
 			segment.
 		</p>
 		<p>
-			<strong>Price.</strong> Plateau at 100 from <code>€0 to €2500</code>, then linear decay to
-			0 at the <code>€5000</code> budget ceiling. The plateau exists because suspiciously cheap
-			listings are usually scams, salvage, or mechanical wrecks — not bargains — so we don't
-			award extra points for being cheaper than the realistic-bargain line.
+			<strong>Price.</strong> Three-zone piecewise curve anchored on the <code>€5000</code> budget.
+			Plateau at 100 from <code>€0 to €2500</code> (bargain zone), linear decay to 50 at
+			<code>€5000</code> (within budget), then a second decay to 0 at <code>€7500</code>
+			(over budget but still rankable). The plateau exists because suspiciously cheap listings
+			are usually scams, salvage, or mechanical wrecks — not bargains — so we don't award extra
+			points for being cheaper than the realistic-bargain line. The soft tail past budget lets a
+			genuine over-budget deal still surface through the total score.
 		</p>
 		<p>
 			<strong>Reliability.</strong> Each make starts from a baseline (see table below) derived

@@ -16,9 +16,14 @@ describe('priceSubscore', () => {
 		expect(priceSubscore({ price: 2500 })).toBe(100);
 	});
 
-	it('decays linearly to 0 at €5000', () => {
-		expect(priceSubscore({ price: 3750 })).toBe(50);
-		expect(priceSubscore({ price: 5000 })).toBe(0);
-		expect(priceSubscore({ price: 7000 })).toBe(0);
+	it('decays linearly from 100 to 50 between €2500 and €5000', () => {
+		expect(priceSubscore({ price: 3750 })).toBe(75);
+		expect(priceSubscore({ price: 5000 })).toBe(50);
+	});
+
+	it('decays linearly from 50 to 0 between €5000 and €7500', () => {
+		expect(priceSubscore({ price: 6250 })).toBe(25);
+		expect(priceSubscore({ price: 7500 })).toBe(0);
+		expect(priceSubscore({ price: 9000 })).toBe(0);
 	});
 });

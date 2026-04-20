@@ -31,9 +31,9 @@ describe('computeScoreBreakdown — baseline parity', () => {
 			location: 'Braga'
 		});
 		const b = computeScoreBreakdown(car);
-		expect(b.total).toBe(71);
+		expect(b.total).toBe(72);
 		expect(b.km).toBe(100);
-		expect(b.price).toBe(86);
+		expect(b.price).toBe(93);
 		expect(b.year).toBe(7);
 		expect(b.loc).toBe(98);
 		expect(b.rel.score).toBe(54);
@@ -54,9 +54,9 @@ describe('computeScoreBreakdown — baseline parity', () => {
 			location: 'Ramalde, Porto'
 		});
 		const b = computeScoreBreakdown(car);
-		expect(b.total).toBe(56);
+		expect(b.total).toBe(67);
 		expect(b.km).toBe(91);
-		expect(b.price).toBe(0);
+		expect(b.price).toBe(50);
 		expect(b.year).toBe(40);
 		expect(b.loc).toBe(96);
 		expect(b.rel.score).toBe(62);
@@ -78,9 +78,9 @@ describe('computeScoreBreakdown — baseline parity', () => {
 			location: 'Loures, Lisboa'
 		});
 		const b = computeScoreBreakdown(car);
-		expect(b.total).toBe(42);
+		expect(b.total).toBe(53);
 		expect(b.km).toBe(80);
-		expect(b.price).toBe(0);
+		expect(b.price).toBe(50);
 		expect(b.year).toBe(7);
 		expect(b.loc).toBe(81);
 		expect(b.rel.score).toBe(42);
