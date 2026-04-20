@@ -1,7 +1,8 @@
 <script lang="ts">
 	import type { Car } from '$lib/types';
-	import { computeScore } from '$lib/scoring';
+	import { computeScore, detectScamRisk } from '$lib/scoring';
 	import ScoreBadge from '$components/ui/ScoreBadge.svelte';
+	import ScamBadge from '$components/ui/ScamBadge.svelte';
 	import StatusPill from '$components/ui/StatusPill.svelte';
 
 	let {
@@ -17,11 +18,15 @@
 	} = $props();
 
 	const score = $derived(computeScore(car));
+	const scam = $derived(detectScamRisk(car));
 </script>
 
 <tr onclick={() => onopen?.(car.id)}>
 	<td class="title-cell">
-		<div class="title">{car.title}</div>
+		<div class="title-line">
+			<span class="title">{car.title}</span>
+			<ScamBadge {scam} size="sm" />
+		</div>
 		{#if car.model}<div class="subtitle">{car.model}</div>{/if}
 	</td>
 	<td class="soft">{car.make ?? '—'}</td>
@@ -83,6 +88,12 @@
 	}
 	.title-cell {
 		min-width: 200px;
+	}
+	.title-line {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		flex-wrap: wrap;
 	}
 	.title {
 		font-size: 0.88rem;

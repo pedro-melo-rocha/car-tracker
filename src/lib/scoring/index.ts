@@ -49,3 +49,4 @@ export function scoreClass(score: number): 'green' | 'yellow' | 'red' {
 export { kmSubscore, priceSubscore, yearSubscore, locationScore, reliabilitySubscore };
 export { normalizeLoc, locationKm } from './location';
 export { getMakeReliability, getEngineProfile } from './reliability';
+export { detectScamRisk, type ScamFlag, type ScamLevel, type ScamRisk } from './suspicion';

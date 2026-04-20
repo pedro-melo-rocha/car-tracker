@@ -7,6 +7,10 @@ export const SOURCE_MAP: Record<string, string> = {
 	'custojusto.pt': 'CustoJusto'
 };
 
+// Free-to-list platforms with less moderation than paid aggregators.
+// Presence of a structural red flag + a non-paid source bumps scam risk.
+export const NON_PAID_SOURCES = new Set(['OLX', 'Facebook Marketplace', 'CustoJusto']);
+
 export const ENGINE_CODES: Record<string, string> = {
 	tdi: 'TDI',
 	tsi: 'TSI',

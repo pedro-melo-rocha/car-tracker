@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { Car } from '$lib/types';
 	import { STATUSES, STATUS_LABELS, type CarStatus } from '$lib/types';
-	import { computeScore, computeScoreBreakdown, locationKm } from '$lib/scoring';
+	import { computeScore, computeScoreBreakdown, detectScamRisk, locationKm } from '$lib/scoring';
 	import { netPriceDrop } from '$lib/price';
 	import { SCORE_WEIGHTS } from '$lib/constants';
 	import PriceHistoryTimeline from './PriceHistoryTimeline.svelte';
@@ -20,6 +20,7 @@
 
 	const score = $derived(computeScore(car));
 	const breakdown = $derived(computeScoreBreakdown(car));
+	const scam = $derived(detectScamRisk(car));
 	const engineLine = $derived(
 		[car.engine, car.power ? car.power + 'cv' : ''].filter(Boolean).join(' · ')
 	);
@@ -224,6 +225,27 @@
 				<PriceHistoryTimeline history={car.priceHistory ?? []} />
 			</div>
 		</section>
+
+		{#if scam.level !== 'none'}
+			<section class="section">
+				<h3>Scam risk</h3>
+				<div class="scam-card {scam.level}">
+					<div class="scam-head">
+						<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+							<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+							<line x1="12" y1="9" x2="12" y2="13" />
+							<line x1="12" y1="17" x2="12.01" y2="17" />
+						</svg>
+						<span>{scam.level === 'high' ? 'Likely scam — verify carefully' : 'Suspicious — worth a second look'}</span>
+					</div>
+					<ul class="scam-list">
+						{#each scam.flags as f (f.id)}
+							<li>{f.label}</li>
+						{/each}
+					</ul>
+				</div>
+			</section>
+		{/if}
 
 		{#if car.notes}
 			<section class="section">
@@ -516,6 +538,37 @@
 		background: var(--card-2);
 		border-radius: 10px;
 		padding: 12px 14px;
+	}
+	.scam-card {
+		border-radius: 10px;
+		padding: 12px 14px;
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+	}
+	.scam-card.low {
+		background: var(--warn-bg);
+		color: var(--warn);
+	}
+	.scam-card.high {
+		background: var(--bad-bg);
+		color: var(--bad);
+	}
+	.scam-head {
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+		font-size: 0.82rem;
+		font-weight: 600;
+	}
+	.scam-list {
+		margin: 0;
+		padding-left: 22px;
+		font-size: 0.78rem;
+		line-height: 1.5;
+	}
+	.scam-list li {
+		margin: 2px 0;
 	}
 	.notes {
 		font-size: 0.86rem;

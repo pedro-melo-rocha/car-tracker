@@ -1,9 +1,10 @@
 <script lang="ts">
 	import type { Car } from '$lib/types';
-	import { computeScore, locationKm } from '$lib/scoring';
+	import { computeScore, detectScamRisk, locationKm } from '$lib/scoring';
 	import { netPriceDrop } from '$lib/price';
 	import { timeAgo } from '$lib/staleness';
 	import ScoreBadge from '$components/ui/ScoreBadge.svelte';
+	import ScamBadge from '$components/ui/ScamBadge.svelte';
 	import StatusPill from '$components/ui/StatusPill.svelte';
 
 	let {
@@ -23,6 +24,7 @@
 	} = $props();
 
 	const score = $derived(computeScore(car));
+	const scam = $derived(detectScamRisk(car));
 	const dropAmount = $derived(netPriceDrop(car.priceHistory));
 	const distance = $derived(locationKm(car.location));
 	const kmLabel = $derived(car.km != null ? Math.round(car.km / 1000) + 'k\u00A0km' : '—');
@@ -68,6 +70,7 @@
 				€{dropAmount.toLocaleString('pt-PT')} off
 			</span>
 		{/if}
+		<ScamBadge {scam} size="sm" />
 	</div>
 
 	<div class="facts">
