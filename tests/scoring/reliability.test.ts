@@ -13,7 +13,7 @@ describe('getMakeReliability', () => {
 
 	it('returns the baseline for known makes', () => {
 		expect(getMakeReliability('Toyota')).toBe(90);
-		expect(getMakeReliability('BMW')).toBe(60);
+		expect(getMakeReliability('BMW')).toBe(62);
 		expect(getMakeReliability('Fiat')).toBe(48);
 	});
 

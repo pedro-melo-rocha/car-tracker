@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { MAKE_RELIABILITY, ENGINE_PROFILES } from '$lib/constants';
+	import { MAKE_RELIABILITY, MAKE_RELIABILITY_NOTES, ENGINE_PROFILES } from '$lib/constants';
 
 	const weights = [
 		{ label: 'Kms', pct: 22, hint: 'Fuel-aware sweet spot: diesel 0–130k ⇒ 100, 280k ⇒ 0. Petrol 0–90k ⇒ 100, 200k ⇒ 0.' },
@@ -10,14 +10,15 @@
 	];
 
 	const makes = Object.entries(MAKE_RELIABILITY)
-		.filter(([k]) => k !== 'vw' && k !== 'citroen')
+		.filter(([k]) => k !== 'vw' && k !== 'citroen' && k !== 'mercedes-benz')
 		.sort((a, b) => b[1] - a[1])
 		.map(([k, v]) => ({
 			name: k
 				.split(' ')
 				.map((s) => s.charAt(0).toUpperCase() + s.slice(1))
 				.join(' '),
-			score: v
+			score: v,
+			note: MAKE_RELIABILITY_NOTES[k] ?? null
 		}));
 
 	function makeCls(v: number) {
@@ -111,11 +112,32 @@
 	<div class="docs-section">
 		<h3>Make reliability baseline</h3>
 		<p>Before any engine adjustment. Scale is 0–100.</p>
+		<p class="docs-context">
+			These scores are <strong>tuned for our shopping window</strong>: roughly €5k, cars typically
+			8–15 years old, bought and driven in Portugal. That context changes which signals matter. New-car
+			owner surveys (<a href="https://www.jdpower.com/cars/ratings/dependability" target="_blank" rel="noreferrer noopener">J.D. Power</a>,
+			<a href="https://www.whatcar.com/reliability/" target="_blank" rel="noreferrer noopener">What Car?</a>,
+			<a href="https://www.reliabilityindex.com/" target="_blank" rel="noreferrer noopener">Warranty Direct / Reliability Index</a>)
+			dominate most "most reliable brand" lists, but they skew young — they tell you how a 2-year-old
+			car is behaving, not a 12-year-old one. For the cars we actually look at, long-term durability
+			signals are better: <strong>German inspection reports</strong> —
+			<a href="https://www.tuev-verband.de/pruefungen/tuev-report" target="_blank" rel="noreferrer noopener">TÜV Report</a> and
+			<a href="https://www.dekra.com/en/used-car-report/" target="_blank" rel="noreferrer noopener">Dekra Used Car Report</a>
+			(defect rates on 5–11 yr old cars) — plus long-term ownership data from
+			<a href="https://www.consumerreports.org/cars/" target="_blank" rel="noreferrer noopener">Consumer Reports</a> and European
+			specialist forums. We also factor in <strong>parts availability and mechanic support in Portugal</strong>,
+			which penalises some exotic-in-Europe brands (e.g. Subaru) beyond what global data would suggest.
+		</p>
 		<div class="docs-makes">
 			{#each makes as m (m.name)}
 				<div class="docs-make-row">
-					<span class="m-name">{m.name}</span>
-					<span class="m-score {makeCls(m.score)}">{m.score}</span>
+					<div class="m-head">
+						<span class="m-name">{m.name}</span>
+						<span class="m-score {makeCls(m.score)}">{m.score}</span>
+					</div>
+					{#if m.note}
+						<p class="m-note">{m.note}</p>
+					{/if}
 				</div>
 			{/each}
 		</div>
@@ -136,40 +158,6 @@
 				</div>
 			{/each}
 		</div>
-	</div>
-
-	<div class="docs-section">
-		<h3>Why these adjustments?</h3>
-		<ul>
-			<li>
-				<strong>Fiat 1.3 Multijet / Opel 1.3 CDTi / Alfa 1.3 JTDM</strong> — same Fiat block.
-				Timing chain stretch at 120–150k km (expensive fix), EGR/DPF clogging, turbo failures,
-				injector issues. Widely labelled a "motor a evitar". Strongest negative flag in the
-				model.
-			</li>
-			<li>
-				<strong>VW 1.2/1.4 TSI (EA111) and 1.6 TDI CR (EA189)</strong> — timing chain and
-				injector problems respectively. The post-2013 EA211 TSIs corrected most of this and get
-				a small bonus instead.
-			</li>
-			<li>
-				<strong>PSA 1.4 HDi / Ford 1.4 TDCi</strong> — shared block, small displacement working
-				hard in Fiestas/C3s/207s. Injector and FAP issues are near-universal beyond 150k km.
-			</li>
-			<li>
-				<strong>Renault 1.5 dCi (K9K)</strong> — small penalty. The engine can do 300k km if
-				lucky, but K9K-722 onwards had serious injector/turbo runs. The 2013+ Energy dCi variant
-				is cleaner; the field value is conservative.
-			</li>
-			<li>
-				<strong>Toyota 1.4 D-4D / VVT-i</strong> — the reference point of durability. 300k km+
-				units with just belts and oil are documented. Strong positive bonus.
-			</li>
-			<li>
-				<strong>VAG 1.9 TDI (PD and non-PD)</strong> — the legendary EDC-based diesel. Simple,
-				abundant parts, fixable. Positive bonus.
-			</li>
-		</ul>
 	</div>
 
 	<div class="docs-section">
@@ -341,6 +329,19 @@
 		font-size: 0.82rem;
 		line-height: 1.4;
 	}
+	.docs-context {
+		font-size: 0.85rem;
+		line-height: 1.55;
+		color: var(--text-secondary);
+		margin: 4px 0 12px;
+	}
+	.docs-context a {
+		color: var(--accent);
+		text-decoration: none;
+	}
+	.docs-context a:hover {
+		text-decoration: underline;
+	}
 	.docs-makes {
 		display: grid;
 		grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
@@ -349,12 +350,23 @@
 	}
 	.docs-make-row {
 		display: flex;
-		justify-content: space-between;
-		align-items: center;
+		flex-direction: column;
+		gap: 4px;
 		padding: 6px 10px;
 		background: var(--bg-card);
 		border: 1px solid var(--border);
 		border-radius: var(--radius-sm);
+	}
+	.docs-make-row .m-head {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+	}
+	.docs-make-row .m-note {
+		margin: 0;
+		font-size: 0.78rem;
+		line-height: 1.4;
+		color: var(--text-muted);
 	}
 	.docs-make-row .m-name {
 		color: var(--text);
