@@ -42,6 +42,59 @@ describe('getEngineProfile', () => {
 		const p = getEngineProfile({ title: 'Golf 1.9 TDI', notes: null, engine: null });
 		expect(p?.delta).toBe(12);
 	});
+
+	it('catches 1.3 CDTi (Opel variant of the flagged Fiat block)', () => {
+		const p = getEngineProfile({ title: 'Opel Corsa 1.3 CDTi', notes: null, engine: null });
+		expect(p?.delta).toBe(-16);
+	});
+
+	it('distinguishes EA211 1.2 TSI (+5) from EA111 1.2 TSI (-10)', () => {
+		const good = getEngineProfile({ title: 'Polo 1.2 TSI EA211', notes: null, engine: null });
+		const bad = getEngineProfile({ title: 'Polo 1.2 TSI', notes: null, engine: null });
+		expect(good?.delta).toBe(5);
+		expect(bad?.delta).toBe(-10);
+	});
+
+	it('matches the 2.0 D-4D', () => {
+		const p = getEngineProfile({ title: 'Toyota Avensis 2.0 D-4D', notes: null, engine: null });
+		expect(p?.delta).toBe(10);
+	});
+
+	it('matches the 1.7 CDTi', () => {
+		const p = getEngineProfile({ title: 'Opel Astra 1.7 CDTi', notes: null, engine: null });
+		expect(p?.delta).toBe(6);
+	});
+
+	it('matches the 1.4 CRDi separately from 1.6 CRDi', () => {
+		const p = getEngineProfile({ title: 'Hyundai i20 1.4 CRDi', notes: null, engine: null });
+		expect(p?.delta).toBe(3);
+	});
+
+	it('matches 1.6 BlueHDi before the generic 1.6 HDi rule', () => {
+		const p = getEngineProfile({ title: 'Peugeot 308 1.6 BlueHDi', notes: null, engine: null });
+		expect(p?.delta).toBe(2);
+	});
+
+	it('flags 1.0 EcoBoost', () => {
+		const p = getEngineProfile({ title: 'Ford Fiesta 1.0 EcoBoost', notes: null, engine: null });
+		expect(p?.delta).toBe(-6);
+	});
+
+	it('flags Renault TCe variants', () => {
+		const p09 = getEngineProfile({ title: 'Renault Clio 0.9 TCe', notes: null, engine: null });
+		const p12 = getEngineProfile({ title: 'Renault Captur 1.2 TCe', notes: null, engine: null });
+		expect(p09?.delta).toBe(-8);
+		expect(p12?.delta).toBe(-8);
+	});
+
+	it('flags Opel A14NET/B14NET turbo', () => {
+		const p = getEngineProfile({
+			title: 'Opel Astra J 1.4 Turbo',
+			notes: 'engine code A14NET',
+			engine: null
+		});
+		expect(p?.delta).toBe(-6);
+	});
 });
 
 describe('reliabilitySubscore', () => {

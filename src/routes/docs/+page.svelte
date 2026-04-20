@@ -32,7 +32,7 @@
 			.replace(/\(\?!.*?\)/g, '')
 			.replace(/\\b/g, '')
 			.replace(/\(.*?\)/g, (m) =>
-				m.replace(/[()|]/g, ' ').trim().split(/\s+/).slice(0, 2).join('/')
+				m.replace(/[()|]/g, ' ').trim().split(/\s+/).join('/')
 			)
 			.replace(/\s+/g, ' ')
 			.trim();

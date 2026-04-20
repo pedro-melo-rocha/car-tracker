@@ -2,6 +2,7 @@
 	import type { Car } from '$lib/types';
 	import { STATUSES, STATUS_LABELS, type CarStatus } from '$lib/types';
 	import { computeScore, computeScoreBreakdown, detectScamRisk, locationKm } from '$lib/scoring';
+	import { computeIUC, iucTone } from '$lib/scoring/iuc';
 	import { netPriceDrop } from '$lib/price';
 	import { SCORE_WEIGHTS } from '$lib/constants';
 	import PriceHistoryTimeline from './PriceHistoryTimeline.svelte';
@@ -25,6 +26,7 @@
 		[car.engine, car.power ? car.power + 'cv' : ''].filter(Boolean).join(' · ')
 	);
 	const distance = $derived(locationKm(car.location));
+	const iuc = $derived(computeIUC(car));
 	const priceDrop = $derived(netPriceDrop(car.priceHistory));
 
 	const scoreTone = $derived(score >= 70 ? 'good' : score >= 50 ? 'warn' : 'bad');
@@ -223,6 +225,19 @@
 				<div class="spec">
 					<span class="k">Distance</span>
 					<span class="v">{distance != null ? distance + ' km' : '—'}</span>
+				</div>
+				<div class="spec">
+					<span class="k">IUC estimado</span>
+					{#if iuc}
+						<span class="v iuc {iucTone(iuc.euros)}">
+							€{iuc.euros}/ano
+							<span class="iuc-sub"
+								>Cat. {iuc.category}{iuc.estimated ? ' · estimado' : ''}</span
+							>
+						</span>
+					{:else}
+						<span class="v">—</span>
+					{/if}
 				</div>
 			</div>
 		</section>
@@ -546,6 +561,23 @@
 		font-size: 0.88rem;
 		color: var(--ink);
 		font-weight: 500;
+	}
+	.iuc.good {
+		color: var(--good);
+	}
+	.iuc.warn {
+		color: var(--warn);
+	}
+	.iuc.bad {
+		color: var(--bad);
+	}
+	.iuc-sub {
+		display: block;
+		font-size: 0.66rem;
+		font-weight: 400;
+		color: var(--ink-dim);
+		letter-spacing: 0.04em;
+		margin-top: 2px;
 	}
 	.soft-card {
 		background: var(--card-2);
