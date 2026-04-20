@@ -134,23 +134,93 @@
 			<h3>How each subscore works</h3>
 			<details open>
 				<summary><strong>Kms</strong> <span class="summary-tag">fuel-aware curve</span></summary>
-				<p>
-					Diesels plateau at 100 between <code>0–130 000 km</code> and decay linearly to 0 at
-					<code>280 000 km</code>. Petrol ages faster: plateau <code>0–90 000 km</code>, decay to 0
-					at <code>200 000 km</code>. Below the plateau the score stays flat — we don't reward
-					suspiciously low km on an old car, since odometer rollback is a common fraud pattern in
-					this segment.
-				</p>
+				<div class="details-body">
+					<svg class="curve" viewBox="0 0 320 180" role="img" aria-label="Km subscore curve">
+						<!-- grid + axes -->
+						<g class="grid">
+							<line x1="40" y1="20" x2="40" y2="150" />
+							<line x1="40" y1="150" x2="310" y2="150" />
+							<line x1="40" y1="85" x2="310" y2="85" class="dashed" />
+							<line x1="40" y1="20" x2="310" y2="20" class="dashed" />
+						</g>
+						<!-- y labels -->
+						<text x="34" y="24" class="ax">100</text>
+						<text x="34" y="89" class="ax">50</text>
+						<text x="34" y="154" class="ax">0</text>
+						<!-- x labels (0, 90, 130, 200, 280, 300k) -->
+						<text x="40" y="165" class="ax mid">0</text>
+						<text x="121" y="165" class="ax mid">90k</text>
+						<text x="157" y="165" class="ax mid">130k</text>
+						<text x="220" y="165" class="ax mid">200k</text>
+						<text x="292" y="165" class="ax mid">300k</text>
+						<!-- diesel curve: x=40+km/300000*270, plateau 0-130k, decay to 280k -->
+						<polyline
+							class="curve-line diesel"
+							points="40,20 157,20 283,150 310,150"
+						/>
+						<!-- petrol curve -->
+						<polyline
+							class="curve-line petrol"
+							points="40,20 121,20 220,150 310,150"
+						/>
+						<!-- legend -->
+						<g class="legend" transform="translate(210, 30)">
+							<line x1="0" y1="4" x2="16" y2="4" class="curve-line diesel" />
+							<text x="20" y="8" class="ax">Diesel</text>
+							<line x1="0" y1="20" x2="16" y2="20" class="curve-line petrol" />
+							<text x="20" y="24" class="ax">Petrol</text>
+						</g>
+					</svg>
+					<p>
+						Diesels plateau at 100 between <code>0–130 000 km</code> and decay linearly to 0 at
+						<code>280 000 km</code>. Petrol ages faster: plateau <code>0–90 000 km</code>, decay
+						to 0 at <code>200 000 km</code>. Below the plateau the score stays flat — we don't
+						reward suspiciously low km on an old car, since odometer rollback is a common fraud
+						pattern in this segment.
+					</p>
+				</div>
 			</details>
 			<details>
 				<summary><strong>Price</strong> <span class="summary-tag">3-zone piecewise</span></summary>
-				<p>
-					Anchored on the <code>€5000</code> budget. Plateau at 100 from <code>€0 to €2500</code>
-					(bargain zone), linear decay to 50 at <code>€5000</code>, then a second decay to 0 at
-					<code>€7500</code>. The plateau exists because suspiciously cheap listings are usually
-					scams, salvage or mechanical wrecks. The soft tail past budget lets a genuine over-budget
-					deal still surface through the total score.
-				</p>
+				<div class="details-body">
+					<svg class="curve" viewBox="0 0 320 180" role="img" aria-label="Price subscore curve">
+						<g class="grid">
+							<line x1="40" y1="20" x2="40" y2="150" />
+							<line x1="40" y1="150" x2="310" y2="150" />
+							<line x1="40" y1="85" x2="310" y2="85" class="dashed" />
+							<line x1="40" y1="20" x2="310" y2="20" class="dashed" />
+						</g>
+						<text x="34" y="24" class="ax">100</text>
+						<text x="34" y="89" class="ax">50</text>
+						<text x="34" y="154" class="ax">0</text>
+						<!-- x axis scale: 0 to 10000 mapped to 40-310 (270px) -->
+						<!-- 2500 -> 40 + 2500/10000*270 = 107.5 -->
+						<!-- 5000 -> 175 -->
+						<!-- 7500 -> 242.5 -->
+						<!-- 10000 -> 310 -->
+						<text x="40" y="165" class="ax mid">€0</text>
+						<text x="107" y="165" class="ax mid">€2.5k</text>
+						<text x="175" y="165" class="ax mid">€5k</text>
+						<text x="242" y="165" class="ax mid">€7.5k</text>
+						<text x="305" y="165" class="ax mid">€10k</text>
+						<!-- budget marker -->
+						<line x1="175" y1="20" x2="175" y2="150" class="marker" />
+						<text x="175" y="14" class="ax mid marker-label">budget</text>
+						<!-- curve: (0,100) (2500,100) (5000,50) (7500,0) (10000,0) -->
+						<polyline
+							class="curve-line price"
+							points="40,20 107,20 175,85 242,150 310,150"
+						/>
+					</svg>
+					<p>
+						Anchored on the <code>€5000</code> budget. Plateau at 100 from
+						<code>€0 to €2500</code>
+						(bargain zone), linear decay to 50 at <code>€5000</code>, then a second decay to 0 at
+						<code>€7500</code>. The plateau exists because suspiciously cheap listings are usually
+						scams, salvage or mechanical wrecks. The soft tail past budget lets a genuine
+						over-budget deal still surface through the total score.
+					</p>
+				</div>
 			</details>
 			<details>
 				<summary
@@ -564,6 +634,66 @@
 	details > p {
 		padding: 0 14px 14px;
 		margin: 0;
+	}
+	.details-body {
+		padding: 0 14px 14px;
+	}
+	.details-body p {
+		margin: 0;
+		color: var(--text-secondary);
+		font-size: var(--fs-sm);
+		line-height: 1.6;
+	}
+	.curve {
+		display: block;
+		width: 100%;
+		max-width: 420px;
+		height: auto;
+		margin: 4px 0 14px;
+		background: var(--bg-warm);
+		border-radius: var(--radius-sm);
+		padding: 4px;
+	}
+	.curve .grid line {
+		stroke: var(--border-strong);
+		stroke-width: 1;
+	}
+	.curve .grid line.dashed {
+		stroke: var(--border);
+		stroke-dasharray: 2 3;
+	}
+	.curve .ax {
+		font-family: var(--mono);
+		font-size: 8px;
+		fill: var(--text-muted);
+	}
+	.curve .ax.mid {
+		text-anchor: middle;
+	}
+	.curve .curve-line {
+		fill: none;
+		stroke-width: 2;
+		stroke-linejoin: round;
+		stroke-linecap: round;
+	}
+	.curve .curve-line.diesel {
+		stroke: var(--accent);
+	}
+	.curve .curve-line.petrol {
+		stroke: var(--warn);
+	}
+	.curve .curve-line.price {
+		stroke: var(--accent);
+	}
+	.curve .marker {
+		stroke: var(--red);
+		stroke-width: 1;
+		stroke-dasharray: 2 2;
+		opacity: 0.6;
+	}
+	.curve .marker-label {
+		fill: var(--red);
+		font-size: 7px;
 	}
 	details.context-details {
 		margin-bottom: 16px;
