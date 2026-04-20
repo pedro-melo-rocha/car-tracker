@@ -58,9 +58,16 @@
 		onclose();
 	}
 
-	function setStatus(next: CarStatus) {
-		if (car.status === next) return;
-		updateCar(car.id, { status: next });
+	let pendingStatus: CarStatus | null = $state(null);
+
+	async function setStatus(next: CarStatus) {
+		if (car.status === next || pendingStatus !== null) return;
+		pendingStatus = next;
+		try {
+			await updateCar(car.id, { status: next });
+		} finally {
+			pendingStatus = null;
+		}
 	}
 
 	function onKeydown(e: KeyboardEvent) {
@@ -125,6 +132,7 @@
 						type="button"
 						class="status-chip"
 						class:active={car.status === s}
+						class:pending={pendingStatus === s}
 						onclick={() => setStatus(s)}
 					>
 						{STATUS_LABELS[s]}
@@ -436,6 +444,11 @@
 		background: var(--accent);
 		color: #fff;
 		border-color: var(--accent);
+	}
+	.status-chip.pending {
+		opacity: 0.55;
+		cursor: wait;
+		pointer-events: none;
 	}
 	.breakdown {
 		display: flex;

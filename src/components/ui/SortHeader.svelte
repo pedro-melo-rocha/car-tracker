@@ -10,7 +10,7 @@
 	} = $props();
 
 	const active = $derived($listSort.field === field);
-	const arrow = $derived(active ? ($listSort.asc ? ' ↑' : ' ↓') : '');
+	const arrow = $derived($listSort.field === field ? ($listSort.asc ? '↑' : '↓') : '');
 
 	function toggle() {
 		listSort.update((s) =>
@@ -20,7 +20,7 @@
 </script>
 
 <button type="button" class="sort-btn" class:active onclick={toggle}>
-	{label}{arrow}
+	{label}<span class="arrow" aria-hidden="true">{arrow || '↕'}</span>
 </button>
 
 <style>
@@ -34,11 +34,24 @@
 		letter-spacing: 0.03em;
 		cursor: pointer;
 		padding: 0;
+		white-space: nowrap;
+		display: inline-flex;
+		align-items: center;
+		gap: 3px;
 	}
 	.sort-btn:hover {
 		color: var(--text);
 	}
 	.sort-btn.active {
 		color: var(--accent);
+	}
+	.arrow {
+		font-size: 0.7em;
+		opacity: 0.35;
+		width: 1em;
+		text-align: center;
+	}
+	.sort-btn.active .arrow {
+		opacity: 1;
 	}
 </style>
