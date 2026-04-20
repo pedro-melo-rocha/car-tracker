@@ -113,7 +113,10 @@
 		</header>
 
 		<section id="weights" class="docs-section">
-			<h3>Weights</h3>
+			<div class="weights-head">
+				<h3>Weights</h3>
+				<span class="weights-total">sums to 100%</span>
+			</div>
 			<div class="docs-weights">
 				{#each weights as w (w.label)}
 					<div class="docs-weight-card">
@@ -540,6 +543,26 @@
 		color: var(--text);
 	}
 
+	.weights-head {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 12px;
+		margin-bottom: 10px;
+	}
+	.weights-head h3 {
+		margin-bottom: 0;
+	}
+	.weights-total {
+		font-family: var(--mono);
+		font-size: 0.72rem;
+		font-weight: 600;
+		letter-spacing: 0.04em;
+		color: var(--accent);
+		background: var(--accent-soft);
+		padding: 3px 10px;
+		border-radius: 999px;
+	}
 	.docs-weights {
 		display: grid;
 		grid-template-columns: repeat(5, 1fr);
