@@ -71,6 +71,7 @@ export const DATALIST_ENGINES = [
 	'1.9 Multijet',
 	'Honda i-VTEC',
 	'Mazda SkyActiv',
+	'1.6 MZ-CD',
 	'1.0 TSI EA211',
 	'1.2 TSI EA211',
 	'1.5 TDCi',
@@ -258,6 +259,7 @@ export const ENGINE_PROFILES: EngineProfile[] = [
 	// EA288 explicitly caught before the generic 1.6 TDI penalty below
 	{ re: /1\.6\s*tdi.*ea288|ea288.*1\.6\s*tdi/i, delta: 2, reason: 'VW 1.6 TDI EA288 (post-2014) — addresses EA189 injector/EGR issues; generally reliable when serviced.' },
 	{ re: /1\.5\s*tdci|1\.6\s*tdci/i, delta: 2, reason: 'Ford 1.5/1.6 TDCi — refined PSA block, reasonably reliable.' },
+	{ re: /1\.6\s*mz[- ]?cd/i, delta: 2, reason: 'Mazda 1.6 MZ-CD (Mazda 3 BK/BL) — rebadged PSA DV6 / Ford 1.6 TDCi block; refined, reasonably reliable.' },
 	{ re: /1\.6\s*bluehdi/i, delta: 2, reason: 'PSA 1.6 BlueHDi (DV5/DV6FC, post-2014) — improved successor to 1.6 HDi; AdBlue/SCR sensors can be a maintenance point but bottom end is strong.' },
 
 	// --- Negative adjustments (ordered by severity) ---
