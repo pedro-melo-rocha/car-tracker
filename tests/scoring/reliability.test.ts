@@ -87,6 +87,18 @@ describe('getEngineProfile', () => {
 		expect(p12?.delta).toBe(-8);
 	});
 
+	it('flags Suzuki 1.3 DDiS with the same penalty as the Fiat 1.3 Multijet', () => {
+		const p = getEngineProfile({ title: 'Suzuki Swift 1.3 DDiS', notes: null, engine: '1.3 DDiS' });
+		expect(p?.delta).toBe(-16);
+		expect(p?.reason).toMatch(/DDiS/);
+	});
+
+	it('flags Mazda 1.4 MZ-CD as a rebadged PSA DV4', () => {
+		const p = getEngineProfile({ title: 'Mazda 2 1.4 MZ-CD Comfort', notes: null, engine: '1.4 MZ-CD' });
+		expect(p?.delta).toBe(-10);
+		expect(p?.reason).toMatch(/DV4/);
+	});
+
 	it('flags Opel A14NET/B14NET turbo', () => {
 		const p = getEngineProfile({
 			title: 'Opel Astra J 1.4 Turbo',

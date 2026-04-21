@@ -68,6 +68,7 @@ export const DATALIST_ENGINES = [
 	'Honda i-VTEC',
 	'Mazda SkyActiv',
 	'1.6 MZ-CD',
+	'1.4 MZ-CD',
 	'1.0 TSI',
 	'1.2 TSI',
 	'1.5 TDCi',
@@ -77,6 +78,7 @@ export const DATALIST_ENGINES = [
 	'1.7 CDTi',
 	'1.6 BlueHDi',
 	'1.3 Multijet',
+	'1.3 DDiS',
 	'1.4 HDi',
 	'1.6 TDI',
 	'1.5 dCi',
@@ -263,7 +265,9 @@ export const ENGINE_PROFILES: EngineProfile[] = [
 
 	// --- Negative adjustments (ordered by severity) ---
 	{ re: /1\.3\s*(multijet|m[- ]?jet|jtd|cdti)/i, delta: -16, reason: 'Fiat/Opel 1.3 Multijet/JTD/CDTi — timing chain stretch 120–150k km, EGR/DPF clogs, turbo failures. Widely flagged as "motor a evitar".' },
+	{ re: /1\.3\s*ddis/i, delta: -16, reason: 'Suzuki 1.3 DDiS (Swift, Ignis, Wagon R+) — Fiat 1.3 Multijet under licence: timing chain stretch 120–150k km, EGR/DPF clogs, turbo failures.' },
 	{ re: /1\.4\s*(hdi|tdci)/i, delta: -10, reason: 'PSA 1.4 HDi / Ford 1.4 TDCi — injector and FAP issues, oil sludge.' },
+	{ re: /1\.4\s*mz[- ]?cd/i, delta: -10, reason: 'Mazda 1.4 MZ-CD (Mazda 2) — rebadged PSA DV4 (same as 1.4 HDi / Ford 1.4 TDCi): injector and FAP issues, oil sludge.' },
 	// 1.2 TSI EA111: year-based split (pre-2014 is the bad chain variant)
 	{ re: /1\.2\s*tsi/i, delta: -10, yearMax: 2013, reason: 'VW 1.2 TSI (EA111, pre-2014) — timing chain stretch, tensioner failures.' },
 	{ re: /1\.4\s*tsi/i, delta: -10, reason: 'VW 1.4 TSI — timing chain, carbon build-up, oil consumption.' },
