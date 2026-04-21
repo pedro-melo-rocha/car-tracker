@@ -49,8 +49,8 @@ describe('getEngineProfile', () => {
 	});
 
 	it('distinguishes EA211 1.2 TSI (+5) from EA111 1.2 TSI (-10)', () => {
-		const good = getEngineProfile({ title: 'Polo 1.2 TSI EA211', notes: null, engine: null });
-		const bad = getEngineProfile({ title: 'Polo 1.2 TSI', notes: null, engine: null });
+		const good = getEngineProfile({ title: 'Polo 1.2 TSI EA211', notes: null, engine: null, year: 2016 });
+		const bad = getEngineProfile({ title: 'Polo 1.2 TSI', notes: null, engine: null, year: 2011 });
 		expect(good?.delta).toBe(5);
 		expect(bad?.delta).toBe(-10);
 	});
