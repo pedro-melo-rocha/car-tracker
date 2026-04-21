@@ -4,7 +4,6 @@
 	import { netPriceDrop } from '$lib/price';
 	import { timeAgo } from '$lib/staleness';
 	import ScoreBadge from '$components/ui/ScoreBadge.svelte';
-	import ScamBadge from '$components/ui/ScamBadge.svelte';
 	import StatusPill from '$components/ui/StatusPill.svelte';
 
 	let {
@@ -49,6 +48,19 @@
 	}}
 	ondragend={() => ondragend?.()}
 >
+	{#if scam.level !== 'none'}
+		<div
+			class="scam-strip {scam.level}"
+			title={scam.flags.map((f) => `• ${f.label}`).join('\n')}
+		>
+			<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+				<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+				<line x1="12" y1="9" x2="12" y2="13" />
+				<line x1="12" y1="17" x2="12.01" y2="17" />
+			</svg>
+			<span>{scam.level === 'high' ? 'Likely scam' : 'Suspicious'}</span>
+		</div>
+	{/if}
 	<div class="head">
 		<ScoreBadge {score} size="md" />
 		<div class="head-text">
@@ -70,7 +82,6 @@
 				€{dropAmount.toLocaleString('pt-PT')} off
 			</span>
 		{/if}
-		<ScamBadge {scam} size="sm" />
 	</div>
 
 	<div class="facts">
@@ -172,6 +183,26 @@
 		display: inline-flex;
 		align-items: center;
 		gap: 3px;
+	}
+	.scam-strip {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		margin: -16px -16px 12px;
+		padding: 6px 14px;
+		border-top-left-radius: var(--radius-lg);
+		border-top-right-radius: var(--radius-lg);
+		font-size: 0.7rem;
+		font-weight: 600;
+		letter-spacing: 0.01em;
+	}
+	.scam-strip.low {
+		background: var(--warn-bg);
+		color: var(--warn);
+	}
+	.scam-strip.high {
+		background: var(--bad-bg);
+		color: var(--bad);
 	}
 	.facts {
 		display: flex;

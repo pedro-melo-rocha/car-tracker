@@ -38,13 +38,11 @@ describe('detectScamRisk', () => {
 	});
 
 	it('flags low-km-per-year regardless of age (older cars still suspicious)', () => {
-		// 2013 Peugeot 208 with 55k km → ~4.2k km/yr, should flag even at 13 yrs old
 		const r = detectScamRisk(fixture({ year: 2013, km: 55000, price: 3950 }), NOW);
 		expect(r.flags.map((f) => f.id)).toContain('low-km-per-year');
 	});
 
 	it('does not flag low-km-per-year when usage is normal', () => {
-		// 2010 car with ~180k km → ~11k km/yr, normal
 		const r = detectScamRisk(fixture({ year: 2010, km: 180000, price: 4500 }), NOW);
 		expect(r.flags.map((f) => f.id)).not.toContain('low-km-per-year');
 	});
@@ -56,36 +54,52 @@ describe('detectScamRisk', () => {
 
 	it('flags unicorn combos (low km + low price + recent)', () => {
 		const r = detectScamRisk(fixture({ year: 2019, km: 50000, price: 2500 }), NOW);
+		expect(r.flags.map((f) => f.id)).toContain('unicorn-combo');
+	});
+
+	it('flags the Peugeot 307 2.0 scam (older + 2.0L + too cheap)', () => {
+		const r = detectScamRisk(
+			fixture({
+				year: 2006,
+				km: 100000,
+				price: 2850,
+				engine: '2.0 XSi-Automat',
+				source: 'StandVirtual'
+			}),
+			NOW
+		);
 		const ids = r.flags.map((f) => f.id);
-		expect(ids).toContain('unicorn-combo');
+		expect(ids).toContain('big-engine-cheap');
+		expect(ids).toContain('low-km-per-year');
+		expect(r.level).not.toBe('none');
 	});
 
-	it('bumps to high when source is non-paid and a structural flag fires', () => {
+	it('flags a Leon-like below-market listing on StandVirtual', () => {
 		const r = detectScamRisk(
-			fixture({ year: 2020, km: 30000, price: 2500, source: 'Facebook Marketplace' }),
+			fixture({
+				year: 2016,
+				km: 120000,
+				price: 6000,
+				engine: '1.6 TDI',
+				source: 'StandVirtual'
+			}),
 			NOW
 		);
-		// low-km-per-year + recent-cheap + unicorn-combo + non-paid-source = 4 flags → high
-		expect(r.nonPaidSource).toBe(true);
-		expect(r.flags.map((f) => f.id)).toContain('non-paid-source');
-		expect(r.level).toBe('high');
+		expect(r.flags.map((f) => f.id)).toContain('below-market-estimate');
+		expect(r.level).not.toBe('none');
 	});
 
-	it('does not add non-paid-source flag when no structural flags fired', () => {
+	it('does not flag a fairly-priced modern car regardless of source', () => {
 		const r = detectScamRisk(
-			fixture({ year: 2015, km: 180000, price: 4500, source: 'OLX' }),
+			fixture({
+				year: 2018,
+				km: 110000,
+				price: 12000,
+				engine: '1.6 TDI',
+				source: 'OLX'
+			}),
 			NOW
 		);
-		expect(r.flags.map((f) => f.id)).not.toContain('non-paid-source');
 		expect(r.level).toBe('none');
-	});
-
-	it('StandVirtual does not trigger the non-paid-source bump', () => {
-		const r = detectScamRisk(
-			fixture({ year: 2020, km: 30000, price: 2500, source: 'StandVirtual' }),
-			NOW
-		);
-		expect(r.nonPaidSource).toBe(false);
-		expect(r.flags.map((f) => f.id)).not.toContain('non-paid-source');
 	});
 });
