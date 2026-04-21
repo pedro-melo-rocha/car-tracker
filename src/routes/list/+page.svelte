@@ -163,32 +163,7 @@
 								/>
 							</span>
 						</th>
-						<th>
-							<span class="th-inner">
-								<span class="th-label">Source</span>
-								<button
-									type="button"
-									class="th-filter"
-									class:active={isActive('sources')}
-									aria-label="Filter Source"
-									onclick={() => toggleCol('sources')}
-								>
-									<svg viewBox="0 0 10 10" fill="currentColor">
-										<path d="M1 2h8L6 6v3L4 8V6L1 2z" />
-									</svg>
-								</button>
-								<ColumnFilterPopover
-									meta={{
-										type: 'categorical',
-										key: 'sources',
-										title: 'Source',
-										options: uniqueValues.sources
-									}}
-									open={openCol === 'sources'}
-									onclose={() => (openCol = null)}
-								/>
-							</span>
-						</th>
+						<th><span class="th-inner"><span class="th-label">Model</span></span></th>
 						<th><span class="th-inner"><span class="th-label">Local</span></span></th>
 						<th>
 							<span class="th-inner">

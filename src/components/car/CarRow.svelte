@@ -25,12 +25,15 @@
 	<td class="title-cell">
 		<div class="title-line">
 			<span class="title">{car.title}</span>
-			<ScamBadge {scam} size="sm" />
 		</div>
-		{#if car.model}<div class="subtitle">{car.model}</div>{/if}
+		{#if scam.level !== 'none'}
+			<div class="badge-line">
+				<ScamBadge {scam} size="sm" />
+			</div>
+		{/if}
 	</td>
 	<td class="soft">{car.make ?? '—'}</td>
-	<td class="soft">{car.source ?? '—'}</td>
+	<td class="soft">{car.model ?? '—'}</td>
 	<td class="soft">{car.location ?? '—'}</td>
 	<td class="num">{car.year ?? '—'}</td>
 	<td class="num">{car.km ? car.km.toLocaleString('pt-PT') : '—'}</td>
@@ -101,10 +104,8 @@
 		color: var(--ink);
 		letter-spacing: -0.01em;
 	}
-	.subtitle {
-		font-size: 0.68rem;
-		color: var(--ink-dim);
-		margin-top: 2px;
+	.badge-line {
+		margin-top: 4px;
 	}
 	.price {
 		font-weight: 600;
