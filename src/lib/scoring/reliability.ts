@@ -11,11 +11,16 @@ export function getMakeReliability(make: string | null | undefined): number {
 	return 60;
 }
 
-export function getEngineProfile(car: Pick<Car, 'title' | 'notes' | 'engine'>): EngineProfile | null {
+export function getEngineProfile(car: Pick<Car, 'title' | 'notes' | 'engine' | 'year'>): EngineProfile | null {
 	const blob = [car.title, car.notes, car.engine].filter(Boolean).join(' ');
 	if (!blob) return null;
 	for (const p of ENGINE_PROFILES) {
-		if (p.re.test(blob)) return p;
+		if (!p.re.test(blob)) continue;
+		if (car.year != null) {
+			if (p.yearMin != null && car.year < p.yearMin) continue;
+			if (p.yearMax != null && car.year > p.yearMax) continue;
+		}
+		return p;
 	}
 	return null;
 }
@@ -28,7 +33,7 @@ export interface ReliabilityBreakdown {
 }
 
 export function reliabilitySubscore(
-	car: Pick<Car, 'make' | 'title' | 'notes' | 'engine'>
+	car: Pick<Car, 'make' | 'title' | 'notes' | 'engine' | 'year'>
 ): ReliabilityBreakdown {
 	const base = getMakeReliability(car.make);
 	const profile = getEngineProfile(car);

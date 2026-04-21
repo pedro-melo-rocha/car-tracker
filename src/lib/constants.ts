@@ -241,6 +241,8 @@ export interface EngineProfile {
 	re: RegExp;
 	delta: number;
 	reason: string;
+	yearMin?: number;
+	yearMax?: number;
 }
 
 export const ENGINE_PROFILES: EngineProfile[] = [
@@ -253,11 +255,12 @@ export const ENGINE_PROFILES: EngineProfile[] = [
 	{ re: /1\.9\s*(multijet|jtd)/i, delta: 10, reason: 'Fiat/Alfa 1.9 Multijet — robust, unlike the 1.3 variant.' },
 	{ re: /mazda\b.*\b(mzr|skyactiv)/i, delta: 8, reason: 'Mazda MZR / SkyActiv — generally reliable.' },
 	{ re: /1\.7\s*cdti/i, delta: 6, reason: 'Opel 1.7 CDTi (Isuzu Y17DT / A17DTJ — Astra, Corsa, Meriva) — Isuzu block, well-regarded longevity; watch EGR valve and swirl flaps.' },
-	{ re: /1\.0\s*tsi.*ea211|1\.2\s*tsi.*ea211/i, delta: 5, reason: 'VW EA211 TSI (post-2013) — fixed the timing chain issues.' },
+	// EA211 TSI: year-based split (post-2013 fixed the chain issues)
+	{ re: /1\.0\s*tsi|1\.2\s*tsi/i, delta: 5, yearMin: 2014, reason: 'VW EA211 TSI (post-2013) — fixed the timing chain issues of the EA111.' },
 	{ re: /1\.6\s*crdi/i, delta: 4, reason: 'Kia/Hyundai 1.6 CRDi (U2 / D4FB) — generally reliable Korean diesel, many units past 300k km; watch for EGR/DMF wear on early pre-2011 cars.' },
 	{ re: /1\.4\s*crdi/i, delta: 3, reason: 'Kia/Hyundai 1.4 CRDi (D4FC) — solid small Korean diesel (i20, Rio, Venga); watch EGR/DPF on urban-use units.' },
-	// EA288 explicitly caught before the generic 1.6 TDI penalty below
-	{ re: /1\.6\s*tdi.*ea288|ea288.*1\.6\s*tdi/i, delta: 2, reason: 'VW 1.6 TDI EA288 (post-2014) — addresses EA189 injector/EGR issues; generally reliable when serviced.' },
+	// 1.6 TDI: EA288 (2015+) is reliable; EA189 (pre-2015) is penalised below
+	{ re: /1\.6\s*tdi/i, delta: 2, yearMin: 2015, reason: 'VW 1.6 TDI EA288 (2015+) — addresses EA189 injector/EGR issues; generally reliable when serviced.' },
 	{ re: /1\.5\s*tdci|1\.6\s*tdci/i, delta: 2, reason: 'Ford 1.5/1.6 TDCi — refined PSA block, reasonably reliable.' },
 	{ re: /1\.6\s*mz[- ]?cd/i, delta: 2, reason: 'Mazda 1.6 MZ-CD (Mazda 3 BK/BL) — rebadged PSA DV6 / Ford 1.6 TDCi block; refined, reasonably reliable.' },
 	{ re: /1\.6\s*bluehdi/i, delta: 2, reason: 'PSA 1.6 BlueHDi (DV5/DV6FC, post-2014) — improved successor to 1.6 HDi; AdBlue/SCR sensors can be a maintenance point but bottom end is strong.' },
@@ -265,16 +268,19 @@ export const ENGINE_PROFILES: EngineProfile[] = [
 	// --- Negative adjustments (ordered by severity) ---
 	{ re: /1\.3\s*(multijet|m[- ]?jet|jtd|cdti)/i, delta: -16, reason: 'Fiat/Opel 1.3 Multijet/JTD/CDTi — timing chain stretch 120–150k km, EGR/DPF clogs, turbo failures. Widely flagged as "motor a evitar".' },
 	{ re: /1\.4\s*(hdi|tdci)/i, delta: -10, reason: 'PSA 1.4 HDi / Ford 1.4 TDCi — injector and FAP issues, oil sludge.' },
-	{ re: /1\.2\s*tsi(?!.*ea211)/i, delta: -10, reason: 'VW 1.2 TSI (EA111, pre-2013) — timing chain stretch, tensioner failures.' },
+	// 1.2 TSI EA111: year-based split (pre-2014 is the bad chain variant)
+	{ re: /1\.2\s*tsi/i, delta: -10, yearMax: 2013, reason: 'VW 1.2 TSI (EA111, pre-2014) — timing chain stretch, tensioner failures.' },
 	{ re: /1\.4\s*tsi/i, delta: -10, reason: 'VW 1.4 TSI — timing chain, carbon build-up, oil consumption.' },
 	{ re: /\b(n12|n14|n18)\b|1\.6\s*thp/i, delta: -10, reason: 'BMW/PSA Prince (N12/N14/N18 — Mini R56, Peugeot 207/208 THP, Citroën DS3) — timing chain stretch, carbon build-up, high oil consumption, water pump failures.' },
-	{ re: /1\.6\s*tdi/i, delta: -9, reason: 'VW 1.6 TDI common-rail (EA189, pre-EA288) — injector/EGR issues, sensitive to urban use, DieselGate era.' },
+	// 1.6 TDI EA189: only penalise pre-2015 (post-2015 caught by EA288 rule above)
+	{ re: /1\.6\s*tdi/i, delta: -9, yearMax: 2014, reason: 'VW 1.6 TDI EA189 (pre-2015) — injector/EGR issues, sensitive to urban use, DieselGate era.' },
 	{ re: /\bn47\b/i, delta: -8, reason: 'BMW N47 2.0d (pre-2011 320d/520d/X3) — timing chain at the rear of the block; failure requires engine-out, €2–3k job.' },
 	{ re: /(0\.9|1\.2)\s*tce/i, delta: -8, reason: 'Renault 0.9/1.2 TCe (H4Bt / H5Ft) — heavy oil consumption, piston ring failure, turbo wear; repair costs dwarf €5k-tier purchase price.' },
 	{ re: /1\.6\s*dci/i, delta: -7, reason: 'Renault 1.6 dCi (R9M / Energy dCi) — timing chain stretch (pre-2015), oil consumption, injector and turbo failures; same block sold to Mercedes as OM626 with documented issues.' },
 	{ re: /1\.4\s*tdi/i, delta: -7, reason: 'VW 1.4 TDI 3-cyl (PD / EA189 CR, pre-EA288) — DPF clogging on short trips, turbo failures from ~110k km, EGR coking; Dieselgate-era CR variants affected.' },
 	{ re: /2\.0\s*tdi.*(cbab|cbdb|cfgb)|2\.0\s*tdi.*pd/i, delta: -6, reason: '2.0 TDI PD / early CR — oil pump balance-shaft failures, FAP issues.' },
-	{ re: /1\.0\s*ecoboost/i, delta: -6, reason: 'Ford 1.0 EcoBoost (pre-2017) — wet timing belt degradation, coolant loss and cylinder head cracks on early units; expensive to repair.' },
+	// 1.0 EcoBoost wet-belt issue was fixed from 2017 onwards
+	{ re: /1\.0\s*ecoboost/i, delta: -6, yearMax: 2016, reason: 'Ford 1.0 EcoBoost (pre-2017) — wet timing belt degradation, coolant loss and cylinder head cracks on early units; expensive to repair.' },
 	{ re: /a14net|b14net/i, delta: -6, reason: 'Opel 1.4 Turbo (A14NET/B14NET — Astra J, Corsa D) — timing chain stretch, coolant leaks, carbon build-up.' },
 	{ re: /\bom651\b|2\.1\s*cdi/i, delta: -6, reason: 'Mercedes OM651 2.1 CDI (pre-2014 C/E/Sprinter) — injector failures, timing chain wear, turbo actuator issues.' },
 	{ re: /1\.5\s*dci/i, delta: -5, reason: 'Renault 1.5 dCi (K9K) — mixed track record; early units plagued by injectors and turbo failure.' },
