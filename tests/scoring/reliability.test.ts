@@ -99,6 +99,26 @@ describe('getEngineProfile', () => {
 		expect(p?.reason).toMatch(/DV4/);
 	});
 
+	it('skips diesel profiles when the car is Gasolina', () => {
+		const p = getEngineProfile({
+			title: 'Peugeot 308 1.6',
+			notes: '1.6 HDi mentioned in stray text',
+			engine: null,
+			fuel: 'Gasolina'
+		});
+		expect(p).toBeNull();
+	});
+
+	it('still matches diesel profiles when car.fuel is null (unknown)', () => {
+		const p = getEngineProfile({
+			title: 'Peugeot 308 1.6 HDi',
+			notes: null,
+			engine: null,
+			fuel: null
+		});
+		expect(p?.delta).toBe(-4);
+	});
+
 	it('flags Opel A14NET/B14NET turbo', () => {
 		const p = getEngineProfile({
 			title: 'Opel Astra J 1.4 Turbo',

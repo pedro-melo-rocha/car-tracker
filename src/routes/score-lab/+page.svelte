@@ -71,7 +71,13 @@
 	const breakdown = $derived(computeScoreBreakdown(draft));
 	const distance = $derived(locationKm(draft.location));
 	const engineProfile = $derived(
-		getEngineProfile({ title: draft.title, notes: draft.notes, engine: draft.engine, year: draft.year })
+		getEngineProfile({
+			title: draft.title,
+			notes: draft.notes,
+			engine: draft.engine,
+			year: draft.year,
+			fuel: draft.fuel || null
+		})
 	);
 
 	const hasMinForScore = $derived(

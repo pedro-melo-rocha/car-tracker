@@ -51,6 +51,7 @@
 			pattern,
 			delta: p.delta,
 			reason: p.reason,
+			fuel: p.fuel ?? null,
 			cls: p.delta > 0 ? 'pos' : 'neg',
 			sign: p.delta > 0 ? '+' : ''
 		};
@@ -58,14 +59,18 @@
 
 	const posCount = allEngines.filter((e) => e.delta > 0).length;
 	const negCount = allEngines.filter((e) => e.delta < 0).length;
+	const dieselCount = allEngines.filter((e) => e.fuel === 'Diesel').length;
+	const gasolinaCount = allEngines.filter((e) => e.fuel === 'Gasolina').length;
 
 	let engineFilter: 'all' | 'pos' | 'neg' = $state('all');
+	let fuelFilter: 'all' | 'Diesel' | 'Gasolina' = $state('all');
 	let engineQuery = $state('');
 
 	const visibleEngines = $derived(
 		allEngines.filter((e) => {
 			if (engineFilter === 'pos' && e.delta <= 0) return false;
 			if (engineFilter === 'neg' && e.delta >= 0) return false;
+			if (fuelFilter !== 'all' && e.fuel !== fuelFilter) return false;
 			if (engineQuery.trim()) {
 				const q = engineQuery.toLowerCase();
 				return e.pattern.toLowerCase().includes(q) || e.reason.toLowerCase().includes(q);
@@ -349,6 +354,35 @@
 						Penalty <span class="count">{negCount}</span>
 					</button>
 				</div>
+				<div class="engine-tabs" role="tablist" aria-label="Fuel filter">
+					<button
+						type="button"
+						role="tab"
+						aria-selected={fuelFilter === 'all'}
+						class:active={fuelFilter === 'all'}
+						onclick={() => (fuelFilter = 'all')}
+					>
+						All fuels
+					</button>
+					<button
+						type="button"
+						role="tab"
+						aria-selected={fuelFilter === 'Diesel'}
+						class:active={fuelFilter === 'Diesel'}
+						onclick={() => (fuelFilter = 'Diesel')}
+					>
+						Diesel <span class="count">{dieselCount}</span>
+					</button>
+					<button
+						type="button"
+						role="tab"
+						aria-selected={fuelFilter === 'Gasolina'}
+						class:active={fuelFilter === 'Gasolina'}
+						onclick={() => (fuelFilter = 'Gasolina')}
+					>
+						Gasolina <span class="count">{gasolinaCount}</span>
+					</button>
+				</div>
 				<input
 					type="search"
 					class="engine-search"
@@ -360,7 +394,14 @@
 			<div class="docs-engines">
 				{#each visibleEngines as e (e.pattern + e.reason)}
 					<div class="docs-engine-row {e.cls}">
-						<span class="docs-engine-label">{e.pattern}</span>
+						<span class="docs-engine-label">
+							{e.pattern}
+							{#if e.fuel}
+								<span class="fuel-pill fuel-{e.fuel.toLowerCase()}">{e.fuel}</span>
+							{:else}
+								<span class="fuel-pill fuel-any">any</span>
+							{/if}
+						</span>
 						<span class="docs-engine-delta">{e.sign}{e.delta}</span>
 						<span class="docs-engine-reason">{e.reason}</span>
 					</div>
@@ -828,6 +869,33 @@
 		font-weight: 600;
 		color: var(--text);
 		font-size: 0.82rem;
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		flex-wrap: wrap;
+	}
+	.fuel-pill {
+		font-family: var(--mono);
+		font-size: 0.65rem;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		padding: 1px 6px;
+		border-radius: 999px;
+		background: var(--bg-warm);
+		color: var(--text-muted);
+		border: 1px solid var(--border);
+	}
+	.fuel-pill.fuel-diesel {
+		color: var(--text-secondary);
+		border-color: var(--border);
+	}
+	.fuel-pill.fuel-gasolina {
+		color: var(--text-secondary);
+		border-color: var(--border);
+	}
+	.fuel-pill.fuel-any {
+		opacity: 0.7;
 	}
 	.docs-engine-delta {
 		font-family: var(--mono);
