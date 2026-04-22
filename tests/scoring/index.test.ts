@@ -54,14 +54,14 @@ describe('computeScoreBreakdown — baseline parity', () => {
 			location: 'Ramalde, Porto'
 		});
 		const b = computeScoreBreakdown(car);
-		expect(b.total).toBe(67);
+		expect(b.total).toBe(66);
 		expect(b.km).toBe(91);
 		expect(b.price).toBe(50);
 		expect(b.year).toBe(40);
 		expect(b.loc).toBe(96);
-		expect(b.rel.score).toBe(62);
+		expect(b.rel.score).toBe(58);
 		expect(b.rel.base).toBe(66);
-		expect(b.rel.delta).toBe(-4);
+		expect(b.rel.delta).toBe(-8);
 		expect(b.rel.reason).toContain('1.2 TDI');
 	});
 

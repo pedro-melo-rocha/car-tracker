@@ -67,7 +67,7 @@ describe('getEngineProfile', () => {
 
 	it('matches the 1.4 CRDi separately from 1.6 CRDi', () => {
 		const p = getEngineProfile({ title: 'Hyundai i20 1.4 CRDi', notes: null, engine: null });
-		expect(p?.delta).toBe(3);
+		expect(p?.delta).toBe(1);
 	});
 
 	it('matches 1.6 BlueHDi before the generic 1.6 HDi rule', () => {
@@ -87,15 +87,15 @@ describe('getEngineProfile', () => {
 		expect(p12?.delta).toBe(-8);
 	});
 
-	it('flags Suzuki 1.3 DDiS with the same penalty as the Fiat 1.3 Multijet', () => {
+	it('flags Suzuki 1.3 DDiS close to the Fiat 1.3 Multijet penalty', () => {
 		const p = getEngineProfile({ title: 'Suzuki Swift 1.3 DDiS', notes: null, engine: '1.3 DDiS' });
-		expect(p?.delta).toBe(-16);
+		expect(p?.delta).toBe(-14);
 		expect(p?.reason).toMatch(/DDiS/);
 	});
 
 	it('flags Mazda 1.4 MZ-CD as a rebadged PSA DV4', () => {
 		const p = getEngineProfile({ title: 'Mazda 2 1.4 MZ-CD Comfort', notes: null, engine: '1.4 MZ-CD' });
-		expect(p?.delta).toBe(-10);
+		expect(p?.delta).toBe(-7);
 		expect(p?.reason).toMatch(/DV4/);
 	});
 
@@ -116,7 +116,9 @@ describe('getEngineProfile', () => {
 			engine: null,
 			fuel: null
 		});
-		expect(p?.delta).toBe(-4);
+		// 1.6 HDi is year-split: post-2011 (DV6B) -2 / pre-2011 (DV6 TED4) -6.
+		// With no year provided, the first regex match wins — the post-2011 rule is listed first.
+		expect(p?.delta).toBe(-2);
 	});
 
 	it('flags Opel A14NET/B14NET turbo', () => {
@@ -134,7 +136,7 @@ describe('reliabilitySubscore', () => {
 		const r = reliabilitySubscore({ make: 'Toyota', title: '1.4 D-4D', notes: null, engine: null });
 		expect(r.score).toBeLessThanOrEqual(100);
 		expect(r.score).toBe(100);
-		expect(r.delta).toBe(18);
+		expect(r.delta).toBe(10);
 	});
 
 	it('applies engine delta to make base', () => {

@@ -246,48 +246,61 @@ export interface EngineProfile {
 
 export const ENGINE_PROFILES: EngineProfile[] = [
 	// --- Positive adjustments (best-known blocks) ---
-	{ re: /1\.4\s*d[- ]?4d/i, delta: 18, fuel: 'Diesel', reason: 'Toyota 1.4 D-4D — ultra-reliable, documented 300k+ km units.' },
-	{ re: /vvt[- ]?i/i, delta: 14, fuel: 'Gasolina', reason: 'Toyota VVT-i petrol — bulletproof, cheap to maintain.' },
-	{ re: /1\.9\s*tdi/i, delta: 12, fuel: 'Diesel', reason: 'VAG 1.9 TDI (PD/non-PD) — legendary longevity.' },
-	{ re: /honda\b.*\b(i-vtec|vtec)/i, delta: 12, fuel: 'Gasolina', reason: 'Honda VTEC petrol — extremely durable.' },
-	{ re: /(2\.0|2\.2)\s*d[- ]?4d/i, delta: 10, fuel: 'Diesel', reason: 'Toyota 2.0/2.2 D-4D (Avensis/Auris/RAV4) — robust bottom end; early 2.2 D-CAT had piston/injector issues but 2.0 D-4D is strong.' },
-	{ re: /1\.9\s*(multijet|jtd)/i, delta: 10, fuel: 'Diesel', reason: 'Fiat/Alfa 1.9 Multijet — robust, unlike the 1.3 variant.' },
+	// 2.2 D-4D pre-2010 head-gasket exception — MUST come before the broad 2.0/2.2 D-4D rule below.
+	{ re: /2\.2\s*d[- ]?4d/i, delta: -2, yearMax: 2009, fuel: 'Diesel', reason: 'Toyota 2.2 D-4D (2AD-FTV) pre-2010 — notorious head-gasket failures on 2005–2008 units; Toyota revised gasket material from 2010.' },
+	{ re: /1\.4\s*d[- ]?4d/i, delta: 10, fuel: 'Diesel', reason: 'Toyota 1.4 D-4D (1ND-TV) — aluminum block (no rebore), turbo failures documented; less bulletproof than the 2.0 D-4D legend suggests, but still above average.' },
+	{ re: /vvt[- ]?i/i, delta: 14, fuel: 'Gasolina', reason: 'Toyota VVT-i petrol — bulletproof to ~100k mi; post-100k oil consumption and chain stretch appear but rarely terminal.' },
+	{ re: /1\.9\s*tdi/i, delta: 12, fuel: 'Diesel', reason: 'VAG 1.9 TDI (PD/ALH) — legendary longevity, 300k+ km documented.' },
+	{ re: /honda\b.*\b(i-vtec|vtec)/i, delta: 12, fuel: 'Gasolina', reason: 'Honda VTEC/i-VTEC petrol — extremely durable; R18A oil consumption after 100k the only common caveat.' },
+	{ re: /(2\.0|2\.2)\s*d[- ]?4d/i, delta: 10, fuel: 'Diesel', reason: 'Toyota 2.0 D-4D (1AD-FTV) / 2.2 D-4D post-2010 (revised head gasket) — robust bottom end.' },
+	{ re: /1\.9\s*(multijet|jtd)/i, delta: 10, fuel: 'Diesel', reason: 'Fiat/Alfa 1.9 Multijet — robust, unlike the 1.3 variant. 8V preferred (water pump off aux belt).' },
 	// Mazda MZR is petrol, SkyActiv spans both (G petrol, D diesel) — leave fuel agnostic.
-	{ re: /mazda\b.*\b(mzr|skyactiv)/i, delta: 8, reason: 'Mazda MZR / SkyActiv — generally reliable.' },
-	{ re: /1\.7\s*cdti/i, delta: 6, fuel: 'Diesel', reason: 'Opel 1.7 CDTi (Isuzu Y17DT / A17DTJ — Astra, Corsa, Meriva) — Isuzu block, well-regarded longevity; watch EGR valve and swirl flaps.' },
+	{ re: /mazda\b.*\b(mzr|skyactiv)/i, delta: 8, reason: 'Mazda MZR / SkyActiv-G — near-bulletproof per owner data; MAF sensor and carbon build-up minor.' },
+	{ re: /1\.7\s*cdti/i, delta: 6, fuel: 'Diesel', reason: 'Opel 1.7 CDTi (Isuzu Y17DT / A17DTJ — Astra, Corsa, Meriva) — most reliable GM diesel; 200k+ km common. Watch EGR and swirl flaps.' },
 	// EA211 TSI: year-based split (post-2013 fixed the chain issues)
-	{ re: /1\.0\s*tsi|1\.2\s*tsi/i, delta: 5, yearMin: 2014, fuel: 'Gasolina', reason: 'VW EA211 TSI (post-2013) — fixed the timing chain issues of the EA111.' },
-	{ re: /1\.6\s*crdi/i, delta: 4, fuel: 'Diesel', reason: 'Kia/Hyundai 1.6 CRDi (U2 / D4FB) — generally reliable Korean diesel, many units past 300k km; watch for EGR/DMF wear on early pre-2011 cars.' },
-	{ re: /1\.4\s*crdi/i, delta: 3, fuel: 'Diesel', reason: 'Kia/Hyundai 1.4 CRDi (D4FC) — solid small Korean diesel (i20, Rio, Venga); watch EGR/DPF on urban-use units.' },
+	{ re: /1\.0\s*tsi|1\.2\s*tsi/i, delta: 5, yearMin: 2014, fuel: 'Gasolina', reason: 'VW EA211 TSI (post-2013) — belt-driven, fixed the EA111 chain issues; EVO revisions from 2016 further improved.' },
+	{ re: /1\.6\s*crdi/i, delta: 4, fuel: 'Diesel', reason: 'Kia/Hyundai 1.6 CRDi (U2 / D4FB) — 250k km typical; Bosch injectors wear 120–180k.' },
 	// 1.6 TDI: EA288 (2015+) is reliable; EA189 (pre-2015) is penalised below
 	{ re: /1\.6\s*tdi/i, delta: 2, yearMin: 2015, fuel: 'Diesel', reason: 'VW 1.6 TDI EA288 (2015+) — addresses EA189 injector/EGR issues; generally reliable when serviced.' },
-	{ re: /1\.5\s*tdci|1\.6\s*tdci/i, delta: 2, fuel: 'Diesel', reason: 'Ford 1.5/1.6 TDCi — refined PSA block, reasonably reliable.' },
-	{ re: /1\.6\s*mz[- ]?cd/i, delta: 2, fuel: 'Diesel', reason: 'Mazda 1.6 MZ-CD (Mazda 3 BK/BL) — rebadged PSA DV6 / Ford 1.6 TDCi block; refined, reasonably reliable.' },
-	{ re: /1\.6\s*bluehdi/i, delta: 2, fuel: 'Diesel', reason: 'PSA 1.6 BlueHDi (DV5/DV6FC, post-2014) — improved successor to 1.6 HDi; AdBlue/SCR sensors can be a maintenance point but bottom end is strong.' },
+	{ re: /1\.5\s*tdci/i, delta: 2, yearMin: 2015, fuel: 'Diesel', reason: 'Ford 1.5 TDCi EcoBlue (2015+) — clean-sheet block replacing the PSA DV6; more reliable than the 1.6 TDCi predecessor.' },
+	{ re: /1\.6\s*bluehdi/i, delta: 2, fuel: 'Diesel', reason: 'PSA 1.6 BlueHDi (DV5/DV6FC, post-2014) — bottom end is strong; AdBlue/SCR/NOx-sensor add cost but rarely engine-terminal.' },
+	{ re: /1\.4\s*crdi/i, delta: 1, fuel: 'Diesel', reason: 'Kia/Hyundai 1.4 CRDi (D4FC — i20, Rio, Venga) — fuel pump at 80–120k, DPF on short trips; only marginally better than a neutral Korean baseline.' },
 
 	// --- Negative adjustments (ordered by severity) ---
 	{ re: /1\.3\s*(multijet|m[- ]?jet|jtd|cdti)/i, delta: -16, fuel: 'Diesel', reason: 'Fiat/Opel 1.3 Multijet/JTD/CDTi — timing chain stretch 120–150k km, EGR/DPF clogs, turbo failures. Widely flagged as "motor a evitar".' },
-	{ re: /1\.3\s*ddis/i, delta: -16, fuel: 'Diesel', reason: 'Suzuki 1.3 DDiS (Swift, Ignis, Wagon R+) — Fiat 1.3 Multijet under licence: timing chain stretch 120–150k km, EGR/DPF clogs, turbo failures.' },
-	{ re: /1\.4\s*(hdi|tdci)/i, delta: -10, fuel: 'Diesel', reason: 'PSA 1.4 HDi / Ford 1.4 TDCi — injector and FAP issues, oil sludge.' },
-	{ re: /1\.4\s*mz[- ]?cd/i, delta: -10, fuel: 'Diesel', reason: 'Mazda 1.4 MZ-CD (Mazda 2) — rebadged PSA DV4 (same as 1.4 HDi / Ford 1.4 TDCi): injector and FAP issues, oil sludge.' },
+	{ re: /1\.3\s*ddis/i, delta: -14, fuel: 'Diesel', reason: 'Suzuki 1.3 DDiS (Swift, Ignis, Wagon R+) — Fiat 1.3 Multijet under licence; marginally better owner-reported reliability in the lighter Suzuki install.' },
+	{ re: /\bn47\b/i, delta: -10, yearMax: 2011, fuel: 'Diesel', reason: 'BMW N47 2.0d (Mar 2007 – Mar 2011 — 320d/520d/X3) — timing chain at the rear of the block; failure requires engine-out, £1.5–6.5k job.' },
 	// 1.2 TSI EA111: year-based split (pre-2014 is the bad chain variant)
 	{ re: /1\.2\s*tsi/i, delta: -10, yearMax: 2013, fuel: 'Gasolina', reason: 'VW 1.2 TSI (EA111, pre-2014) — timing chain stretch, tensioner failures.' },
-	{ re: /1\.4\s*tsi/i, delta: -10, fuel: 'Gasolina', reason: 'VW 1.4 TSI — timing chain, carbon build-up, oil consumption.' },
-	{ re: /\b(n12|n14|n18)\b|1\.6\s*thp/i, delta: -10, fuel: 'Gasolina', reason: 'BMW/PSA Prince (N12/N14/N18 — Mini R56, Peugeot 207/208 THP, Citroën DS3) — timing chain stretch, carbon build-up, high oil consumption, water pump failures.' },
+	{ re: /1\.4\s*tsi/i, delta: -10, fuel: 'Gasolina', reason: 'VW 1.4 TSI twincharger (CAVD/CAXA) — timing chain tensioner at 100k, piston/ring failures on Golf-gen CAVD; CTHD (2012+) fixed most of it.' },
+	// Prince: N18 (2011+) rule MUST come before the N12/N14 catch-all below.
+	{ re: /\bn18\b/i, delta: -5, yearMin: 2011, fuel: 'Gasolina', reason: 'BMW/PSA Prince N18 (Mini R56 LCI, 2011+) — addressed the N14 timing chain, vacuum pump and coking issues; still direct-injection so some carbon build-up remains.' },
+	{ re: /\b(n12|n14)\b|1\.6\s*thp/i, delta: -10, fuel: 'Gasolina', reason: 'BMW/PSA Prince N12/N14 (Mini R56, Peugeot 207/208 THP, Citroën DS3) — timing chain stretch, carbon build-up, high oil consumption, water pump failures.' },
 	// 1.6 TDI EA189: only penalise pre-2015 (post-2015 caught by EA288 rule above)
-	{ re: /1\.6\s*tdi/i, delta: -9, yearMax: 2014, fuel: 'Diesel', reason: 'VW 1.6 TDI EA189 (pre-2015) — injector/EGR issues, sensitive to urban use, DieselGate era.' },
-	{ re: /\bn47\b/i, delta: -8, fuel: 'Diesel', reason: 'BMW N47 2.0d (pre-2011 320d/520d/X3) — timing chain at the rear of the block; failure requires engine-out, €2–3k job.' },
-	{ re: /(0\.9|1\.2)\s*tce/i, delta: -8, fuel: 'Gasolina', reason: 'Renault 0.9/1.2 TCe (H4Bt / H5Ft) — heavy oil consumption, piston ring failure, turbo wear; repair costs dwarf €5k-tier purchase price.' },
-	{ re: /1\.6\s*dci/i, delta: -7, fuel: 'Diesel', reason: 'Renault 1.6 dCi (R9M / Energy dCi) — timing chain stretch (pre-2015), oil consumption, injector and turbo failures; same block sold to Mercedes as OM626 with documented issues.' },
-	{ re: /1\.4\s*tdi/i, delta: -7, fuel: 'Diesel', reason: 'VW 1.4 TDI 3-cyl (PD / EA189 CR, pre-EA288) — DPF clogging on short trips, turbo failures from ~110k km, EGR coking; Dieselgate-era CR variants affected.' },
-	{ re: /2\.0\s*tdi.*(cbab|cbdb|cfgb)|2\.0\s*tdi.*pd/i, delta: -6, fuel: 'Diesel', reason: '2.0 TDI PD / early CR — oil pump balance-shaft failures, FAP issues.' },
+	{ re: /1\.6\s*tdi/i, delta: -9, yearMax: 2014, fuel: 'Diesel', reason: 'VW 1.6 TDI EA189 (pre-2015) — Siemens piezo injector insulation breakdown; EGR worsened by Dieselgate emissions fix.' },
+	// OM651: post-2011 magnetic-injector rule MUST come before pre-2011 piezo-injector catch-all.
+	{ re: /\bom651\b|2\.1\s*cdi/i, delta: -3, yearMin: 2011, fuel: 'Diesel', reason: 'Mercedes OM651 2.1 CDI (magnetic injectors, spring 2011+) — replaces failure-prone Delphi piezo injectors; timing chain/tensioner issues remain.' },
+	{ re: /\bom651\b|2\.1\s*cdi/i, delta: -8, yearMax: 2010, fuel: 'Diesel', reason: 'Mercedes OM651 2.1 CDI (Delphi piezo injectors, pre-mid-2010) — signature injector failures, timing chain wear, turbo actuator issues.' },
+	{ re: /1\.2\s*tdi/i, delta: -8, fuel: 'Diesel', reason: 'VW 1.2 TDI 3-cyl (CFWA) — 460k-car fuel-filter recall, Siemens piezo injector failures, DPF clogging on short trips; worse than the 1.4 TDI 3-cyl.' },
+	{ re: /(0\.9|1\.2)\s*tce/i, delta: -8, fuel: 'Gasolina', reason: 'Renault 0.9/1.2 TCe (H4Bt / H5Ft) — piston-ring tolerance defect consumes 1L/1000km in affected units; repair €500–1500 plus consequential damage.' },
+	{ re: /1\.4\s*(hdi|tdci)/i, delta: -7, fuel: 'Diesel', reason: 'PSA 1.4 HDi (DV4) / Ford 1.4 TDCi — chronic injector seal leakage, extraction sometimes impossible; FAP/EGR build-up. Block itself is durable (300k+) but ancillary costs accumulate.' },
+	{ re: /1\.4\s*mz[- ]?cd/i, delta: -7, fuel: 'Diesel', reason: 'Mazda 1.4 MZ-CD (Mazda 2) — rebadged PSA DV4; same injector-seal and FAP issues as 1.4 HDi.' },
+	{ re: /1\.6\s*dci/i, delta: -7, fuel: 'Diesel', reason: 'Renault 1.6 dCi R9M (Energy dCi) — timing chain stretch 140–150k vs 250k design, dual-EGR clogging, oil leaks around chain cover; same block sold to Mercedes as OM626.' },
+	// 1.5 dCi: post-2011 K9K 8xx rule MUST come before pre-2011 catch-all.
+	{ re: /1\.5\s*dci/i, delta: -3, yearMin: 2011, fuel: 'Diesel', reason: 'Renault 1.5 dCi K9K 8xx (2011+) — upgraded injectors and turbo oil feed; adequate workhorse when serviced on synthetic RN0700/RN0710.' },
+	{ re: /1\.5\s*dci/i, delta: -7, yearMax: 2010, fuel: 'Diesel', reason: 'Renault 1.5 dCi K9K pre-2011 — Delphi injector and turbo failures, connecting-rod bearing risk from long oil intervals.' },
+	// 1.4 TDI: EA288 (2015+) post-2015 rare rule MUST come before pre-2015 catch-all.
+	{ re: /1\.4\s*tdi/i, delta: -2, yearMin: 2015, fuel: 'Diesel', reason: 'VW 1.4 TDI EA288 (2015+ — rare as 3-cyl, most later 1.4 TDIs are 4-cyl) — improved SCR/AdBlue, notably more reliable than EA189.' },
+	{ re: /1\.4\s*tdi/i, delta: -6, yearMax: 2014, fuel: 'Diesel', reason: 'VW 1.4 TDI 3-cyl PD / EA189 CR (pre-2015) — DPF clogging, turbo failures ~110k, EGR coking; Dieselgate-era CR variants affected.' },
+	{ re: /2\.0\s*tdi.*(cbab|cbdb|cfgb)|2\.0\s*tdi.*pd/i, delta: -6, fuel: 'Diesel', reason: '2.0 TDI PD / early CR (Passat/A4/Superb BKP/BLB/BPW/BRE/BNA/BMA, CBAB/CBDB/CFGB) — balance-shaft oil-pump drive failure 60–100k. BKD/AZV/BMN (Golf/Octavia/A3) NOT affected (chain-driven oil pump).' },
 	// 1.0 EcoBoost wet-belt issue was fixed from 2017 onwards
-	{ re: /1\.0\s*ecoboost/i, delta: -6, yearMax: 2016, fuel: 'Gasolina', reason: 'Ford 1.0 EcoBoost (pre-2017) — wet timing belt degradation, coolant loss and cylinder head cracks on early units; expensive to repair.' },
-	{ re: /a14net|b14net/i, delta: -6, fuel: 'Gasolina', reason: 'Opel 1.4 Turbo (A14NET/B14NET — Astra J, Corsa D) — timing chain stretch, coolant leaks, carbon build-up.' },
-	{ re: /\bom651\b|2\.1\s*cdi/i, delta: -6, fuel: 'Diesel', reason: 'Mercedes OM651 2.1 CDI (pre-2014 C/E/Sprinter) — injector failures, timing chain wear, turbo actuator issues.' },
-	{ re: /1\.5\s*dci/i, delta: -5, fuel: 'Diesel', reason: 'Renault 1.5 dCi (K9K) — mixed track record; early units plagued by injectors and turbo failure.' },
-	{ re: /1\.6\s*hdi/i, delta: -4, fuel: 'Diesel', reason: 'PSA 1.6 HDi — early units (pre-2010) had injector seal failures; FAP additive management needed.' },
-	{ re: /1\.2\s*tdi/i, delta: -4, fuel: 'Diesel', reason: 'VW 1.2 TDI 3-cyl — fragile in cold starts, DPF issues on short trips.' }
+	{ re: /1\.0\s*ecoboost/i, delta: -6, yearMax: 2016, fuel: 'Gasolina', reason: 'Ford 1.0 EcoBoost (pre-2017) — wet timing belt degradation, coolant loss and cylinder head cracks on early units; £1000+ repair. Fixed with chain drive from 2018.' },
+	{ re: /a14net|b14net/i, delta: -6, fuel: 'Gasolina', reason: 'Opel 1.4 Turbo (A14NET/B14NET — Astra J, Corsa D) — timing chain stretch documented at low mileage, accelerated by soot in oil.' },
+	// 1.6 HDi: post-2011 8V SOHC rule MUST come before pre-2011 16V DOHC catch-all.
+	{ re: /1\.6\s*hdi/i, delta: -2, yearMin: 2011, fuel: 'Diesel', reason: 'PSA 1.6 HDi 8V SOHC (DV6B, 2011+) — re-engineered to address the injector seal / turbo oiling issues of the 16V DOHC DV6 TED4.' },
+	{ re: /1\.6\s*hdi/i, delta: -6, yearMax: 2010, fuel: 'Diesel', reason: 'PSA 1.6 HDi 16V DOHC (DV6 TED4, pre-2011) — injector carbon leakage → turbo oil starvation; most common failure path on this era.' },
+	{ re: /1\.6\s*tdci/i, delta: -4, fuel: 'Diesel', reason: 'Ford 1.6 TDCi (DLD-416 / PSA DV6) — same block and failure path as 1.6 HDi; sludge-fed turbo failure, injector wear.' },
+	{ re: /1\.6\s*mz[- ]?cd/i, delta: -4, fuel: 'Diesel', reason: 'Mazda 1.6 MZ-CD (Mazda 3 BK/BL) — rebadged PSA DV6; injector replacements often before 130k, DPF contaminates oil.' }
 ];
 
 export const SCORE_WEIGHTS = { km: 0.22, price: 0.22, reliability: 0.3, year: 0.13, location: 0.13 };
