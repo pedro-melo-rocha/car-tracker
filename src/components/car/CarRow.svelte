@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Car } from '$lib/types';
 	import { computeScore, detectScamRisk } from '$lib/scoring';
+	import { cars } from '$lib/stores/cars';
 	import ScoreBadge from '$components/ui/ScoreBadge.svelte';
 	import ScamBadge from '$components/ui/ScamBadge.svelte';
 	import StatusPill from '$components/ui/StatusPill.svelte';
@@ -18,7 +19,7 @@
 	} = $props();
 
 	const score = $derived(computeScore(car));
-	const scam = $derived(detectScamRisk(car));
+	const scam = $derived(detectScamRisk(car, { peers: $cars }));
 </script>
 
 <tr onclick={() => onopen?.(car.id)}>

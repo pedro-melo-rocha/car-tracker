@@ -89,6 +89,62 @@ describe('detectScamRisk', () => {
 		expect(r.level).not.toBe('none');
 	});
 
+	it('flags the Yaris 1.4 D-4D scam via reliability-aware market floor', () => {
+		const r = detectScamRisk(
+			fixture({
+				make: 'Toyota',
+				model: 'Yaris',
+				year: 2012,
+				km: 176500,
+				price: 4500,
+				engine: '1.4 D-4D',
+				source: 'PiscaPisca'
+			}),
+			NOW
+		);
+		expect(r.flags.map((f) => f.id)).toContain('below-market-estimate');
+		expect(r.level).not.toBe('none');
+	});
+
+	it('flags below-peer-median when similar tracked cars are priced much higher', () => {
+		const peers: Car[] = [
+			fixture({ id: 'p1', make: 'Toyota', model: 'Yaris', year: 2012, km: 170000, price: 9800 }),
+			fixture({ id: 'p2', make: 'Toyota', model: 'Yaris', year: 2013, km: 180000, price: 10500 }),
+			fixture({ id: 'p3', make: 'toyota', model: 'yaris', year: 2011, km: 160000, price: 9500 })
+		];
+		const r = detectScamRisk(
+			fixture({
+				id: 'target',
+				make: 'Toyota',
+				model: 'Yaris',
+				year: 2012,
+				km: 176500,
+				price: 4500
+			}),
+			{ peers, now: NOW }
+		);
+		expect(r.flags.map((f) => f.id)).toContain('below-peer-median');
+	});
+
+	it('does not flag below-peer-median with fewer than 3 peers', () => {
+		const peers: Car[] = [
+			fixture({ id: 'p1', make: 'Toyota', model: 'Yaris', year: 2012, km: 170000, price: 9800 }),
+			fixture({ id: 'p2', make: 'Toyota', model: 'Yaris', year: 2013, km: 180000, price: 10500 })
+		];
+		const r = detectScamRisk(
+			fixture({
+				id: 'target',
+				make: 'Toyota',
+				model: 'Yaris',
+				year: 2012,
+				km: 176500,
+				price: 4500
+			}),
+			{ peers, now: NOW }
+		);
+		expect(r.flags.map((f) => f.id)).not.toContain('below-peer-median');
+	});
+
 	it('does not flag a fairly-priced modern car regardless of source', () => {
 		const r = detectScamRisk(
 			fixture({

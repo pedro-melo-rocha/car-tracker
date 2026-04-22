@@ -6,7 +6,7 @@
 	import { netPriceDrop } from '$lib/price';
 	import { SCORE_WEIGHTS } from '$lib/constants';
 	import PriceHistoryTimeline from './PriceHistoryTimeline.svelte';
-	import { deleteCar as removeCar, updateCar } from '$lib/stores/cars';
+	import { cars, deleteCar as removeCar, updateCar } from '$lib/stores/cars';
 	import { confirmDialog } from '$lib/stores/ui';
 
 	let {
@@ -21,7 +21,7 @@
 
 	const score = $derived(computeScore(car));
 	const breakdown = $derived(computeScoreBreakdown(car));
-	const scam = $derived(detectScamRisk(car));
+	const scam = $derived(detectScamRisk(car, { peers: $cars }));
 	const engineLine = $derived(
 		[car.engine, car.power ? car.power + 'cv' : ''].filter(Boolean).join(' · ')
 	);

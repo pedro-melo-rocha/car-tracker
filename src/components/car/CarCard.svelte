@@ -3,6 +3,7 @@
 	import { computeScore, detectScamRisk, locationKm } from '$lib/scoring';
 	import { netPriceDrop } from '$lib/price';
 	import { timeAgo } from '$lib/staleness';
+	import { cars } from '$lib/stores/cars';
 	import ScoreBadge from '$components/ui/ScoreBadge.svelte';
 	import StatusPill from '$components/ui/StatusPill.svelte';
 
@@ -23,7 +24,7 @@
 	} = $props();
 
 	const score = $derived(computeScore(car));
-	const scam = $derived(detectScamRisk(car));
+	const scam = $derived(detectScamRisk(car, { peers: $cars }));
 	const dropAmount = $derived(netPriceDrop(car.priceHistory));
 	const distance = $derived(locationKm(car.location));
 	const kmLabel = $derived(car.km != null ? Math.round(car.km / 1000) + 'k\u00A0km' : '—');
