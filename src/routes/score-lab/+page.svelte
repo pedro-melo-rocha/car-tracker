@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { Car } from '$lib/types';
 	import { cars } from '$lib/stores/cars';
-	import { computeScoreBreakdown, getEngineProfile, locationKm } from '$lib/scoring';
+	import { computeScoreBreakdown, locationKm } from '$lib/scoring';
 	import {
 		SCORE_WEIGHTS,
 		DATALIST_MAKES,
@@ -76,15 +76,6 @@
 
 	const breakdown = $derived(computeScoreBreakdown(draft));
 	const distance = $derived(locationKm(draft.location));
-	const engineProfile = $derived(
-		getEngineProfile({
-			title: draft.title,
-			notes: draft.notes,
-			engine: draft.engine,
-			year: draft.year,
-			fuel: draft.fuel || null
-		})
-	);
 
 	const rankedEngineOptions = $derived.by(() => {
 		const hints = getModelEngineHints(draft.make, draft.model);
@@ -237,19 +228,6 @@
 						placeholder="e.g. 1.5 dCi, 1.4 D-4D"
 						bind:value={draft.engine}
 					/>
-					{#if engineProfile}
-						<div
-							class="engine-hint"
-							class:pos={engineProfile.delta > 0}
-							class:neg={engineProfile.delta < 0}
-						>
-							{engineProfile.delta > 0 ? '+' : ''}{engineProfile.delta} · {engineProfile.reason}
-						</div>
-					{:else if draft.engine.trim()}
-						<div class="engine-hint warn">
-							Engine not recognised — score uses the make baseline only.
-						</div>
-					{/if}
 				</div>
 				<div class="form-group">
 					<label for="lab-power">Power (cv)</label>
@@ -545,25 +523,6 @@
 		font-size: 0.72rem;
 		color: var(--ink-dim);
 		padding: 0 2px;
-	}
-	.engine-hint {
-		font-size: 0.72rem;
-		padding: 6px 10px;
-		border-radius: 8px;
-		background: var(--card-2);
-		color: var(--ink-soft);
-	}
-	.engine-hint.pos {
-		background: var(--good-bg);
-		color: var(--good);
-	}
-	.engine-hint.neg {
-		background: var(--bad-bg);
-		color: var(--bad);
-	}
-	.engine-hint.warn {
-		background: var(--warn-bg);
-		color: var(--warn);
 	}
 	.panel {
 		background: var(--card);

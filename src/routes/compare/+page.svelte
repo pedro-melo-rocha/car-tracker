@@ -238,14 +238,16 @@
 									{#if isRel && relDetail}
 										<button
 											type="button"
-											class="reason-btn"
+											class="reason-tip"
 											class:warn={!relDetail.matched}
 											title={relDetail.reason}
 											aria-expanded={reasonOpen}
-											aria-label="Reliability details"
+											aria-label={relDetail.matched
+												? 'Show reliability explanation'
+												: 'Engine not recognised — show explanation'}
 											onclick={() => (openReasonId = reasonOpen ? null : reasonKey)}
 										>
-											ⓘ
+											?
 										</button>
 									{/if}
 									{#if isWinner}<span class="star">★</span>{/if}
@@ -480,20 +482,60 @@
 		margin-left: 6px;
 		font-size: 0.7rem;
 	}
-	.reason-btn {
+	.reason-tip {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 18px;
+		height: 18px;
+		margin-left: 8px;
+		padding: 0;
 		background: transparent;
-		border: 0;
-		padding: 0 0 0 6px;
-		font-size: 0.78rem;
+		border: 1px solid var(--rule);
+		border-radius: 50%;
 		color: var(--ink-dim);
-		cursor: pointer;
+		font-family: var(--mono);
+		font-size: 0.72rem;
+		font-weight: 700;
 		line-height: 1;
+		cursor: pointer;
+		vertical-align: 1px;
+		transition:
+			background var(--dur-fast) var(--ease),
+			border-color var(--dur-fast) var(--ease),
+			color var(--dur-fast) var(--ease),
+			transform var(--dur-fast) var(--ease);
 	}
-	.reason-btn:hover {
-		color: var(--ink);
+	.reason-tip:hover {
+		border-color: var(--accent);
+		color: var(--accent);
 	}
-	.reason-btn.warn {
+	.reason-tip:active {
+		transform: scale(0.92);
+	}
+	.reason-tip[aria-expanded='true'] {
+		background: var(--accent);
+		border-color: var(--accent);
+		color: #fff;
+	}
+	.reason-tip:focus-visible {
+		outline: 2px solid var(--accent);
+		outline-offset: 2px;
+	}
+	.reason-tip.warn {
+		border-color: var(--warn);
 		color: var(--warn);
+	}
+	.reason-tip.warn:hover {
+		background: var(--warn-bg);
+	}
+	.reason-tip.warn[aria-expanded='true'] {
+		background: var(--warn);
+		border-color: var(--warn);
+		color: #fff;
+	}
+	.row.winner .reason-tip {
+		background: var(--card);
 	}
 	.reason-row {
 		padding: 8px 20px 12px;

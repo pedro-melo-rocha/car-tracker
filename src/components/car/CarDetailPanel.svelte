@@ -166,18 +166,29 @@
 						></span></span
 					>
 				</div>
-				<button
-					type="button"
-					class="br-row br-row-btn"
-					aria-expanded={reasonOpen}
-					aria-controls="reliability-reason"
-					onclick={() => (reasonOpen = !reasonOpen)}
-				>
+				<div class="br-row">
 					<span class="br-label">
 						Reliability
-						<span class="br-hint-badge" class:warn={!breakdown.rel.matched}>
-							{breakdown.rel.matched ? (reasonOpen ? 'hide why' : 'why?') : 'engine not recognised'}
-						</span>
+						<button
+							type="button"
+							class="reason-tip"
+							class:warn={!breakdown.rel.matched}
+							aria-expanded={reasonOpen}
+							aria-controls="reliability-reason"
+							aria-label={breakdown.rel.matched
+								? reasonOpen
+									? 'Hide reliability explanation'
+									: 'Show reliability explanation'
+								: 'Engine not recognised — show explanation'}
+							title={breakdown.rel.matched
+								? reasonOpen
+									? 'Hide explanation'
+									: 'Why this score?'
+								: 'Engine not recognised — tap for details'}
+							onclick={() => (reasonOpen = !reasonOpen)}
+						>
+							?
+						</button>
 					</span>
 					<span class="br-weight">{Math.round(SCORE_WEIGHTS.reliability * 100)}%</span>
 					<span class="br-value">{breakdown.rel.score}<span class="br-div">/100</span></span>
@@ -187,7 +198,7 @@
 							style="width:{breakdown.rel.score}%"
 						></span></span
 					>
-				</button>
+				</div>
 				{#if reasonOpen}
 					<div
 						id="reliability-reason"
@@ -538,39 +549,57 @@
 	.br-fill.bad {
 		background: var(--bad);
 	}
-	.br-row-btn {
-		background: transparent;
-		border: 0;
+	.reason-tip {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 18px;
+		height: 18px;
+		margin-left: 8px;
 		padding: 0;
-		margin: 0;
-		text-align: left;
+		background: transparent;
+		border: 1px solid var(--rule);
+		border-radius: 50%;
+		color: var(--ink-dim);
+		font-family: var(--mono);
+		font-size: 0.72rem;
+		font-weight: 700;
+		line-height: 1;
 		cursor: pointer;
-		border-radius: 6px;
-		transition: background var(--dur-fast) var(--ease);
+		vertical-align: 1px;
+		transition:
+			background var(--dur-fast) var(--ease),
+			border-color var(--dur-fast) var(--ease),
+			color var(--dur-fast) var(--ease),
+			transform var(--dur-fast) var(--ease);
 	}
-	.br-row-btn:hover {
-		background: var(--card-2);
+	.reason-tip:hover {
+		border-color: var(--accent);
+		color: var(--accent);
 	}
-	.br-row-btn:focus-visible {
+	.reason-tip:active {
+		transform: scale(0.92);
+	}
+	.reason-tip[aria-expanded='true'] {
+		background: var(--accent);
+		border-color: var(--accent);
+		color: #fff;
+	}
+	.reason-tip:focus-visible {
 		outline: 2px solid var(--accent);
 		outline-offset: 2px;
 	}
-	.br-hint-badge {
-		display: inline-block;
-		margin-left: 6px;
-		font-size: 0.62rem;
-		font-weight: 600;
-		letter-spacing: 0.04em;
-		text-transform: uppercase;
-		color: var(--ink-dim);
-		background: var(--card-2);
-		padding: 2px 6px;
-		border-radius: 999px;
-		vertical-align: 1px;
-	}
-	.br-hint-badge.warn {
+	.reason-tip.warn {
+		border-color: var(--warn);
 		color: var(--warn);
+	}
+	.reason-tip.warn:hover {
 		background: var(--warn-bg);
+	}
+	.reason-tip.warn[aria-expanded='true'] {
+		background: var(--warn);
+		border-color: var(--warn);
+		color: #fff;
 	}
 	.br-reason {
 		grid-column: 1 / -1;
