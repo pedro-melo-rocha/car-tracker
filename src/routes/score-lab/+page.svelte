@@ -2,7 +2,13 @@
 	import type { Car } from '$lib/types';
 	import { cars } from '$lib/stores/cars';
 	import { computeScoreBreakdown, getEngineProfile, locationKm } from '$lib/scoring';
-	import { SCORE_WEIGHTS, DATALIST_MAKES, DATALIST_ENGINES, EXTRA_MAKES } from '$lib/constants';
+	import {
+		SCORE_WEIGHTS,
+		DATALIST_MAKES,
+		DATALIST_ENGINES,
+		EXTRA_MAKES,
+		getModelEngineHints
+	} from '$lib/constants';
 	import ScoreBadge from '$components/ui/ScoreBadge.svelte';
 	import CustomSelect from '$components/ui/CustomSelect.svelte';
 	import CustomCombobox from '$components/ui/CustomCombobox.svelte';
@@ -79,6 +85,14 @@
 			fuel: draft.fuel || null
 		})
 	);
+
+	const rankedEngineOptions = $derived.by(() => {
+		const hints = getModelEngineHints(draft.make, draft.model);
+		if (hints.length === 0) return DATALIST_ENGINES;
+		const hintSet = new Set(hints);
+		const rest = DATALIST_ENGINES.filter((e) => !hintSet.has(e));
+		return [...hints, ...rest];
+	});
 
 	const hasMinForScore = $derived(
 		draft.km != null ||
@@ -219,7 +233,7 @@
 					<label for="lab-engine">Engine</label>
 					<CustomCombobox
 						id="lab-engine"
-						options={DATALIST_ENGINES}
+						options={rankedEngineOptions}
 						placeholder="e.g. 1.5 dCi, 1.4 D-4D"
 						bind:value={draft.engine}
 					/>
@@ -230,6 +244,10 @@
 							class:neg={engineProfile.delta < 0}
 						>
 							{engineProfile.delta > 0 ? '+' : ''}{engineProfile.delta} · {engineProfile.reason}
+						</div>
+					{:else if draft.engine.trim()}
+						<div class="engine-hint warn">
+							Engine not recognised — score uses the make baseline only.
 						</div>
 					{/if}
 				</div>
@@ -373,14 +391,20 @@
 						></span></span
 					>
 				</div>
-				{#if hasMinForScore && breakdown.rel.reason}
-					<div
-						class="br-reason"
-						class:pos={breakdown.rel.delta > 0}
-						class:neg={breakdown.rel.delta < 0}
-					>
-						{breakdown.rel.delta > 0 ? '+' : ''}{breakdown.rel.delta} · {breakdown.rel.reason}
-					</div>
+				{#if hasMinForScore}
+					{#if breakdown.rel.matched && breakdown.rel.reason}
+						<div
+							class="br-reason"
+							class:pos={breakdown.rel.delta > 0}
+							class:neg={breakdown.rel.delta < 0}
+						>
+							{breakdown.rel.delta > 0 ? '+' : ''}{breakdown.rel.delta} · {breakdown.rel.reason}
+						</div>
+					{:else}
+						<div class="br-reason warn">
+							Engine not recognised — using {draft.make || 'default'} baseline ({breakdown.rel.base}/100).
+						</div>
+					{/if}
 				{/if}
 				<div class="br-row">
 					<span class="br-label">Year</span>
@@ -536,6 +560,10 @@
 	.engine-hint.neg {
 		background: var(--bad-bg);
 		color: var(--bad);
+	}
+	.engine-hint.warn {
+		background: var(--warn-bg);
+		color: var(--warn);
 	}
 	.panel {
 		background: var(--card);
@@ -746,6 +774,10 @@
 	.br-reason.neg {
 		background: var(--bad-bg);
 		color: var(--bad);
+	}
+	.br-reason.warn {
+		background: var(--warn-bg);
+		color: var(--warn);
 	}
 	.btn {
 		padding: 10px 16px;

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { Car, CarCreateInput } from '$lib/types';
 	import { STATUSES, STATUS_LABELS } from '$lib/types';
-	import { DATALIST_MAKES, DATALIST_ENGINES, EXTRA_MAKES } from '$lib/constants';
+	import { DATALIST_MAKES, DATALIST_ENGINES, EXTRA_MAKES, getModelEngineHints } from '$lib/constants';
 	import { createCar, updateCar } from '$lib/stores/cars';
 	import { cars as carsStore } from '$lib/stores/cars';
 	import { toast } from '$lib/stores/ui';
@@ -86,6 +86,15 @@
 	];
 	const statusOptions = STATUSES.map((s) => ({ value: s, label: STATUS_LABELS[s] }));
 	const allMakes = [...DATALIST_MAKES, ...EXTRA_MAKES].sort();
+
+	// Engine options ranked by make+model match: hinted engines first (in curated order), then everything else.
+	const rankedEngineOptions = $derived.by(() => {
+		const hints = getModelEngineHints(f.make, f.model);
+		if (hints.length === 0) return DATALIST_ENGINES;
+		const hintSet = new Set(hints);
+		const rest = DATALIST_ENGINES.filter((e) => !hintSet.has(e));
+		return [...hints, ...rest];
+	});
 
 	function handleUrlBlur() {
 		if (!f.url.trim() || isEdit) return;
@@ -235,7 +244,7 @@
 			<label for="f-engine">Engine</label>
 			<CustomCombobox
 				id="f-engine"
-				options={DATALIST_ENGINES}
+				options={rankedEngineOptions}
 				placeholder="e.g. 1.5 dCi, 1.4 D-4D"
 				bind:value={f.engine}
 			/>

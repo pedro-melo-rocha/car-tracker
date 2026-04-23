@@ -31,6 +31,8 @@ export interface ReliabilityBreakdown {
 	base: number;
 	delta: number;
 	reason: string | null;
+	/** True when an engine profile matched — false means the score is just the make baseline. */
+	matched: boolean;
 }
 
 export function reliabilitySubscore(
@@ -43,6 +45,7 @@ export function reliabilitySubscore(
 		score: Math.max(0, Math.min(100, base + delta)),
 		base,
 		delta,
-		reason: profile ? profile.reason : null
+		reason: profile ? profile.reason : null,
+		matched: profile !== null
 	};
 }

@@ -61,6 +61,7 @@
 	}
 
 	let pendingStatus: CarStatus | null = $state(null);
+	let reasonOpen = $state(false);
 
 	async function setStatus(next: CarStatus) {
 		if (car.status === next || pendingStatus !== null) return;
@@ -165,8 +166,19 @@
 						></span></span
 					>
 				</div>
-				<div class="br-row">
-					<span class="br-label">Reliability</span>
+				<button
+					type="button"
+					class="br-row br-row-btn"
+					aria-expanded={reasonOpen}
+					aria-controls="reliability-reason"
+					onclick={() => (reasonOpen = !reasonOpen)}
+				>
+					<span class="br-label">
+						Reliability
+						<span class="br-hint-badge" class:warn={!breakdown.rel.matched}>
+							{breakdown.rel.matched ? (reasonOpen ? 'hide why' : 'why?') : 'engine not recognised'}
+						</span>
+					</span>
 					<span class="br-weight">{Math.round(SCORE_WEIGHTS.reliability * 100)}%</span>
 					<span class="br-value">{breakdown.rel.score}<span class="br-div">/100</span></span>
 					<span class="br-bar"
@@ -175,14 +187,19 @@
 							style="width:{breakdown.rel.score}%"
 						></span></span
 					>
-				</div>
-				{#if breakdown.rel.reason}
+				</button>
+				{#if reasonOpen}
 					<div
+						id="reliability-reason"
 						class="br-reason"
-						class:pos={breakdown.rel.delta > 0}
-						class:neg={breakdown.rel.delta < 0}
+						class:pos={breakdown.rel.matched && breakdown.rel.delta > 0}
+						class:neg={breakdown.rel.matched && breakdown.rel.delta < 0}
 					>
-						{breakdown.rel.delta > 0 ? '+' : ''}{breakdown.rel.delta} · {breakdown.rel.reason}
+						{#if breakdown.rel.matched && breakdown.rel.reason}
+							{breakdown.rel.delta > 0 ? '+' : ''}{breakdown.rel.delta} · {breakdown.rel.reason}
+						{:else}
+							No engine profile matched — score uses the make reliability baseline only ({breakdown.rel.base}/100). Add or refine the engine field to get a more specific score.
+						{/if}
 					</div>
 				{/if}
 				<div class="br-row">
@@ -520,6 +537,40 @@
 	}
 	.br-fill.bad {
 		background: var(--bad);
+	}
+	.br-row-btn {
+		background: transparent;
+		border: 0;
+		padding: 0;
+		margin: 0;
+		text-align: left;
+		cursor: pointer;
+		border-radius: 6px;
+		transition: background var(--dur-fast) var(--ease);
+	}
+	.br-row-btn:hover {
+		background: var(--card-2);
+	}
+	.br-row-btn:focus-visible {
+		outline: 2px solid var(--accent);
+		outline-offset: 2px;
+	}
+	.br-hint-badge {
+		display: inline-block;
+		margin-left: 6px;
+		font-size: 0.62rem;
+		font-weight: 600;
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
+		color: var(--ink-dim);
+		background: var(--card-2);
+		padding: 2px 6px;
+		border-radius: 999px;
+		vertical-align: 1px;
+	}
+	.br-hint-badge.warn {
+		color: var(--warn);
+		background: var(--warn-bg);
 	}
 	.br-reason {
 		grid-column: 1 / -1;

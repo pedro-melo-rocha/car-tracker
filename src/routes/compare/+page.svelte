@@ -34,6 +34,18 @@
 	function relOf(c: Car) {
 		return computeScoreBreakdown(c).rel.score;
 	}
+	function relDetailOf(c: Car): { reason: string; matched: boolean } {
+		const r = computeScoreBreakdown(c).rel;
+		if (r.matched && r.reason) {
+			return { reason: `${r.delta > 0 ? '+' : ''}${r.delta} · ${r.reason}`, matched: true };
+		}
+		return {
+			reason: `Engine not recognised — score uses the ${c.make || 'default'} baseline only (${r.base}/100).`,
+			matched: false
+		};
+	}
+
+	let openReasonId = $state<string | null>(null);
 	function distOf(c: Car) {
 		return locationKm(c.location);
 	}
@@ -215,13 +227,35 @@
 					<div class="rows">
 						{#each rows as r (r.key)}
 							{@const isWinner = bestByRow[r.key] === c.id}
+							{@const isRel = r.key === 'reliability'}
+							{@const relDetail = isRel ? relDetailOf(c) : null}
+							{@const reasonKey = `${c.id}:reliability`}
+							{@const reasonOpen = isRel && openReasonId === reasonKey}
 							<div class="row" class:winner={isWinner}>
 								<span class="row-label">{r.label}</span>
 								<span class="row-value" class:big={r.big}>
 									{r.get(c)}
+									{#if isRel && relDetail}
+										<button
+											type="button"
+											class="reason-btn"
+											class:warn={!relDetail.matched}
+											title={relDetail.reason}
+											aria-expanded={reasonOpen}
+											aria-label="Reliability details"
+											onclick={() => (openReasonId = reasonOpen ? null : reasonKey)}
+										>
+											ⓘ
+										</button>
+									{/if}
 									{#if isWinner}<span class="star">★</span>{/if}
 								</span>
 							</div>
+							{#if reasonOpen && relDetail}
+								<div class="reason-row" class:warn={!relDetail.matched}>
+									{relDetail.reason}
+								</div>
+							{/if}
 						{/each}
 					</div>
 				</article>
@@ -445,6 +479,33 @@
 	.star {
 		margin-left: 6px;
 		font-size: 0.7rem;
+	}
+	.reason-btn {
+		background: transparent;
+		border: 0;
+		padding: 0 0 0 6px;
+		font-size: 0.78rem;
+		color: var(--ink-dim);
+		cursor: pointer;
+		line-height: 1;
+	}
+	.reason-btn:hover {
+		color: var(--ink);
+	}
+	.reason-btn.warn {
+		color: var(--warn);
+	}
+	.reason-row {
+		padding: 8px 20px 12px;
+		font-size: 0.72rem;
+		color: var(--ink-soft);
+		background: var(--card-2);
+		border-bottom: 1px solid var(--rule);
+		line-height: 1.5;
+	}
+	.reason-row.warn {
+		background: var(--warn-bg);
+		color: var(--warn);
 	}
 	@media (max-width: 900px) {
 		.cards {
