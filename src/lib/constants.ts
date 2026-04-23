@@ -34,6 +34,27 @@ export const ENGINE_CODES: Record<string, string> = {
 
 export const ENGINE_CODE_RE = new RegExp('^(' + Object.keys(ENGINE_CODES).join('|') + ')$');
 
+/**
+ * Common make-name variants normalised to their canonical form (matches DATALIST_MAKES).
+ * Keyed by lowercased input. Extend as new variants surface.
+ */
+const MAKE_ALIASES: Record<string, string> = {
+	vw: 'Volkswagen',
+	volkswagen: 'Volkswagen',
+	mercedes: 'Mercedes-Benz',
+	'mercedes benz': 'Mercedes-Benz',
+	'mercedes-benz': 'Mercedes-Benz',
+	citroen: 'Citroën',
+	'citroën': 'Citroën'
+};
+
+/** Normalise a user-entered make to its canonical form. Unknown makes are returned trimmed but otherwise unchanged. */
+export function normalizeMake(make: string | null | undefined): string {
+	if (!make) return '';
+	const trimmed = make.trim();
+	return MAKE_ALIASES[trimmed.toLowerCase()] ?? trimmed;
+}
+
 export const DATALIST_MAKES = [
 	'Audi',
 	'BMW',
@@ -157,12 +178,10 @@ export const MAKE_RELIABILITY: Record<string, number> = {
 	opel: 58,
 	mini: 52,
 	bmw: 62,
-	mercedes: 60,
 	'mercedes-benz': 60,
 	dacia: 56,
 	renault: 54,
 	peugeot: 54,
-	citroen: 50,
 	'citroën': 50,
 	fiat: 48,
 	'alfa romeo': 42,
@@ -182,7 +201,6 @@ export const MAKE_RELIABILITY_NOTES: Record<string, string> = {
 	nissan: 'Jatco CVT failures on Qashqai/Juke/X-Trail are a brand-level liability at 100–150k km. 1.5 dCi diesel is a further weak spot (penalized at engine level). Global surveys — inflated by US/JP market data — overstate Nissan in the European used fleet.',
 	volvo: 'Pre-2014 5-cyl diesels (especially D5) are genuine tanks, but Drive-E era introduced timing-belt-in-oil and electronics gremlins, and Ford-era 1.6D (PSA DV6) is problematic. Older-generation nostalgia doesn\u2019t fully carry the modern range.',
 	skoda: 'VAG platforms with simpler trim and fewer electronics than VW/Audi. Warranty Direct and What Car? surveys consistently rank Skoda 5–8 points above VW.',
-	vw: 'Solid mechanicals when paired with a good engine, but DSG, MMI/infotainment, and chain-driven TSI/TDI variants pull the average down.',
 	volkswagen: 'Solid mechanicals when paired with a good engine, but DSG, MMI/infotainment, and chain-driven TSI/TDI variants pull the average down.',
 	audi: 'More tech per car than VW (MMI, adaptive suspension, DSG prevalence) means more systems to fail as cars age. European long-term surveys consistently place Audi below VW.',
 	seat: 'VAG platforms with Spanish assembly and cost-cut trim; sits slightly below VW in long-term data.',
@@ -190,12 +208,10 @@ export const MAKE_RELIABILITY_NOTES: Record<string, string> = {
 	opel: 'Inconsistent across eras: Isuzu-sourced 1.7 CDTi is solid, GM-era electronics are weak. Post-PSA (2017+) improved but rarely in €5k window.',
 	mini: 'At the €5k tier Minis are R56/R55/R57-era, dominated by the BMW/PSA Prince N12/N14 engine: timing chain stretch, carbon build-up, heavy oil consumption, water pump failures. The engine itself is also flagged separately.',
 	bmw: 'At the €5k tier, BMW is arguably more predictable than Mercedes of the same era — simpler chassis tech, less adaptive suspension. Known weak spots (N47 timing chain, VANOS) are engine-specific and handled downstream.',
-	mercedes: 'W211/W204-era AirMatic failures, rust on pre-facelift W211, OM651 injector/timing chain issues, SBC brake module. Premium badge doesn\u2019t offset chassis-era problems at this age.',
 	'mercedes-benz': 'W211/W204-era AirMatic failures, rust on pre-facelift W211, OM651 injector/timing chain issues, SBC brake module. Premium badge doesn\u2019t offset chassis-era problems at this age.',
 	dacia: 'Owner surveys inflate Dacia (simple mechanicals, cheap repairs, young fleet), but German TÜV defect reports rank it near the bottom on 8–12 yr cars — worn suspension, brake corrosion, light/electrical faults. Diesels all use the 1.5 dCi, flagged at engine level.',
 	renault: 'French electrics and a weak diesel lineup (1.5/1.6 dCi) drag the average. Petrols are middling; TCe turbos have serious oil-consumption issues (handled at engine level).',
 	peugeot: 'Stellantis diesels (1.6 BlueHDi) are decent, but 1.4/1.6 HDi-era injector and FAP issues, plus electrics, keep the baseline below average.',
-	citroen: 'Peugeot twin with extra electrical and hydropneumatic complexity (older C5). Slightly below Peugeot in most EU datasets.',
 	'citroën': 'Peugeot twin with extra electrical and hydropneumatic complexity (older C5). Slightly below Peugeot in most EU datasets.',
 	fiat: 'Genuinely poor in long-term surveys: electrics, trim, rust, and the 1.3 Multijet timing chain epidemic. 1.9 Multijet is the one bright spot (engine level).',
 	'alfa romeo': 'Harsh but honest for the €5k tier. Modern Giulia improved, but none reach this budget. Electrics and build quality drag historical data.',
@@ -308,9 +324,7 @@ export const MODEL_ENGINE_HINTS: Record<string, string[]> = {
 	'peugeot:207': ['1.4 HDi', '1.6 HDi', 'Prince N12/N14'],
 	'peugeot:208': ['1.4 HDi', '1.6 HDi', '1.6 BlueHDi', 'Prince N12/N14'],
 	'peugeot:308': ['1.6 HDi', '1.6 BlueHDi', '1.6 TDCi'],
-	'citroen:c3': ['1.4 HDi', '1.6 HDi', '1.6 BlueHDi'],
 	'citroën:c3': ['1.4 HDi', '1.6 HDi', '1.6 BlueHDi'],
-	'citroen:c4': ['1.6 HDi', '1.6 BlueHDi'],
 	'citroën:c4': ['1.6 HDi', '1.6 BlueHDi'],
 	'ford:fiesta': ['1.4 HDi', '1.6 TDCi', '1.0 EcoBoost', '1.5 TDCi'],
 	'ford:focus': ['1.6 TDCi', '1.0 EcoBoost', '1.5 TDCi'],
@@ -340,7 +354,6 @@ export const MODEL_ENGINE_HINTS: Record<string, string[]> = {
 	'mini:cooper': ['Prince N12/N14', 'Prince N18'],
 	'mini:cooper s': ['Prince N12/N14', 'Prince N18'],
 	'mercedes-benz:c-class': ['OM651 2.1 CDI'],
-	'mercedes:c-class': ['OM651 2.1 CDI'],
 	// Korean / Japanese
 	'hyundai:i20': ['1.4 CRDi'],
 	'hyundai:i30': ['1.4 CRDi', '1.6 CRDi'],

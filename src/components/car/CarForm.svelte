@@ -1,7 +1,13 @@
 <script lang="ts">
 	import type { Car, CarCreateInput } from '$lib/types';
 	import { STATUSES, STATUS_LABELS } from '$lib/types';
-	import { DATALIST_MAKES, DATALIST_ENGINES, EXTRA_MAKES, getModelEngineHints } from '$lib/constants';
+	import {
+		DATALIST_MAKES,
+		DATALIST_ENGINES,
+		EXTRA_MAKES,
+		getModelEngineHints,
+		normalizeMake
+	} from '$lib/constants';
 	import { createCar, updateCar } from '$lib/stores/cars';
 	import { cars as carsStore } from '$lib/stores/cars';
 	import { toast } from '$lib/stores/ui';
@@ -133,7 +139,7 @@
 		const payload: CarCreateInput = {
 			url: f.url.trim() || undefined,
 			title,
-			make: f.make.trim() || undefined,
+			make: normalizeMake(f.make) || undefined,
 			model: f.model.trim() || undefined,
 			year: toNumber(f.year),
 			km: toNumber(f.km),
