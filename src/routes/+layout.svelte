@@ -13,6 +13,7 @@
 
 	let { children } = $props();
 
+	const isShare = $derived(page.url.pathname.startsWith('/share/'));
 	const detailId = $derived(page.url.searchParams.get('car'));
 	const editId = $derived(page.url.searchParams.get('edit'));
 
@@ -40,18 +41,22 @@
 	}
 </script>
 
-<Header />
-
-<main class="main">
+{#if isShare}
 	{@render children()}
-</main>
+{:else}
+	<Header />
 
-<ToastStack />
-<DialogHost />
-<PasswordPrompt />
-<GlobalSpinner />
+	<main class="main">
+		{@render children()}
+	</main>
 
-{#if detailCar}
+	<ToastStack />
+	<DialogHost />
+	<PasswordPrompt />
+	<GlobalSpinner />
+{/if}
+
+{#if !isShare && detailCar}
 	<CarDetailPanel
 		car={detailCar}
 		onclose={() => closeOverlay('car')}
@@ -59,7 +64,7 @@
 	/>
 {/if}
 
-{#if isEditing}
+{#if !isShare && isEditing}
 	<div class="modal-overlay" role="presentation">
 		<div
 			class="modal"

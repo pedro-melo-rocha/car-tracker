@@ -7,7 +7,7 @@
 	import { SCORE_WEIGHTS } from '$lib/constants';
 	import PriceHistoryTimeline from './PriceHistoryTimeline.svelte';
 	import { cars, deleteCar as removeCar, updateCar } from '$lib/stores/cars';
-	import { confirmDialog } from '$lib/stores/ui';
+	import { confirmDialog, toast } from '$lib/stores/ui';
 
 	let {
 		car,
@@ -47,6 +47,16 @@
 
 	function barCls(v: number) {
 		return v >= 70 ? 'good' : v >= 50 ? 'warn' : 'bad';
+	}
+
+	async function onShare() {
+		const url = `${location.origin}/share/${car.id}`;
+		try {
+			await navigator.clipboard.writeText(url);
+			toast.success('Share link copied');
+		} catch {
+			toast.info(url);
+		}
 	}
 
 	async function onDelete() {
@@ -307,6 +317,7 @@
 
 		<div class="actions">
 			<button type="button" class="btn primary" onclick={() => onedit(car.id)}>Edit</button>
+			<button type="button" class="btn ghost" onclick={onShare}>Share</button>
 			<button type="button" class="btn ghost-danger" onclick={onDelete}>Delete</button>
 		</div>
 	</div>
@@ -722,6 +733,14 @@
 	}
 	.btn.primary:hover {
 		background: var(--accent-hover);
+	}
+	.btn.ghost {
+		background: transparent;
+		color: var(--ink);
+		border: 1px solid var(--rule);
+	}
+	.btn.ghost:hover {
+		background: var(--card-2);
 	}
 	.btn.ghost-danger {
 		background: transparent;

@@ -38,6 +38,8 @@ export interface Car {
 	version: number;
 }
 
+export type PublicCar = Omit<Car, 'notes' | 'contactedAt' | 'status' | 'version'>;
+
 export interface CarCreateInput {
 	url?: string;
 	title: string;
