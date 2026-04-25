@@ -72,6 +72,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		location: body.location || '',
 		contactedAt: status === 'contacted' ? now : null,
 		notes: body.notes || '',
+		imageUrl: body.imageUrl || '',
 		priceHistory: [{ date: now, price, note: 'Initial price' }],
 		version: 1
 	};

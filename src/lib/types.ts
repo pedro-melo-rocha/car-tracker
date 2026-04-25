@@ -33,6 +33,7 @@ export interface Car {
 	status: CarStatus;
 	location?: string | null;
 	notes?: string | null;
+	imageUrl?: string | null;
 	contactedAt?: string | null;
 	priceHistory: PriceHistoryEntry[];
 	version: number;
@@ -55,6 +56,7 @@ export interface CarCreateInput {
 	status?: CarStatus;
 	location?: string;
 	notes?: string;
+	imageUrl?: string;
 }
 
 export interface CarUpdateInput extends Partial<CarCreateInput> {

@@ -24,14 +24,25 @@
 
 <tr onclick={() => onopen?.(car.id)}>
 	<td class="title-cell">
-		<div class="title-line">
-			<span class="title">{car.title}</span>
-		</div>
-		{#if scam.level !== 'none'}
-			<div class="badge-line">
-				<ScamBadge {scam} size="sm" />
+		<div class="title-wrap">
+			{#if car.imageUrl}
+				<img
+					class="thumb"
+					src={car.imageUrl}
+					alt=""
+					loading="lazy"
+					onerror={(e) => ((e.currentTarget as HTMLImageElement).style.display = 'none')}
+				/>
+			{/if}
+			<div class="title-stack">
+				<span class="title">{car.title}</span>
+				{#if scam.level !== 'none'}
+					<div class="badge-line">
+						<ScamBadge {scam} size="sm" />
+					</div>
+				{/if}
 			</div>
-		{/if}
+		</div>
 	</td>
 	<td class="soft">{car.make ?? '—'}</td>
 	<td class="soft">{car.model ?? '—'}</td>
@@ -93,11 +104,24 @@
 	.title-cell {
 		min-width: 200px;
 	}
-	.title-line {
+	.title-wrap {
 		display: flex;
 		align-items: center;
-		gap: 8px;
-		flex-wrap: wrap;
+		gap: 12px;
+	}
+	.title-stack {
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+		min-width: 0;
+	}
+	.thumb {
+		width: 56px;
+		height: 40px;
+		border-radius: 6px;
+		object-fit: cover;
+		flex-shrink: 0;
+		background: var(--card-2);
 	}
 	.title {
 		font-size: 0.88rem;
@@ -106,7 +130,7 @@
 		letter-spacing: -0.01em;
 	}
 	.badge-line {
-		margin-top: 4px;
+		display: flex;
 	}
 	.price {
 		font-weight: 600;

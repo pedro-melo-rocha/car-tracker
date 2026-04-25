@@ -33,6 +33,15 @@
 >
 	<div class="lc-top">
 		<ScoreBadge {score} size="sm" />
+		{#if car.imageUrl}
+			<img
+				class="lc-thumb"
+				src={car.imageUrl}
+				alt=""
+				loading="lazy"
+				onerror={(e) => ((e.currentTarget as HTMLImageElement).style.display = 'none')}
+			/>
+		{/if}
 		<div class="lc-title-block">
 			<div class="lc-meta">{car.source ?? '—'}</div>
 			<div class="lc-title">{car.title}</div>
@@ -95,6 +104,14 @@
 	.lc-title-block {
 		flex: 1;
 		min-width: 0;
+	}
+	.lc-thumb {
+		width: 56px;
+		height: 40px;
+		border-radius: 6px;
+		object-fit: cover;
+		flex-shrink: 0;
+		background: var(--card-2);
 	}
 	.lc-meta {
 		font-size: 0.68rem;

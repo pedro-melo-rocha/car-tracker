@@ -16,7 +16,8 @@ const EDITABLE_FIELDS = [
 	'source',
 	'status',
 	'location',
-	'notes'
+	'notes',
+	'imageUrl'
 ] as const;
 
 function serverError(scope: string, err: unknown): Response {

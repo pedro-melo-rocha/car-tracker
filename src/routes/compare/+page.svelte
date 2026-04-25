@@ -195,6 +195,15 @@
 		<div class="cards" style="grid-template-columns: repeat({selected.length}, 1fr)">
 			{#each selected as c (c.id)}
 				<article class="card" class:is-top-pick={topPickId === c.id}>
+					{#if c.imageUrl}
+						<img
+							class="card-img"
+							src={c.imageUrl}
+							alt=""
+							loading="lazy"
+							onerror={(e) => ((e.currentTarget as HTMLImageElement).style.display = 'none')}
+						/>
+					{/if}
 					<header class="card-head">
 						<div class="head-row">
 							<ScoreBadge score={scoreOf(c)} size="lg" />
@@ -372,6 +381,13 @@
 	.card.is-top-pick {
 		border-color: var(--accent);
 		box-shadow: 0 0 0 1px var(--accent-light);
+	}
+	.card-img {
+		width: 100%;
+		height: 160px;
+		object-fit: cover;
+		display: block;
+		background: var(--card-2);
 	}
 	.card-head {
 		padding: 20px;

@@ -42,6 +42,7 @@
 		status: string;
 		location: string;
 		notes: string;
+		imageUrl: string;
 		priceNote: string;
 	};
 
@@ -61,6 +62,7 @@
 			status: c?.status ?? 'to-contact',
 			location: c?.location ?? '',
 			notes: c?.notes ?? '',
+			imageUrl: c?.imageUrl ?? '',
 			priceNote: ''
 		};
 	}
@@ -150,7 +152,8 @@
 			source: f.source || undefined,
 			status: (f.status as Car['status']) || 'to-contact',
 			location: f.location.trim() || undefined,
-			notes: f.notes || undefined
+			notes: f.notes || undefined,
+			imageUrl: f.imageUrl.trim() || undefined
 		};
 
 		submitting = true;
@@ -191,6 +194,26 @@
 			bind:value={f.url}
 			onblur={handleUrlBlur}
 		/>
+	</div>
+
+	<div class="form-group">
+		<label for="f-image-url">Image URL</label>
+		<input
+			id="f-image-url"
+			type="url"
+			placeholder="Paste image URL from listing"
+			bind:value={f.imageUrl}
+		/>
+		{#if f.imageUrl.trim()}
+			<img
+				class="image-preview"
+				src={f.imageUrl.trim()}
+				alt=""
+				loading="lazy"
+				onerror={(e) => ((e.currentTarget as HTMLImageElement).style.display = 'none')}
+				onload={(e) => ((e.currentTarget as HTMLImageElement).style.display = '')}
+			/>
+		{/if}
 	</div>
 
 	<div class="form-group">
@@ -350,6 +373,14 @@
 	textarea {
 		min-height: 80px;
 		resize: vertical;
+	}
+	.image-preview {
+		margin-top: 6px;
+		max-height: 140px;
+		width: 100%;
+		object-fit: cover;
+		border-radius: 8px;
+		background: var(--card-2);
 	}
 	.price-change {
 		background: var(--warn-bg);

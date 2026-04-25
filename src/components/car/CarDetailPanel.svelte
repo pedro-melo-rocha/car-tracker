@@ -111,6 +111,16 @@
 
 		<h1 class="title">{car.title}</h1>
 
+		{#if car.imageUrl}
+			<img
+				class="hero-img"
+				src={car.imageUrl}
+				alt=""
+				loading="lazy"
+				onerror={(e) => ((e.currentTarget as HTMLImageElement).style.display = 'none')}
+			/>
+		{/if}
+
 		<div class="score-widget" style="background: {scoreBgColor}; color: {scoreColor};">
 			<div class="score-num">{score}</div>
 			<div class="score-label">SCORE</div>
@@ -388,6 +398,13 @@
 	.close-btn svg {
 		width: 14px;
 		height: 14px;
+	}
+	.hero-img {
+		width: 100%;
+		max-height: 260px;
+		object-fit: cover;
+		border-radius: 12px;
+		background: var(--card-2);
 	}
 	.title {
 		font-size: 1.625rem;

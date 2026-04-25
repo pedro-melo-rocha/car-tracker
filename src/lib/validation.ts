@@ -29,7 +29,8 @@ export const carCreateSchema = z
 		source: z.string().max(100).optional().or(z.literal('')),
 		status: z.enum(STATUSES).optional(),
 		location: z.string().max(200).optional().or(z.literal('')),
-		notes: z.string().max(5000).optional().or(z.literal(''))
+		notes: z.string().max(5000).optional().or(z.literal('')),
+		imageUrl: z.string().max(2000).url().optional().or(z.literal(''))
 	})
 	.strict();
 
