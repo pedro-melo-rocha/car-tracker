@@ -31,11 +31,11 @@ describe('computeScoreBreakdown — baseline parity', () => {
 			location: 'Braga'
 		});
 		const b = computeScoreBreakdown(car);
-		expect(b.total).toBe(72);
+		expect(b.total).toBe(73);
 		expect(b.km).toBe(100);
 		expect(b.price).toBe(93);
 		expect(b.year).toBe(7);
-		expect(b.loc).toBe(98);
+		expect(b.loc).toBe(100);
 		expect(b.rel.score).toBe(54);
 		expect(b.rel.base).toBe(54);
 		expect(b.rel.delta).toBe(0);
@@ -58,7 +58,7 @@ describe('computeScoreBreakdown — baseline parity', () => {
 		expect(b.km).toBe(91);
 		expect(b.price).toBe(50);
 		expect(b.year).toBe(40);
-		expect(b.loc).toBe(96);
+		expect(b.loc).toBe(95);
 		expect(b.rel.score).toBe(58);
 		expect(b.rel.base).toBe(66);
 		expect(b.rel.delta).toBe(-8);
@@ -78,14 +78,14 @@ describe('computeScoreBreakdown — baseline parity', () => {
 			location: 'Loures, Lisboa'
 		});
 		const b = computeScoreBreakdown(car);
-		expect(b.total).toBe(53);
+		expect(b.total).toBe(51);
 		expect(b.km).toBe(80);
 		expect(b.price).toBe(50);
 		expect(b.year).toBe(7);
-		expect(b.loc).toBe(81);
-		expect(b.rel.score).toBe(42);
+		expect(b.loc).toBe(56);
+		expect(b.rel.score).toBe(46);
 		expect(b.rel.base).toBe(58);
-		expect(b.rel.delta).toBe(-16);
+		expect(b.rel.delta).toBe(-12);
 		expect(b.rel.reason).toContain('1.3 Multijet');
 	});
 });

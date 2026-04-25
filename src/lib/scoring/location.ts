@@ -9,10 +9,16 @@ export function locationScore(location: string | null | undefined): number {
 	const loc = normalizeLoc(location);
 	for (const [place, dist] of Object.entries(LOCATION_DISTANCES)) {
 		if (loc.includes(normalizeLoc(place))) {
-			return Math.max(0, Math.round(100 - (dist / 600) * 30));
+			return distanceToScore(dist);
 		}
 	}
 	return 50;
+}
+
+function distanceToScore(dist: number): number {
+	if (dist <= 50) return 100;
+	if (dist <= 200) return Math.round(100 - ((dist - 50) / 150) * 30);
+	return Math.max(40, Math.round(70 - ((dist - 200) / 400) * 30));
 }
 
 export function locationKm(location: string | null | undefined): number | null {

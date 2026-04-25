@@ -147,8 +147,8 @@ describe('reliabilitySubscore', () => {
 			engine: null
 		});
 		expect(r.base).toBe(48);
-		expect(r.delta).toBe(-16);
-		expect(r.score).toBe(32);
+		expect(r.delta).toBe(-12);
+		expect(r.score).toBe(36);
 	});
 
 	it('uses base only when no engine profile matches', () => {

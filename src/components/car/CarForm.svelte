@@ -12,6 +12,7 @@
 	import { cars as carsStore } from '$lib/stores/cars';
 	import { toast } from '$lib/stores/ui';
 	import { inferFromUrl } from '$lib/inference';
+	import { apiFetch } from '$lib/api';
 	import { get } from 'svelte/store';
 	import CustomSelect from '$components/ui/CustomSelect.svelte';
 	import CustomCombobox from '$components/ui/CustomCombobox.svelte';
@@ -72,6 +73,55 @@
 	// svelte-ignore state_referenced_locally
 	let originalPrice = $state<number | undefined>(car?.price ?? undefined);
 	let submitting = $state(false);
+	let importUrl = $state('');
+	let importing = $state(false);
+
+	const FIELD_LABELS: Record<string, string> = {
+		title: 'title',
+		price: 'price',
+		km: 'km',
+		year: 'year',
+		fuel: 'fuel',
+		make: 'make',
+		model: 'model'
+	};
+
+	async function onImport() {
+		const u = importUrl.trim();
+		if (!u || importing) return;
+		importing = true;
+		try {
+			const r = await apiFetch<{
+				data: Partial<CarCreateInput>;
+				source: string | null;
+				warnings: string[];
+			}>('/api/import', { method: 'POST', body: JSON.stringify({ url: u }) });
+			const d = r.data;
+			f.url = d.url ?? '';
+			f.title = d.title ?? '';
+			f.make = d.make ?? '';
+			f.model = d.model ?? '';
+			f.year = d.year != null ? String(d.year) : '';
+			f.km = d.km != null ? String(d.km) : '';
+			f.price = d.price != null ? String(d.price) : '';
+			f.fuel = d.fuel ?? '';
+			f.engine = d.engine ?? '';
+			f.power = d.power != null ? String(d.power) : '';
+			f.source = d.source ?? '';
+			f.location = d.location ?? '';
+			f.imageUrl = d.imageUrl ?? '';
+			if (r.warnings.length) {
+				const missing = r.warnings.map((w) => FIELD_LABELS[w] || w).join(', ');
+				toast.info(`Imported. Missing: ${missing}`);
+			} else {
+				toast.success('Imported.');
+			}
+		} catch {
+			/* apiFetch already toasted */
+		} finally {
+			importing = false;
+		}
+	}
 
 	const priceChanged = $derived(
 		isEdit && f.price != null && f.price !== '' && Number(f.price) !== originalPrice
@@ -185,36 +235,67 @@
 </script>
 
 <form onsubmit={onSubmit}>
-	<div class="form-group">
-		<label for="f-url">URL</label>
-		<input
-			id="f-url"
-			type="url"
-			placeholder="Listing URL"
-			bind:value={f.url}
-			onblur={handleUrlBlur}
-		/>
-	</div>
+	{#if !isEdit}
+		<div class="form-group import-row">
+			<label for="f-import">Import from listing URL</label>
+			<div class="import-input-row">
+				<input
+					id="f-import"
+					type="url"
+					placeholder="Paste StandVirtual / OLX / PiscaPisca / CustoJusto URL"
+					bind:value={importUrl}
+					disabled={importing}
+				/>
+				<button
+					type="button"
+					class="btn secondary import-btn"
+					onclick={onImport}
+					disabled={importing || !importUrl.trim()}
+				>
+					{#if importing}
+						<span class="btn-spinner" aria-hidden="true"></span>
+						<span>Importing…</span>
+					{:else}
+						<span>Import</span>
+					{/if}
+				</button>
+			</div>
+		</div>
+	{/if}
 
-	<div class="form-group">
-		<label for="f-image-url">Image URL</label>
-		<input
-			id="f-image-url"
-			type="url"
-			placeholder="Paste image URL from listing"
-			bind:value={f.imageUrl}
-		/>
-		{#if f.imageUrl.trim()}
-			<img
-				class="image-preview"
-				src={f.imageUrl.trim()}
-				alt=""
-				loading="lazy"
-				onerror={(e) => ((e.currentTarget as HTMLImageElement).style.display = 'none')}
-				onload={(e) => ((e.currentTarget as HTMLImageElement).style.display = '')}
+	{#if isEdit}
+		<div class="form-group">
+			<label for="f-url">URL</label>
+			<input
+				id="f-url"
+				type="url"
+				placeholder="Listing URL"
+				bind:value={f.url}
+				onblur={handleUrlBlur}
 			/>
-		{/if}
-	</div>
+		</div>
+
+		<div class="form-group">
+			<label for="f-image-url">Image URL</label>
+			<input
+				id="f-image-url"
+				type="url"
+				placeholder="Paste image URL from listing"
+				bind:value={f.imageUrl}
+			/>
+		</div>
+	{/if}
+
+	{#if f.imageUrl.trim()}
+		<img
+			class="image-preview"
+			src={f.imageUrl.trim()}
+			alt=""
+			loading="lazy"
+			onerror={(e) => ((e.currentTarget as HTMLImageElement).style.display = 'none')}
+			onload={(e) => ((e.currentTarget as HTMLImageElement).style.display = '')}
+		/>
+	{/if}
 
 	<div class="form-group">
 		<label for="f-title">Title</label>
@@ -386,6 +467,21 @@
 		background: var(--warn-bg);
 		padding: 10px 12px;
 		border-radius: 10px;
+	}
+	.import-input-row {
+		display: flex;
+		gap: 8px;
+	}
+	.import-input-row input {
+		flex: 1;
+	}
+	.import-btn {
+		flex-shrink: 0;
+		min-width: 112px;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: 8px;
 	}
 	.form-actions {
 		display: flex;

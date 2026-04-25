@@ -1,6 +1,8 @@
 import type { Car } from '../types';
 import { MAKE_RELIABILITY, ENGINE_PROFILES, type EngineProfile } from '../constants';
 
+const ENGINE_DELTA_CAP = 12;
+
 export function getMakeReliability(make: string | null | undefined): number {
 	if (!make) return 60;
 	const key = make.toLowerCase().trim();
@@ -40,7 +42,8 @@ export function reliabilitySubscore(
 ): ReliabilityBreakdown {
 	const base = getMakeReliability(car.make);
 	const profile = getEngineProfile(car);
-	const delta = profile ? profile.delta : 0;
+	const rawDelta = profile ? profile.delta : 0;
+	const delta = Math.max(-ENGINE_DELTA_CAP, Math.min(ENGINE_DELTA_CAP, rawDelta));
 	return {
 		score: Math.max(0, Math.min(100, base + delta)),
 		base,

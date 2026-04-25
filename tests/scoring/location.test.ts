@@ -25,9 +25,13 @@ describe('locationScore', () => {
 		expect(locationScore('Viana do Castelo')).toBe(100);
 	});
 
-	it('caps the penalty at 30 points across 600km', () => {
-		expect(locationScore('Faro')).toBeGreaterThanOrEqual(70);
-		expect(locationScore('Faro')).toBeLessThan(80);
+	it('floors distant locations at 40', () => {
+		expect(locationScore('Faro')).toBeGreaterThanOrEqual(40);
+		expect(locationScore('Faro')).toBeLessThan(55);
+	});
+
+	it('scores within 50km as 100', () => {
+		expect(locationScore('Braga')).toBe(100);
 	});
 
 	it('handles diacritics', () => {
