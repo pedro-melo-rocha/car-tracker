@@ -9,43 +9,41 @@
 <div class="login">
 	<div class="card">
 		<h1>Car Tracker</h1>
-		{#if form?.sent}
-			<p class="msg">
-				Check <strong>{form.email}</strong> for a sign-in link. The link expires in an hour.
-			</p>
-			<p class="hint">
-				Didn't get it? <a href="/login">Try again</a>.
-			</p>
-		{:else}
-			<p class="msg">Enter your email to receive a magic sign-in link.</p>
-			<form
-				method="POST"
-				use:enhance={() => {
-					submitting = true;
-					return async ({ update }) => {
-						await update();
-						submitting = false;
-					};
-				}}
-			>
-				<!-- svelte-ignore a11y_autofocus -->
-				<input
-					type="email"
-					name="email"
-					placeholder="you@example.com"
-					value={form?.email ?? ''}
-					required
-					autofocus
-					autocomplete="email"
-				/>
-				{#if form?.error}
-					<p class="err">{form.error}</p>
-				{/if}
-				<button type="submit" disabled={submitting}>
-					{submitting ? 'Sending…' : 'Send magic link'}
-				</button>
-			</form>
-		{/if}
+		<p class="msg">Sign in to continue.</p>
+		<form
+			method="POST"
+			use:enhance={() => {
+				submitting = true;
+				return async ({ update }) => {
+					await update();
+					submitting = false;
+				};
+			}}
+		>
+			<!-- svelte-ignore a11y_autofocus -->
+			<input
+				type="email"
+				name="email"
+				placeholder="Email"
+				value={form?.email ?? ''}
+				required
+				autofocus
+				autocomplete="email"
+			/>
+			<input
+				type="password"
+				name="password"
+				placeholder="Password"
+				required
+				autocomplete="current-password"
+			/>
+			{#if form?.error}
+				<p class="err">{form.error}</p>
+			{/if}
+			<button type="submit" disabled={submitting}>
+				{submitting ? 'Signing in…' : 'Sign in'}
+			</button>
+		</form>
 	</div>
 </div>
 
@@ -82,14 +80,6 @@
 		color: var(--ink-soft);
 		font-size: 0.88rem;
 	}
-	.hint {
-		margin: 0;
-		color: var(--ink-dim);
-		font-size: 0.8rem;
-	}
-	.hint a {
-		color: var(--accent);
-	}
 	form {
 		display: flex;
 		flex-direction: column;
@@ -116,6 +106,7 @@
 		font-size: 0.9rem;
 		font-weight: 600;
 		cursor: pointer;
+		margin-top: 0.25rem;
 	}
 	button:hover:not(:disabled) {
 		background: var(--accent-hover);

@@ -21,8 +21,7 @@ Car Tracker is a hosted car search tracker for browsing used car listings in Por
 - **`src/routes/+layout.svelte`** — Mounts Header, overlays (`?car=<id>`, `?edit=new|<id>`), toasts, dialogs. Skips chrome on `/login` and `/share/*`.
 - **`src/routes/+layout.server.ts`** — Auth guard: redirects unauthenticated users to `/login` (except `/login`, `/share/*`, `/share-target`, `/auth/*`). Returns `user` in layout data.
 - **`src/routes/{pipeline,list,compare,docs}/+page.svelte`** — One URL per view.
-- **`src/routes/login/+page.svelte`** — Magic-link form. Server action calls `supabase.auth.signInWithOtp` with `shouldCreateUser: false` (only pre-provisioned users can sign in).
-- **`src/routes/auth/callback/+server.ts`** — Exchanges the magic-link `code` for a session cookie, then redirects to `?next=…`.
+- **`src/routes/login/+page.svelte`** — Email + password form. Server action calls `supabase.auth.signInWithPassword`. Users are pre-provisioned via the Supabase dashboard (no signup flow exposed).
 - **`src/routes/auth/logout/+server.ts`** — POST endpoint, signs out and redirects to `/login`.
 - **`src/routes/api/cars/+server.ts`** — `GET` (list + staleness flip) and `POST` (create).
 - **`src/routes/api/cars/[id]/+server.ts`** — `PUT` (optimistic-lock on `version`) and `DELETE`.
@@ -47,9 +46,8 @@ Use Supabase's new "Publishable and secret API keys" (Settings → API). The leg
 
 ## Supabase dashboard config (one-time)
 
-- **Authentication → Providers → Email**: enable. Disable "Allow new users to sign up" so only pre-provisioned users can request magic links.
-- **Authentication → URL Configuration**: add `http://localhost:5173/auth/callback` and the prod equivalent to "Redirect URLs".
-- **Authentication → Users**: invite Pedro and his girlfriend manually (email-only invite is fine — they'll receive a magic link on first login).
+- **Authentication → Providers → Email**: enable. Disable "Allow new users to sign up" so only pre-provisioned users can authenticate.
+- **Authentication → Users → Add user**: create accounts for Pedro and his girlfriend with **Auto Confirm User** checked, and set a password directly. Password reset is done from the dashboard, not the app (no `/forgot-password` route — there are only two users).
 
 ## Key Domain Concepts
 
@@ -72,7 +70,7 @@ Use Supabase's new "Publishable and secret API keys" (Settings → API). The leg
 
 - **Supabase column names are camelCase and quoted** (`"addedAt"`, `"contactedAt"`, `"priceHistory"`) so JS objects pass through unchanged. Any new column with a capital letter must be created with double quotes in SQL.
 - **RLS is enabled with no policies.** All access goes through SvelteKit endpoints using the service role key. Never import from `$lib/server/*` in a client module — SvelteKit enforces this at build time.
-- **Auth is per-user via Supabase magic links.** Session lives in `sb-*` httpOnly cookies (set by `@supabase/ssr`). The previous shared-password / `x-api-secret` model is gone.
+- **Auth is per-user via Supabase email + password.** Session lives in `sb-*` httpOnly cookies (set by `@supabase/ssr`). The previous shared-password / `x-api-secret` model is gone.
 - **Initial cars load is client-side** (`+layout.ts` guards with `if (browser) && data?.user`). API endpoints rely on the session cookie; SSR pre-renders the chrome but the cars list still hydrates after mount.
 - **`priceNote` is transient:** Accepted in PUT requests but `delete`d from the stored car object before writing — it only appears in the `priceHistory` entry's `note` field.
 - **Rate-limit bucket is per-instance** (Fluid Compute). Matches legacy behaviour. Move to Upstash if ever needed.

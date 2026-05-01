@@ -1,8 +1,14 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ locals }) => {
-	if (locals.user) throw redirect(303, '/');
+function safeNext(raw: string | null): string {
+	if (!raw) return '/';
+	if (!raw.startsWith('/') || raw.startsWith('//')) return '/';
+	return raw;
+}
+
+export const load: PageServerLoad = async ({ locals, url }) => {
+	if (locals.user) throw redirect(303, safeNext(url.searchParams.get('next')));
 	return {};
 };
 
@@ -12,20 +18,15 @@ export const actions: Actions = {
 		const email = String(data.get('email') ?? '')
 			.trim()
 			.toLowerCase();
-		if (!email) return fail(400, { error: 'Email required', email });
-		if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-			return fail(400, { error: 'Enter a valid email', email });
+		const password = String(data.get('password') ?? '');
+
+		if (!email || !password) {
+			return fail(400, { error: 'Email and password required', email });
 		}
 
-		const { error } = await locals.supabase.auth.signInWithOtp({
-			email,
-			options: {
-				emailRedirectTo: `${url.origin}/auth/callback`,
-				shouldCreateUser: false
-			}
-		});
+		const { error } = await locals.supabase.auth.signInWithPassword({ email, password });
 		if (error) return fail(400, { error: error.message, email });
 
-		return { sent: true, email };
+		throw redirect(303, safeNext(url.searchParams.get('next')));
 	}
 };
