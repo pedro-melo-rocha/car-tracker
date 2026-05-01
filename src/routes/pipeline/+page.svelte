@@ -1,16 +1,47 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { goto } from '$app/navigation';
-	import { cars, updateCar } from '$lib/stores/cars';
-	import { filteredPipelineCars, pipelineFilter } from '$lib/stores/filters';
+	import { goto, replaceState } from '$app/navigation';
+	import { cars, carsLoading, updateCar } from '$lib/stores/cars';
+	import { toast } from '$lib/stores/ui';
+	import {
+		filteredPipelineCars,
+		pipelineFilter,
+		pipelineStateFromParams,
+		applyPipelineStateToParams,
+		pipelineParamsEqual
+	} from '$lib/stores/filters';
 	import { STATUSES, STATUS_LABELS, type CarStatus } from '$lib/types';
 	import CarCard from '$components/car/CarCard.svelte';
 	import CustomSelect from '$components/ui/CustomSelect.svelte';
+	import SkeletonCard from '$components/ui/SkeletonCard.svelte';
+
+	function addNewCar() {
+		const url = new URL(page.url);
+		url.searchParams.set('edit', 'new');
+		goto(url.pathname + url.search, { keepFocus: true, noScroll: true });
+	}
 
 	let draggingOver = $state<CarStatus | null>(null);
 	let isMobile = $state(false);
 	let movingIds = $state<Set<string>>(new Set());
 	let dismissedCollapsed = $state(true);
+	let hydrated = $state(false);
+
+	$effect(() => {
+		if (hydrated) return;
+		pipelineFilter.set(pipelineStateFromParams(page.url.searchParams));
+		hydrated = true;
+	});
+
+	$effect(() => {
+		const f = $pipelineFilter;
+		if (!hydrated) return;
+		const next = applyPipelineStateToParams(page.url.searchParams, f);
+		if (pipelineParamsEqual(next, page.url.searchParams)) return;
+		const url = new URL(page.url);
+		url.search = next.toString();
+		replaceState(url, page.state);
+	});
 
 	$effect(() => {
 		const stored = localStorage.getItem('pipeline.dismissedCollapsed');
@@ -73,10 +104,12 @@
 
 		try {
 			await updateCar(id, { status: nextStatus });
-		} catch {
+			toast.success(`Moved to ${STATUS_LABELS[nextStatus]}`);
+		} catch (err) {
 			cars.update((list) =>
 				list.map((c) => (c.id === id ? { ...c, status: previousStatus } : c))
 			);
+			toast.error(err instanceof Error ? err.message : 'Failed to move car');
 		} finally {
 			const next = new Set(movingIds);
 			next.delete(id);
@@ -179,6 +212,16 @@
 				</div>
 				{#if !collapsed}
 				<div class="col-body">
+					{#if status === 'to-contact' && $carsLoading && $cars.length === 0}
+						<SkeletonCard count={3} />
+					{:else if status === 'to-contact' && !$carsLoading && $cars.length === 0}
+						<div class="col-empty">
+							<p>No cars yet</p>
+							<button type="button" class="cta" onclick={addNewCar}>
+								Add your first car
+							</button>
+						</div>
+					{/if}
 					{#each list as car (car.id)}
 						{@const moving = movingIds.has(car.id)}
 						<div class="card-wrap" class:moving>
@@ -343,6 +386,32 @@
 		display: flex;
 		flex-direction: column;
 		gap: 10px;
+	}
+	.col-empty {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 10px;
+		padding: 24px 12px;
+		text-align: center;
+		color: var(--ink-dim);
+	}
+	.col-empty p {
+		margin: 0;
+		font-size: 0.85rem;
+	}
+	.col-empty .cta {
+		background: var(--accent);
+		color: #fff;
+		border: 0;
+		padding: 8px 14px;
+		border-radius: 8px;
+		font-size: 0.78rem;
+		font-weight: 500;
+		cursor: pointer;
+	}
+	.col-empty .cta:hover {
+		background: var(--accent-hover);
 	}
 	.card-wrap {
 		display: flex;

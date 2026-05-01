@@ -78,13 +78,32 @@
 		pendingStatus = next;
 		try {
 			await updateCar(car.id, { status: next });
+			toast.success(`Moved to ${STATUS_LABELS[next]}`);
+		} catch (err) {
+			toast.error(err instanceof Error ? err.message : 'Failed to update');
 		} finally {
 			pendingStatus = null;
 		}
 	}
 
 	function onKeydown(e: KeyboardEvent) {
-		if (e.key === 'Escape') onclose();
+		if (e.key === 'Escape') {
+			onclose();
+			return;
+		}
+		if (e.metaKey || e.ctrlKey || e.altKey) return;
+		const t = e.target;
+		if (
+			t instanceof HTMLElement &&
+			(t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)
+		) {
+			return;
+		}
+		const idx = Number(e.key) - 1;
+		if (Number.isInteger(idx) && idx >= 0 && idx < STATUSES.length) {
+			e.preventDefault();
+			void setStatus(STATUSES[idx]);
+		}
 	}
 
 	$effect(() => {

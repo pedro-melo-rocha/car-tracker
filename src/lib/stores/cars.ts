@@ -48,10 +48,51 @@ export async function updateCar(id: string, patch: CarUpdateInput): Promise<Car>
 	}
 }
 
-export async function deleteCar(id: string): Promise<void> {
-	await apiFetch(`/api/cars/${id}`, { method: 'DELETE' });
-	cars.update((list) => list.filter((c) => c.id !== id));
-	toast.success('Car deleted');
+const UNDO_WINDOW_MS = 6000;
+
+export function deleteCar(id: string): Promise<void> {
+	const list = get(cars);
+	const index = list.findIndex((c) => c.id === id);
+	if (index < 0) return Promise.resolve();
+	const snapshot = list[index];
+
+	cars.update((l) => l.filter((c) => c.id !== id));
+
+	let undone = false;
+
+	toast.action(
+		'Car deleted',
+		{
+			label: 'Undo',
+			onClick: () => {
+				undone = true;
+				cars.update((l) => {
+					if (l.some((c) => c.id === id)) return l;
+					const next = [...l];
+					next.splice(Math.min(index, next.length), 0, snapshot);
+					return next;
+				});
+			}
+		},
+		UNDO_WINDOW_MS
+	);
+
+	setTimeout(async () => {
+		if (undone) return;
+		try {
+			await apiFetch(`/api/cars/${id}`, { method: 'DELETE' });
+		} catch {
+			cars.update((l) => {
+				if (l.some((c) => c.id === id)) return l;
+				const next = [...l];
+				next.splice(Math.min(index, next.length), 0, snapshot);
+				return next;
+			});
+			toast.error('Failed to delete — restored');
+		}
+	}, UNDO_WINDOW_MS);
+
+	return Promise.resolve();
 }
 
 export function getCar(id: string): Car | undefined {

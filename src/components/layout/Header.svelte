@@ -10,11 +10,25 @@
 		{ href: '/docs', label: 'Docs' }
 	];
 
+	const userEmail = $derived(page.data?.user?.email ?? null);
+	let menuOpen = $state(false);
+	let menuRef: HTMLDivElement | undefined = $state();
+
 	function openAdd() {
 		const url = new URL(page.url);
 		url.searchParams.set('edit', 'new');
 		goto(url.pathname + url.search, { keepFocus: true, noScroll: true });
 	}
+
+	function onDocClick(e: MouseEvent) {
+		if (!menuOpen || !menuRef) return;
+		if (!menuRef.contains(e.target as Node)) menuOpen = false;
+	}
+
+	$effect(() => {
+		document.addEventListener('click', onDocClick);
+		return () => document.removeEventListener('click', onDocClick);
+	});
 </script>
 
 <header class="header">
@@ -43,6 +57,27 @@
 			</svg>
 			Add car
 		</button>
+		{#if userEmail}
+			<div class="user-wrap" bind:this={menuRef}>
+				<button
+					type="button"
+					class="user-btn"
+					onclick={() => (menuOpen = !menuOpen)}
+					aria-label="Account menu"
+					aria-expanded={menuOpen}
+				>
+					{userEmail.split('@')[0].slice(0, 2).toUpperCase()}
+				</button>
+				{#if menuOpen}
+					<div class="user-menu" role="menu">
+						<div class="menu-email">{userEmail}</div>
+						<form method="POST" action="/auth/logout">
+							<button type="submit" class="menu-item">Sign out</button>
+						</form>
+					</div>
+				{/if}
+			</div>
+		{/if}
 	</div>
 </header>
 
@@ -127,6 +162,64 @@
 	}
 	.add-btn:hover {
 		background: var(--accent-hover);
+	}
+	.user-wrap {
+		position: relative;
+	}
+	.user-btn {
+		width: 30px;
+		height: 30px;
+		border-radius: 50%;
+		background: var(--card-2);
+		border: 1px solid var(--rule);
+		color: var(--ink-soft);
+		font-size: 0.7rem;
+		font-weight: 600;
+		letter-spacing: 0.04em;
+		cursor: pointer;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+	}
+	.user-btn:hover {
+		background: var(--rule);
+		color: var(--ink);
+	}
+	.user-menu {
+		position: absolute;
+		right: 0;
+		top: calc(100% + 6px);
+		min-width: 200px;
+		background: var(--bg-card);
+		border: 1px solid var(--border);
+		border-radius: var(--radius-md);
+		box-shadow: var(--shadow-lg);
+		padding: 4px;
+		display: flex;
+		flex-direction: column;
+		gap: 1px;
+	}
+	.menu-email {
+		padding: 6px 10px 8px;
+		font-size: 0.72rem;
+		color: var(--ink-dim);
+		border-bottom: 1px solid var(--rule);
+		margin-bottom: 2px;
+		word-break: break-all;
+	}
+	.menu-item {
+		text-align: left;
+		background: transparent;
+		border: 0;
+		padding: 0.45rem 0.75rem;
+		border-radius: var(--radius-sm);
+		font-size: 0.82rem;
+		color: var(--ink);
+		cursor: pointer;
+		width: 100%;
+	}
+	.menu-item:hover {
+		background: var(--card-2);
 	}
 	@media (max-width: 640px) {
 		.inner {

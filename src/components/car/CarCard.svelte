@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Car } from '$lib/types';
-	import { computeScore, detectScamRisk, locationKm } from '$lib/scoring';
+	import { cachedScore, detectScamRisk, locationKm } from '$lib/scoring';
 	import { netPriceDrop } from '$lib/price';
 	import { timeAgo } from '$lib/staleness';
 	import { cars } from '$lib/stores/cars';
@@ -23,7 +23,7 @@
 		ondragend?: () => void;
 	} = $props();
 
-	const score = $derived(computeScore(car));
+	const score = $derived(cachedScore(car));
 	const scam = $derived(detectScamRisk(car, { peers: $cars }));
 	const dropAmount = $derived(netPriceDrop(car.priceHistory));
 	const distance = $derived(locationKm(car.location));
@@ -258,15 +258,29 @@
 		justify-content: center;
 		border-radius: 6px;
 		color: var(--ink-dim);
-		opacity: 0;
-		transition: opacity var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease);
-	}
-	.car-card:hover .edit-btn,
-	.car-card:focus-within .edit-btn {
 		opacity: 1;
+		transition:
+			opacity var(--dur-fast) var(--ease),
+			background var(--dur-fast) var(--ease);
 	}
 	.edit-btn:hover {
 		background: var(--card-2);
 		color: var(--ink);
+	}
+	@media (hover: hover) {
+		.edit-btn {
+			opacity: 0;
+		}
+		.car-card:hover .edit-btn,
+		.car-card:focus-within .edit-btn {
+			opacity: 1;
+		}
+	}
+	@media (hover: none) {
+		.edit-btn {
+			width: 36px;
+			height: 36px;
+			opacity: 0.65;
+		}
 	}
 </style>

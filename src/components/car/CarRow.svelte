@@ -1,7 +1,8 @@
 <script lang="ts">
 	import type { Car } from '$lib/types';
-	import { computeScore, detectScamRisk } from '$lib/scoring';
+	import { cachedScore, detectScamRisk } from '$lib/scoring';
 	import { cars } from '$lib/stores/cars';
+	import { bulkSelection, toggleSelection } from '$lib/stores/bulk';
 	import ScoreBadge from '$components/ui/ScoreBadge.svelte';
 	import ScamBadge from '$components/ui/ScamBadge.svelte';
 	import StatusPill from '$components/ui/StatusPill.svelte';
@@ -18,11 +19,23 @@
 		ondelete?: (id: string) => void;
 	} = $props();
 
-	const score = $derived(computeScore(car));
+	const score = $derived(cachedScore(car));
 	const scam = $derived(detectScamRisk(car, { peers: $cars }));
+	const selected = $derived($bulkSelection.has(car.id));
+	const anySelected = $derived($bulkSelection.size > 0);
 </script>
 
-<tr onclick={() => onopen?.(car.id)}>
+<tr class:selected onclick={() => onopen?.(car.id)}>
+	<td class="select-cell" onclick={(e) => e.stopPropagation()}>
+		<input
+			type="checkbox"
+			class="select-cb"
+			class:visible={anySelected}
+			checked={selected}
+			onchange={() => toggleSelection(car.id)}
+			aria-label={selected ? 'Deselect' : 'Select'}
+		/>
+	</td>
 	<td class="title-cell">
 		<div class="title-wrap">
 			{#if car.imageUrl}
@@ -93,6 +106,26 @@
 		color: var(--ink);
 		vertical-align: middle;
 		height: 60px;
+	}
+	.select-cell {
+		width: 36px;
+		padding: 12px 4px 12px 12px;
+	}
+	.select-cb {
+		width: 16px;
+		height: 16px;
+		cursor: pointer;
+		accent-color: var(--accent);
+		opacity: 0;
+		transition: opacity var(--dur-fast) var(--ease);
+	}
+	.select-cb.visible,
+	.select-cb:checked,
+	tr:hover .select-cb {
+		opacity: 1;
+	}
+	tr.selected {
+		background: var(--accent-soft);
 	}
 	td.soft {
 		color: var(--ink-soft);

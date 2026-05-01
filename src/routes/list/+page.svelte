@@ -1,11 +1,15 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { goto } from '$app/navigation';
-	import { cars } from '$lib/stores/cars';
+	import { goto, replaceState } from '$app/navigation';
+	import { cars, carsLoading } from '$lib/stores/cars';
 	import {
 		filteredListCars,
 		listFilters,
+		listSort,
 		resetListFilters,
+		listStateFromParams,
+		applyListStateToParams,
+		listParamsEqual,
 		type ListFilters
 	} from '$lib/stores/filters';
 	import { deleteCar } from '$lib/stores/cars';
@@ -15,9 +19,39 @@
 	import SortHeader from '$components/ui/SortHeader.svelte';
 	import ColumnFilterPopover from '$components/ui/ColumnFilterPopover.svelte';
 	import MobileFiltersSheet from '$components/ui/MobileFiltersSheet.svelte';
+	import SkeletonCard from '$components/ui/SkeletonCard.svelte';
+	import SkeletonRow from '$components/ui/SkeletonRow.svelte';
+	import BulkActionBar from '$components/ui/BulkActionBar.svelte';
+	import { bulkSelection, setSelection, clearSelection } from '$lib/stores/bulk';
+
+	function addNewCar() {
+		const url = new URL(page.url);
+		url.searchParams.set('edit', 'new');
+		goto(url.pathname + url.search, { keepFocus: true, noScroll: true });
+	}
 
 	let openCol = $state<string | null>(null);
 	let mobileOpen = $state(false);
+	let hydrated = $state(false);
+
+	$effect(() => {
+		if (hydrated) return;
+		const { filters, sort } = listStateFromParams(page.url.searchParams);
+		listFilters.set(filters);
+		listSort.set(sort);
+		hydrated = true;
+	});
+
+	$effect(() => {
+		const f = $listFilters;
+		const s = $listSort;
+		if (!hydrated) return;
+		const next = applyListStateToParams(page.url.searchParams, f, s);
+		if (listParamsEqual(next, page.url.searchParams)) return;
+		const url = new URL(page.url);
+		url.search = next.toString();
+		replaceState(url, page.state);
+	});
 
 	const uniqueValues = $derived.by(() => {
 		const sources = new Set<string>();
@@ -94,6 +128,19 @@
 	function toggleCol(col: string) {
 		openCol = openCol === col ? null : col;
 	}
+
+	const visibleIds = $derived($filteredListCars.map((c) => c.id));
+	const allVisibleSelected = $derived(
+		visibleIds.length > 0 && visibleIds.every((id) => $bulkSelection.has(id))
+	);
+	const someVisibleSelected = $derived(
+		visibleIds.some((id) => $bulkSelection.has(id)) && !allVisibleSelected
+	);
+
+	function toggleSelectAllVisible() {
+		if (allVisibleSelected) clearSelection();
+		else setSelection(visibleIds);
+	}
 </script>
 
 <div class="list-view">
@@ -120,10 +167,32 @@
 		</button>
 	</div>
 
-	{#if $filteredListCars.length === 0}
+	{#if $carsLoading && $cars.length === 0}
+		<div class="list-cards">
+			<SkeletonCard count={6} />
+		</div>
+		<div class="list-table-wrap">
+			<table class="list-table">
+				<tbody>
+					<SkeletonRow count={6} columns={11} />
+				</tbody>
+			</table>
+		</div>
+	{:else if $cars.length === 0}
+		<div class="empty">
+			<div class="icon">+</div>
+			<p>No cars yet</p>
+			<button type="button" class="cta" onclick={addNewCar}>Add your first car</button>
+		</div>
+	{:else if $filteredListCars.length === 0}
 		<div class="empty">
 			<div class="icon">—</div>
-			No cars match filters
+			<p>No cars match these filters</p>
+			{#if activeCount > 0}
+				<button type="button" class="cta" onclick={resetListFilters}>
+					Clear filters ({activeCount})
+				</button>
+			{/if}
 		</div>
 	{:else}
 		<div class="list-cards">
@@ -136,6 +205,17 @@
 			<table class="list-table">
 				<thead>
 					<tr>
+						<th class="th-select">
+							<input
+								type="checkbox"
+								class="select-all"
+								class:visible={$bulkSelection.size > 0}
+								checked={allVisibleSelected}
+								indeterminate={someVisibleSelected}
+								onchange={toggleSelectAllVisible}
+								aria-label="Select all visible"
+							/>
+						</th>
 						<th><span class="th-inner"><span class="th-label">Title</span></span></th>
 						<th>
 							<span class="th-inner">
@@ -340,6 +420,8 @@
 	<MobileFiltersSheet bind:open={mobileOpen} />
 </div>
 
+<BulkActionBar />
+
 <style>
 	.list-view {
 		padding: 8px 0 24px;
@@ -426,6 +508,23 @@
 		top: calc(var(--header-h) + var(--filters-h));
 		z-index: 10;
 	}
+	.th-select {
+		width: 36px;
+		padding: 10px 4px 10px 12px;
+	}
+	.select-all {
+		width: 16px;
+		height: 16px;
+		cursor: pointer;
+		accent-color: var(--accent);
+		opacity: 0;
+		transition: opacity var(--dur-fast) var(--ease);
+	}
+	.select-all.visible,
+	.select-all:checked,
+	.list-table thead:hover .select-all {
+		opacity: 1;
+	}
 	.th-inner {
 		display: inline-flex;
 		align-items: center;
@@ -466,10 +565,31 @@
 		background: var(--card);
 		border: 1px solid var(--rule);
 		border-radius: var(--radius);
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 12px;
 	}
 	.empty .icon {
-		font-size: 1.5rem;
-		margin-bottom: 0.5rem;
+		font-size: 1.75rem;
+		color: var(--ink-soft);
+	}
+	.empty p {
+		margin: 0;
+		font-size: 0.92rem;
+	}
+	.empty .cta {
+		background: var(--accent);
+		color: #fff;
+		border: 0;
+		padding: 9px 18px;
+		border-radius: 8px;
+		font-size: 0.82rem;
+		font-weight: 500;
+		cursor: pointer;
+	}
+	.empty .cta:hover {
+		background: var(--accent-hover);
 	}
 	@media (max-width: 640px) {
 		.list-table-wrap {

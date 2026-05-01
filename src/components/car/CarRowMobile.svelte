@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Car } from '$lib/types';
-	import { computeScore } from '$lib/scoring';
+	import { cachedScore } from '$lib/scoring';
+	import { bulkSelection, toggleSelection } from '$lib/stores/bulk';
 	import ScoreBadge from '$components/ui/ScoreBadge.svelte';
 	import StatusPill from '$components/ui/StatusPill.svelte';
 
@@ -16,11 +17,14 @@
 		ondelete?: (id: string) => void;
 	} = $props();
 
-	const score = $derived(computeScore(car));
+	const score = $derived(cachedScore(car));
+	const selected = $derived($bulkSelection.has(car.id));
+	const anySelected = $derived($bulkSelection.size > 0);
 </script>
 
 <div
 	class="list-card"
+	class:selected
 	role="button"
 	tabindex="0"
 	onclick={() => onopen?.(car.id)}
@@ -31,6 +35,16 @@
 		}
 	}}
 >
+	<!-- svelte-ignore a11y_click_events_have_key_events -->
+	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+	<label class="select-wrap" class:visible={anySelected || selected} onclick={(e) => e.stopPropagation()}>
+		<input
+			type="checkbox"
+			checked={selected}
+			onchange={() => toggleSelection(car.id)}
+			aria-label={selected ? 'Deselect' : 'Select'}
+		/>
+	</label>
 	<div class="lc-top">
 		<ScoreBadge {score} size="sm" />
 		{#if car.imageUrl}
@@ -95,6 +109,39 @@
 		flex-direction: column;
 		gap: 10px;
 		cursor: pointer;
+		position: relative;
+	}
+	.list-card.selected {
+		background: var(--accent-soft);
+		border-color: var(--accent);
+	}
+	.select-wrap {
+		position: absolute;
+		top: 8px;
+		right: 8px;
+		width: 32px;
+		height: 32px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		opacity: 0;
+		transition: opacity var(--dur-fast) var(--ease);
+		cursor: pointer;
+		z-index: 1;
+	}
+	.select-wrap.visible {
+		opacity: 1;
+	}
+	.select-wrap input {
+		width: 18px;
+		height: 18px;
+		accent-color: var(--accent);
+		cursor: pointer;
+	}
+	@media (hover: hover) {
+		.list-card:hover .select-wrap {
+			opacity: 1;
+		}
 	}
 	.lc-top {
 		display: flex;
@@ -171,5 +218,15 @@
 	.icon-btn svg {
 		width: 14px;
 		height: 14px;
+	}
+	@media (hover: none) {
+		.icon-btn {
+			width: 38px;
+			height: 38px;
+		}
+		.icon-btn svg {
+			width: 16px;
+			height: 16px;
+		}
 	}
 </style>

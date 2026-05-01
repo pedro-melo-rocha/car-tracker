@@ -1,0 +1,29 @@
+{
+	"name": "Car Tracker",
+	"short_name": "Cars",
+	"description": "Track used car listings in Portugal",
+	"start_url": "/",
+	"scope": "/",
+	"display": "standalone",
+	"orientation": "portrait",
+	"background_color": "#fbfaf7",
+	"theme_color": "#2e7d6b",
+	"icons": [
+		{
+			"src": "/favicon.svg",
+			"sizes": "any",
+			"type": "image/svg+xml",
+			"purpose": "any"
+		}
+	],
+	"share_target": {
+		"action": "/share-target",
+		"method": "GET",
+		"enctype": "application/x-www-form-urlencoded",
+		"params": {
+			"title": "title",
+			"text": "text",
+			"url": "url"
+		}
+	}
+}

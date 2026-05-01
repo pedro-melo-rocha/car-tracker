@@ -5,7 +5,6 @@
 	import Header from '$components/layout/Header.svelte';
 	import ToastStack from '$components/layout/ToastStack.svelte';
 	import DialogHost from '$components/layout/DialogHost.svelte';
-	import PasswordPrompt from '$components/layout/PasswordPrompt.svelte';
 	import GlobalSpinner from '$components/layout/GlobalSpinner.svelte';
 	import CarDetailPanel from '$components/car/CarDetailPanel.svelte';
 	import CarForm from '$components/car/CarForm.svelte';
@@ -14,8 +13,11 @@
 	let { children } = $props();
 
 	const isShare = $derived(page.url.pathname.startsWith('/share/'));
+	const isLogin = $derived(page.url.pathname.startsWith('/login'));
+	const isChrome = $derived(!isShare && !isLogin);
 	const detailId = $derived(page.url.searchParams.get('car'));
 	const editId = $derived(page.url.searchParams.get('edit'));
+	const importUrlParam = $derived(page.url.searchParams.get('importUrl') ?? undefined);
 
 	const detailCar = $derived(detailId ? $cars.find((c) => c.id === detailId) : undefined);
 	const editCar = $derived(
@@ -26,6 +28,7 @@
 	function closeOverlay(param: 'car' | 'edit') {
 		const url = new URL(page.url);
 		url.searchParams.delete(param);
+		if (param === 'edit') url.searchParams.delete('importUrl');
 		goto(url.pathname + (url.search ? url.search : ''), {
 			keepFocus: true,
 			noScroll: true,
@@ -39,11 +42,40 @@
 		url.searchParams.set('edit', id);
 		goto(url.pathname + url.search, { keepFocus: true, noScroll: true });
 	}
+
+	function isTypingTarget(t: EventTarget | null): boolean {
+		if (!(t instanceof HTMLElement)) return false;
+		const tag = t.tagName;
+		return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || t.isContentEditable;
+	}
+
+	function onGlobalKeydown(e: KeyboardEvent) {
+		if (e.metaKey || e.ctrlKey || e.altKey) return;
+		if (isTypingTarget(e.target)) return;
+		if (isEditing || detailId || isShare) return;
+
+		if (e.key === 'n' || e.key === 'N') {
+			e.preventDefault();
+			const url = new URL(page.url);
+			url.searchParams.set('edit', 'new');
+			goto(url.pathname + url.search, { keepFocus: true, noScroll: true });
+		} else if (e.key === '/') {
+			const search = document.querySelector<HTMLInputElement>('input.search');
+			if (search) {
+				e.preventDefault();
+				search.focus();
+				search.select();
+			}
+		}
+	}
+
+	$effect(() => {
+		document.addEventListener('keydown', onGlobalKeydown);
+		return () => document.removeEventListener('keydown', onGlobalKeydown);
+	});
 </script>
 
-{#if isShare}
-	{@render children()}
-{:else}
+{#if isChrome}
 	<Header />
 
 	<main class="main">
@@ -52,11 +84,12 @@
 
 	<ToastStack />
 	<DialogHost />
-	<PasswordPrompt />
 	<GlobalSpinner />
+{:else}
+	{@render children()}
 {/if}
 
-{#if !isShare && detailCar}
+{#if isChrome && detailCar}
 	<CarDetailPanel
 		car={detailCar}
 		onclose={() => closeOverlay('car')}
@@ -64,7 +97,7 @@
 	/>
 {/if}
 
-{#if !isShare && isEditing}
+{#if isChrome && isEditing}
 	<div class="modal-overlay" role="presentation">
 		<div
 			class="modal"
@@ -85,7 +118,11 @@
 					aria-label="Close">×</button
 				>
 			</div>
-			<CarForm car={editCar} onclose={() => closeOverlay('edit')} />
+			<CarForm
+				car={editCar}
+				initialImportUrl={importUrlParam}
+				onclose={() => closeOverlay('edit')}
+			/>
 		</div>
 	</div>
 {/if}

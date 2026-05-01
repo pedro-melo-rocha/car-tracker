@@ -1,0 +1,42 @@
+/// <reference types="@sveltejs/kit" />
+/// <reference no-default-lib="true"/>
+/// <reference lib="esnext" />
+/// <reference lib="webworker" />
+
+import { build, files, version } from '$service-worker';
+
+const sw = self as unknown as ServiceWorkerGlobalScope;
+const CACHE = `cache-${version}`;
+const ASSETS = [...build, ...files];
+
+sw.addEventListener('install', (event) => {
+	event.waitUntil(
+		caches.open(CACHE).then((c) => c.addAll(ASSETS))
+	);
+});
+
+sw.addEventListener('activate', (event) => {
+	event.waitUntil(
+		caches.keys().then((keys) =>
+			Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))
+		)
+	);
+});
+
+sw.addEventListener('fetch', (event) => {
+	if (event.request.method !== 'GET') return;
+
+	const url = new URL(event.request.url);
+	if (url.origin !== sw.location.origin) return;
+	if (url.pathname.startsWith('/api/')) return;
+	if (url.pathname.startsWith('/share-target')) return;
+
+	if (ASSETS.includes(url.pathname)) {
+		event.respondWith(
+			caches.open(CACHE).then(async (cache) => {
+				const hit = await cache.match(event.request);
+				return hit ?? fetch(event.request);
+			})
+		);
+	}
+});

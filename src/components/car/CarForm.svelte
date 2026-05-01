@@ -19,9 +19,11 @@
 
 	let {
 		car,
+		initialImportUrl,
 		onclose
 	}: {
 		car?: Car;
+		initialImportUrl?: string;
 		onclose: () => void;
 	} = $props();
 
@@ -73,8 +75,18 @@
 	// svelte-ignore state_referenced_locally
 	let originalPrice = $state<number | undefined>(car?.price ?? undefined);
 	let submitting = $state(false);
-	let importUrl = $state('');
+	// svelte-ignore state_referenced_locally
+	let importUrl = $state(initialImportUrl ?? '');
 	let importing = $state(false);
+	let autoImported = false;
+
+	$effect(() => {
+		if (autoImported) return;
+		if (initialImportUrl && !car) {
+			autoImported = true;
+			void onImport();
+		}
+	});
 
 	const FIELD_LABELS: Record<string, string> = {
 		title: 'title',
@@ -213,6 +225,7 @@
 				const patch: Partial<CarCreateInput> & { priceNote?: string } = { ...payload };
 				if (priceChanged && f.priceNote.trim()) patch.priceNote = f.priceNote.trim();
 				await updateCar(car.id, patch);
+				toast.success('Car updated');
 			} else {
 				if (payload.url) {
 					const dup = get(carsStore).find(

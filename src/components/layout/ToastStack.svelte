@@ -1,11 +1,23 @@
 <script lang="ts">
-	import { toasts } from '$lib/stores/ui';
+	import { toasts, dismissToast } from '$lib/stores/ui';
 </script>
 
 <div class="toast-stack" role="status" aria-live="polite">
 	{#each $toasts as t (t.id)}
 		<div class="toast {t.variant}">
 			<span class="msg">{t.message}</span>
+			{#if t.action}
+				<button
+					type="button"
+					class="action"
+					onclick={() => {
+						t.action!.onClick();
+						dismissToast(t.id);
+					}}
+				>
+					{t.action.label}
+				</button>
+			{/if}
 		</div>
 	{/each}
 </div>
@@ -32,6 +44,24 @@
 		font-size: var(--fs-sm);
 		animation: slideIn var(--dur) var(--ease);
 		pointer-events: auto;
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		justify-content: space-between;
+	}
+	.action {
+		background: transparent;
+		border: 0;
+		color: var(--accent);
+		font-weight: 600;
+		font-size: var(--fs-sm);
+		cursor: pointer;
+		padding: 4px 8px;
+		border-radius: var(--radius-sm);
+		flex-shrink: 0;
+	}
+	.action:hover {
+		background: var(--accent-bg);
 	}
 	.toast.success {
 		border-left: 3px solid var(--green);

@@ -40,6 +40,22 @@ export function computeScore(car: ScoreableCar): number {
 	return computeScoreBreakdown(car).total;
 }
 
+type IdentifiableCar = ScoreableCar & { id: string; version: number };
+
+const breakdownCache = new Map<string, { version: number; breakdown: ScoreBreakdown }>();
+
+export function cachedScoreBreakdown(car: IdentifiableCar): ScoreBreakdown {
+	const hit = breakdownCache.get(car.id);
+	if (hit && hit.version === car.version) return hit.breakdown;
+	const breakdown = computeScoreBreakdown(car);
+	breakdownCache.set(car.id, { version: car.version, breakdown });
+	return breakdown;
+}
+
+export function cachedScore(car: IdentifiableCar): number {
+	return cachedScoreBreakdown(car).total;
+}
+
 export function scoreClass(score: number): 'green' | 'yellow' | 'red' {
 	if (score >= 70) return 'green';
 	if (score >= 50) return 'yellow';

@@ -18,15 +18,20 @@ Car Tracker is a hosted car search tracker for browsing used car listings in Por
 
 ## Architecture
 
-- **`src/routes/+layout.svelte`** — Mounts Header, overlays (`?car=<id>`, `?edit=new|<id>`), toasts, dialogs, password prompt.
+- **`src/routes/+layout.svelte`** — Mounts Header, overlays (`?car=<id>`, `?edit=new|<id>`), toasts, dialogs. Skips chrome on `/login` and `/share/*`.
+- **`src/routes/+layout.server.ts`** — Auth guard: redirects unauthenticated users to `/login` (except `/login`, `/share/*`, `/share-target`, `/auth/*`). Returns `user` in layout data.
 - **`src/routes/{pipeline,list,compare,docs}/+page.svelte`** — One URL per view.
+- **`src/routes/login/+page.svelte`** — Magic-link form. Server action calls `supabase.auth.signInWithOtp` with `shouldCreateUser: false` (only pre-provisioned users can sign in).
+- **`src/routes/auth/callback/+server.ts`** — Exchanges the magic-link `code` for a session cookie, then redirects to `?next=…`.
+- **`src/routes/auth/logout/+server.ts`** — POST endpoint, signs out and redirects to `/login`.
 - **`src/routes/api/cars/+server.ts`** — `GET` (list + staleness flip) and `POST` (create).
 - **`src/routes/api/cars/[id]/+server.ts`** — `PUT` (optimistic-lock on `version`) and `DELETE`.
-- **`src/hooks.server.ts`** — Runs `requireSecret` + `rateLimit` on every `/api/*` request.
-- **`src/lib/server/*`** — Server-only module boundary. SvelteKit prevents client imports at build time. Holds `supabase.ts` (service-role client), `auth.ts`, `rate-limit.ts`.
-- **`src/lib/scoring/*`** — Pure client-side score computation (km, price, reliability, year, location). Runs in the browser because the `cars` table has no `score` column.
-- **`src/lib/stores/*`** — Svelte writable stores: cars, filters, compare, ui (toasts/dialog/pending), auth.
-- **`src/lib/api.ts`** — `apiFetch` wrapper that injects `x-api-secret` header and handles 401 by re-prompting.
+- **`src/hooks.server.ts`** — Builds a Supabase server client per request, populates `event.locals.{supabase,user}`, gates `/api/*` on `user`, applies `rateLimit`.
+- **`src/lib/server/*`** — Server-only module boundary. SvelteKit prevents client imports at build time. Holds `supabase.ts` (lazy service-role client, proxy-wrapped), `supabase-auth.ts` (per-request SSR client factory), `rate-limit.ts`.
+- **`src/lib/supabase-browser.ts`** — Browser Supabase client (cookie session, anon key) for client-side auth state.
+- **`src/lib/scoring/*`** — Pure client-side score computation. `cachedScore`/`cachedScoreBreakdown` keyed on `id+version`.
+- **`src/lib/stores/*`** — Svelte writable stores: cars, filters, compare, ui (toasts/dialog/pending), bulk (multi-select).
+- **`src/lib/api.ts`** — `apiFetch` wrapper relying on session cookies; on `401` it redirects to `/login?next=…`.
 - **`scripts/schema.sql`** — Run once in Supabase SQL Editor to create the `cars` table.
 - **`scripts/migrations/`** — Incremental SQL patches; run in filename order.
 - **`scripts/migrate.js`** — One-time import from `data.json` into Supabase.
@@ -34,22 +39,31 @@ Car Tracker is a hosted car search tracker for browsing used car listings in Por
 
 ## Environment Variables
 
-- `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` — Supabase project URL + **secret** key (not publishable). Set in `.env` locally and in Vercel project settings for prod.
-- `API_SECRET` — Shared password all users type on first load. Stored in `x-api-secret` header.
+Use Supabase's new "Publishable and secret API keys" (Settings → API). The legacy `anon` / `service_role` JWT-style keys are being phased out.
+
+- `PUBLIC_SUPABASE_URL` — Supabase project URL. Public (exposed to browser); used by both the SSR auth client and the secret-key client.
+- `PUBLIC_SUPABASE_PUBLISHABLE_KEY` — Publishable key (`sb_publishable_…`). Public; respects RLS on its own. Replaces the legacy `anon` key.
+- `SUPABASE_SECRET_KEY` — Secret key (`sb_secret_…`). **Server-only**; bypasses RLS. Replaces the legacy `service_role` key. API endpoints use this after the session check passes.
+
+## Supabase dashboard config (one-time)
+
+- **Authentication → Providers → Email**: enable. Disable "Allow new users to sign up" so only pre-provisioned users can request magic links.
+- **Authentication → URL Configuration**: add `http://localhost:5173/auth/callback` and the prod equivalent to "Redirect URLs".
+- **Authentication → Users**: invite Pedro and his girlfriend manually (email-only invite is fine — they'll receive a magic link on first login).
 
 ## Key Domain Concepts
 
 - **Car Score (0-100):** Computed client-side from km (22%), price (22%), reliability (30%), year (13%), location (13%). `kmSubscore` uses a fuel-aware sweet-spot curve (petrol plateau 0–90k → 0 at 200k; diesel plateau 0–130k → 0 at 280k) and deliberately does not reward suspiciously low km (rollback fraud). `priceSubscore` is a three-zone piecewise curve anchored on the €5000 budget: plateau at 100 from €0–€2500, linear decay to 50 at €5000, second decay to 0 at €7500. Soft tail past budget lets over-budget unicorns still rank. `locationScore` uses a dampened curve (max 30-point penalty across 600km from Viana do Castelo). `reliabilitySubscore` combines a make baseline with an engine-specific delta. Cars with missing km, price, or location return a neutral 50.
-- **Status pipeline:** `to-contact → contacted → visit-scheduled → visited → negotiating → rejected → bought`. Auto-generated: `inactive` (contacted with no response for 3+ days). `rejected` cars are hidden from List and Compare views (visible only in Pipeline).
+- **Status pipeline:** `to-contact → contacted → negotiating → final-offer`, with `dismissed` as a parallel terminal state. Auto-generated: `contacted` cars with no update for 3+ days flip to `dismissed` (see `src/lib/staleness.ts`, `STALE_AFTER_DAYS`). `dismissed` cars are hidden from List and Compare views (visible only in Pipeline, where the column is collapsible).
 - **Price history:** Appended on PUT when price changes. The `priceNote` field is accepted in requests but stripped from the stored object.
-- **`contactedAt` and staleness clock:** Set automatically when status becomes `contacted`. Reset if status is rolled back to `contacted` (e.g., from `inactive`). Cleared when status moves outside the staleness chain (`contacted`/`inactive`).
+- **`contactedAt` and staleness clock:** Set automatically when status becomes `contacted`. Preserved when a stale `contacted` car flips to `dismissed`, so a manual roll-back to `contacted` can re-arm the clock. Cleared when status moves to anything other than `contacted` or `dismissed`.
 - **Version field:** Every car has an integer `version`. PUT requires the client's seen version; mismatch returns 409 and the client refreshes.
 - **Sources:** StandVirtual, AutoScout24, OLX, Facebook Marketplace, PiscaPisca, Other.
 - **Fuel types:** Diesel, Gasolina.
 
 ## Design Notes
 
-- Dark theme with CSS variables defined in `src/app.css`.
+- Warm light "atelier" theme (cream backgrounds, ink text, muted green accent) defined as CSS variables in `src/app.css`. There is no dark mode yet.
 - Component styles live in scoped `<style>` blocks inside each `.svelte` file. `:global(...)` only where necessary.
 - Portuguese-market context: prices in euros, Portuguese car listing sources. All status labels are in English.
 - No Tailwind, no CSS framework, no UI library.
@@ -58,8 +72,9 @@ Car Tracker is a hosted car search tracker for browsing used car listings in Por
 
 - **Supabase column names are camelCase and quoted** (`"addedAt"`, `"contactedAt"`, `"priceHistory"`) so JS objects pass through unchanged. Any new column with a capital letter must be created with double quotes in SQL.
 - **RLS is enabled with no policies.** All access goes through SvelteKit endpoints using the service role key. Never import from `$lib/server/*` in a client module — SvelteKit enforces this at build time.
-- **Initial cars load is client-side** (`+layout.ts` guards with `if (browser)`). The API requires `x-api-secret` which only exists in localStorage; SSR cannot fetch cars.
+- **Auth is per-user via Supabase magic links.** Session lives in `sb-*` httpOnly cookies (set by `@supabase/ssr`). The previous shared-password / `x-api-secret` model is gone.
+- **Initial cars load is client-side** (`+layout.ts` guards with `if (browser) && data?.user`). API endpoints rely on the session cookie; SSR pre-renders the chrome but the cars list still hydrates after mount.
 - **`priceNote` is transient:** Accepted in PUT requests but `delete`d from the stored car object before writing — it only appears in the `priceHistory` entry's `note` field.
 - **Rate-limit bucket is per-instance** (Fluid Compute). Matches legacy behaviour. Move to Upstash if ever needed.
 - **Score parity fixtures** in `tests/scoring/index.test.ts` are regression guards. If they drift, investigate before updating — the algorithm changed.
-- **Two humans share one list:** Pedro and his girlfriend both use the same `API_SECRET`; there is no per-user data scoping.
+- **Two humans share one list:** Pedro and his girlfriend each have their own Supabase Auth user, but there is no per-user data scoping on the `cars` table — everyone sees the same list.
