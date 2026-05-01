@@ -40,6 +40,15 @@
 
 <div class="page">
 	<article class="content">
+		{#if car.imageUrl}
+			<img
+				class="hero-image"
+				src={car.imageUrl}
+				alt={car.title}
+				loading="eager"
+				onerror={(e) => ((e.currentTarget as HTMLImageElement).style.display = 'none')}
+			/>
+		{/if}
 		<div class="eyebrow">
 			{#if car.source}{car.source}{/if}
 			<span class="dot-sep">·</span>
@@ -239,6 +248,14 @@
 		flex-direction: column;
 		gap: 14px;
 		box-shadow: var(--shadow-xl);
+	}
+	.hero-image {
+		width: 100%;
+		max-height: 320px;
+		object-fit: cover;
+		border-radius: 10px;
+		background: var(--card-2);
+		margin-bottom: 4px;
 	}
 	.eyebrow {
 		font-size: 0.68rem;

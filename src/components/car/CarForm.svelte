@@ -118,6 +118,7 @@
 			}
 		} catch {
 			/* apiFetch already toasted */
+			if (!f.url) f.url = u;
 		} finally {
 			importing = false;
 		}
