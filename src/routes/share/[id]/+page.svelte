@@ -39,6 +39,14 @@
 </svelte:head>
 
 <div class="page">
+	<div class="topbar">
+		<a href="/" class="back-btn" data-sveltekit-reload>
+			<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+				<path d="M10 13L5 8l5-5" stroke-linecap="round" stroke-linejoin="round" />
+			</svg>
+			Back to Car Tracker
+		</a>
+	</div>
 	<article class="content">
 		{#if car.imageUrl}
 			<img
@@ -237,6 +245,27 @@
 		min-height: 100vh;
 		background: var(--bg);
 		padding: 2rem 1rem 4rem;
+	}
+	.topbar {
+		max-width: 680px;
+		margin: 0 auto 14px;
+	}
+	.back-btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		font-size: 0.85rem;
+		font-weight: 600;
+		color: var(--ink-soft);
+		text-decoration: none;
+		padding: 6px 2px;
+	}
+	.back-btn:hover {
+		color: var(--ink);
+	}
+	.back-btn svg {
+		width: 14px;
+		height: 14px;
 	}
 	.content {
 		max-width: 680px;

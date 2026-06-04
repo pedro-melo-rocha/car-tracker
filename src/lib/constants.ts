@@ -48,11 +48,16 @@ const MAKE_ALIASES: Record<string, string> = {
 	'citroën': 'Citroën'
 };
 
-/** Normalise a user-entered make to its canonical form. Unknown makes are returned trimmed but otherwise unchanged. */
+/**
+ * Normalise a user-entered make to its canonical form. Resolution order:
+ * explicit alias → case-folded match against the known make list → trimmed input unchanged.
+ * The case-fold step collapses variants like "SEAT"/"seat" → "Seat" and "DACIA" → "Dacia".
+ */
 export function normalizeMake(make: string | null | undefined): string {
 	if (!make) return '';
 	const trimmed = make.trim();
-	return MAKE_ALIASES[trimmed.toLowerCase()] ?? trimmed;
+	const lower = trimmed.toLowerCase();
+	return MAKE_ALIASES[lower] ?? CANONICAL_MAKE_BY_LOWER[lower] ?? trimmed;
 }
 
 export const DATALIST_MAKES = [
@@ -102,6 +107,11 @@ export const EXTRA_MAKES = [
 	'Tesla',
 	'Citroen'
 ];
+
+/** Lowercased → canonical make, built from the known make lists. Used by normalizeMake to case-fold variants. */
+const CANONICAL_MAKE_BY_LOWER: Record<string, string> = Object.fromEntries(
+	[...DATALIST_MAKES, ...EXTRA_MAKES].map((m) => [m.toLowerCase(), m])
+);
 
 export const FUEL_MAP: Record<string, string> = {
 	diesel: 'Diesel',

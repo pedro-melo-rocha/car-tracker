@@ -20,13 +20,12 @@
 	];
 
 	const makes = Object.entries(MAKE_RELIABILITY)
-		.filter(([k]) => k !== 'vw' && k !== 'citroen' && k !== 'mercedes-benz')
+		// 'vw' is a duplicate of 'volkswagen'; 'citroen' is an ASCII alias of 'citroën'.
+		.filter(([k]) => k !== 'vw' && k !== 'citroen')
 		.sort((a, b) => b[1] - a[1])
 		.map(([k, v]) => ({
-			name: k
-				.split(' ')
-				.map((s) => s.charAt(0).toUpperCase() + s.slice(1))
-				.join(' '),
+			// Capitalise each word AND the part after a hyphen (so "mercedes-benz" → "Mercedes-Benz").
+			name: k.replace(/(^|[\s-])([a-z])/g, (_, sep, c) => sep + c.toUpperCase()),
 			score: v,
 			note: MAKE_RELIABILITY_NOTES[k] ?? null
 		}));
@@ -47,8 +46,11 @@
 			)
 			.replace(/\s+/g, ' ')
 			.trim();
+		// Year boundary that disambiguates same-engine year splits (e.g. 1.5 dCi pre/post-2011).
+		const year = p.yearMin != null ? `${p.yearMin}+` : p.yearMax != null ? `≤${p.yearMax}` : null;
 		return {
 			pattern,
+			year,
 			delta: p.delta,
 			reason: p.reason,
 			fuel: p.fuel ?? null,
@@ -396,6 +398,9 @@
 					<div class="docs-engine-row {e.cls}">
 						<span class="docs-engine-label">
 							{e.pattern}
+							{#if e.year}
+								<span class="year-pill">{e.year}</span>
+							{/if}
 							{#if e.fuel}
 								<span class="fuel-pill fuel-{e.fuel.toLowerCase()}">{e.fuel}</span>
 							{:else}
@@ -896,6 +901,17 @@
 	}
 	.fuel-pill.fuel-any {
 		opacity: 0.7;
+	}
+	.year-pill {
+		font-family: var(--mono);
+		font-size: 0.65rem;
+		font-weight: 600;
+		letter-spacing: 0.02em;
+		padding: 1px 6px;
+		border-radius: 999px;
+		background: var(--bg-warm);
+		color: var(--text-secondary);
+		border: 1px solid var(--border);
 	}
 	.docs-engine-delta {
 		font-family: var(--mono);
