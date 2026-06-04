@@ -35,17 +35,15 @@ export const ENGINE_CODES: Record<string, string> = {
 export const ENGINE_CODE_RE = new RegExp('^(' + Object.keys(ENGINE_CODES).join('|') + ')$');
 
 /**
- * Common make-name variants normalised to their canonical form (matches DATALIST_MAKES).
- * Keyed by lowercased input. Extend as new variants surface.
+ * Make-name variants that differ from the canonical name by more than case — abbreviations,
+ * missing hyphens, missing diacritics. Pure case variants (e.g. "SEAT") are handled by the
+ * case-fold step in normalizeMake, so they don't belong here. Keyed by lowercased input.
  */
 const MAKE_ALIASES: Record<string, string> = {
 	vw: 'Volkswagen',
-	volkswagen: 'Volkswagen',
 	mercedes: 'Mercedes-Benz',
 	'mercedes benz': 'Mercedes-Benz',
-	'mercedes-benz': 'Mercedes-Benz',
-	citroen: 'Citroën',
-	'citroën': 'Citroën'
+	citroen: 'Citroën'
 };
 
 /**
@@ -246,6 +244,7 @@ export const ENGINE_PROFILES: EngineProfile[] = [
 	{ re: /2\.2\s*d[- ]?4d/i, label: '2.2 D-4D', delta: -2, yearMax: 2009, fuel: 'Diesel', reason: 'Toyota 2.2 D-4D (2AD-FTV) pre-2010 — notorious head-gasket failures on 2005–2008 units; Toyota revised gasket material from 2010.' },
 	{ re: /1\.4\s*d[- ]?4d/i, label: '1.4 D-4D', delta: 10, fuel: 'Diesel', reason: 'Toyota 1.4 D-4D (1ND-TV) — aluminum block (no rebore), turbo failures documented; less bulletproof than the 2.0 D-4D legend suggests, but still above average.' },
 	{ re: /vvt[- ]?i/i, label: 'VVT-i', delta: 14, fuel: 'Gasolina', reason: 'Toyota VVT-i petrol — bulletproof to ~100k mi; post-100k oil consumption and chain stretch appear but rarely terminal.' },
+	{ re: /2zr[- ]?fxe|1\.8\s*(hsd|hybrid|h[ií]brido)|\b(hsd|hybrid|h[ií]brido)\b/i, label: '1.8 HSD', delta: 12, fuel: 'Gasolina', reason: 'Toyota/Lexus Hybrid Synergy Drive (2ZR-FXE 1.8 — Auris/Prius/CT200h) — Atkinson-cycle engine, no turbo/clutch/DMF/timing belt, regen braking spares the friction brakes. Taxi-grade longevity; the HV battery is the only real long-term cost and rarely fails before ~250k km.' },
 	{ re: /1\.9\s*tdi/i, label: '1.9 TDI', delta: 12, fuel: 'Diesel', reason: 'VAG 1.9 TDI (PD/ALH) — legendary longevity, 300k+ km documented.' },
 	{ re: /honda\b.*\b(i-vtec|vtec)/i, label: 'Honda i-VTEC', delta: 12, fuel: 'Gasolina', reason: 'Honda VTEC/i-VTEC petrol — extremely durable; R18A oil consumption after 100k the only common caveat.' },
 	{ re: /(2\.0|2\.2)\s*d[- ]?4d/i, label: '2.0 D-4D', delta: 10, fuel: 'Diesel', reason: 'Toyota 2.0 D-4D (1AD-FTV) / 2.2 D-4D post-2010 (revised head gasket) — robust bottom end.' },
@@ -370,7 +369,8 @@ export const MODEL_ENGINE_HINTS: Record<string, string[]> = {
 	'kia:ceed': ['1.4 CRDi', '1.6 CRDi'],
 	'kia:rio': ['1.4 CRDi'],
 	'toyota:yaris': ['1.4 D-4D', 'VVT-i'],
-	'toyota:auris': ['1.4 D-4D', '2.0 D-4D', 'VVT-i'],
+	'toyota:auris': ['1.8 HSD', '1.4 D-4D', '2.0 D-4D', 'VVT-i'],
+	'toyota:prius': ['1.8 HSD'],
 	'toyota:corolla': ['2.0 D-4D', 'VVT-i'],
 	'toyota:avensis': ['2.0 D-4D', '2.2 D-4D'],
 	'toyota:rav4': ['2.0 D-4D', '2.2 D-4D'],
