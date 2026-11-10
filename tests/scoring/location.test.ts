@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { locationScore, locationKm, normalizeLoc } from '../../src/lib/scoring/location';
+import { locationScore, locationKm, normalizeLoc, formatLocation } from '../../src/lib/scoring/location';
 
 describe('normalizeLoc', () => {
 	it('lowercases, trims, and strips diacritics', () => {
@@ -51,5 +51,40 @@ describe('locationKm', () => {
 
 	it('returns distance for Porto', () => {
 		expect(locationKm('Porto')).toBe(75);
+	});
+});
+
+describe('locationKm — municipalities', () => {
+	it('knows municipalities beyond the hand-tuned list', () => {
+		expect(locationKm('vila do conde')).toBe(55);
+		expect(locationKm('Póvoa de Varzim')).toBe(40);
+	});
+
+	it('prefers the most specific comma part', () => {
+		expect(locationKm('Vila do Conde, Porto')).toBe(55);
+		expect(locationKm('Ramalde, Porto')).toBe(75);
+	});
+
+	it('prefers the longest name match', () => {
+		expect(locationKm('Viana do Alentejo')).toBeGreaterThan(400);
+		expect(locationKm('Porto de Mós')).toBeGreaterThan(250);
+	});
+});
+
+describe('formatLocation', () => {
+	it('canonicalises casing and accents of known places', () => {
+		expect(formatLocation('vila do conde')).toBe('Vila do Conde');
+		expect(formatLocation('VILA DO CONDE, porto')).toBe('Vila do Conde, Porto');
+		expect(formatLocation('povoa de varzim')).toBe('Póvoa de Varzim');
+		expect(formatLocation('montemor-o-novo')).toBe('Montemor-o-Novo');
+	});
+
+	it('title-cases unknown places keeping particles lowercase', () => {
+		expect(formatLocation('sande vila nova e sande são clemente')).toBe('Sande Vila Nova e Sande São Clemente');
+	});
+
+	it('returns empty string for empty input', () => {
+		expect(formatLocation('')).toBe('');
+		expect(formatLocation(null)).toBe('');
 	});
 });

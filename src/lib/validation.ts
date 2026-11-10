@@ -1,5 +1,6 @@
 import { z, type ZodError } from 'zod';
 import { STATUSES } from './types';
+import { formatLocation } from './scoring/location';
 
 const emptyToUndef = (v: unknown) =>
 	v === '' || v === null || typeof v === 'undefined' ? undefined : v;
@@ -28,7 +29,10 @@ export const carCreateSchema = z
 		power: optionalNonNeg(),
 		source: z.string().max(100).optional().or(z.literal('')),
 		status: z.enum(STATUSES).optional(),
-		location: z.string().max(200).optional().or(z.literal('')),
+		location: z.preprocess(
+			(v) => (typeof v === 'string' ? formatLocation(v) : v),
+			z.string().max(200).optional().or(z.literal(''))
+		),
 		notes: z.string().max(5000).optional().or(z.literal('')),
 		imageUrl: z.string().max(2000).url().optional().or(z.literal(''))
 	})

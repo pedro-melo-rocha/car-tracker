@@ -1,4 +1,4 @@
-import { load } from 'cheerio';
+import { load, type CheerioAPI } from 'cheerio';
 import type { CarCreateInput } from '$lib/types';
 import {
 	extractJsonLd,
@@ -78,8 +78,157 @@ export function parseStandVirtual(html: string, url: string): Partial<CarCreateI
 		}
 	});
 
-	const locLabel = $('a[href*="/anuncios/"]').filter((_, el) => /distrito|localidade/i.test($(el).text())).first();
-	if (locLabel.length) result.location = locLabel.text().trim();
+	const advert = extractAdvert($);
+	if (advert) applyAdvert(result, advert);
+
+	if (!result.location) {
+		const locLabel = $('a[href*="/anuncios/"]').filter((_, el) => /distrito|localidade/i.test($(el).text())).first();
+		if (locLabel.length) result.location = locLabel.text().trim();
+	}
 
 	return result;
+}
+
+type Advert = {
+	title?: string;
+	description?: string;
+	price?: { value?: string | number };
+	seller?: { location?: SellerLocation };
+	parametersDict?: Record<string, { values?: Array<{ value?: string; label?: string }> }>;
+};
+type SellerLocation = { city?: string; region?: string; shortAddress?: string };
+
+/** StandVirtual is a Next.js app; the full advert (seller location, specs) lives in __NEXT_DATA__. */
+function extractAdvert($: CheerioAPI): Advert | null {
+	const raw = $('script#__NEXT_DATA__').first().contents().text();
+	if (!raw) return null;
+	try {
+		const data = JSON.parse(raw) as { props?: { pageProps?: { advert?: Advert } } };
+		return data.props?.pageProps?.advert ?? null;
+	} catch {
+		return null;
+	}
+}
+
+function param(advert: Advert, key: string): { value?: string; label?: string } | undefined {
+	return advert.parametersDict?.[key]?.values?.[0];
+}
+
+function applyAdvert(result: Partial<CarCreateInput>, advert: Advert): void {
+	// Structured specs are authoritative — they override the loose text-scan guesses above
+	// (which can e.g. pick up the current year from page boilerplate).
+	const make = normalizeMakeOrUndef(param(advert, 'make')?.label);
+	if (make) result.make = make;
+	const model = param(advert, 'model')?.label?.trim();
+	if (model) result.model = model;
+	const year = parseIntSafe(param(advert, 'first_registration_year')?.value);
+	if (year) result.year = year;
+	const km = parseIntSafe(param(advert, 'mileage')?.value);
+	if (km) result.km = km;
+	const power = parseIntSafe(param(advert, 'engine_power')?.value);
+	if (power) result.power = power;
+	const fuel = normalizeFuel(param(advert, 'fuel_type')?.label);
+	if (fuel) result.fuel = fuel;
+	const price = advert.price?.value != null ? parseIntSafe(advert.price.value) : undefined;
+	if (price) result.price = price;
+
+	const loc = sellerLocation(advert.seller?.location);
+	if (loc) result.location = loc;
+
+	if (!result.engine) {
+		const cc = parseIntSafe(param(advert, 'engine_capacity')?.value);
+		const text = [advert.title, result.title, stripHtml(advert.description)].filter(Boolean).join(' ');
+		result.engine = guessEngine(text, cc);
+	}
+}
+
+/**
+ * "Vila do Conde, Porto" — municipality (concelho) first, then district. StandVirtual's `city` is
+ * usually a parish, so the municipality is read from the tail of `shortAddress`
+ * ("… 4450-120 Matosinhos e Leça da Palmeira, Matosinhos (Portugal)" / "…, concelho Guimarães (Portugal)").
+ */
+function sellerLocation(loc: SellerLocation | undefined): string | undefined {
+	if (!loc) return undefined;
+	let municipality: string | undefined;
+	if (loc.shortAddress) {
+		const tail = loc.shortAddress.split(',').pop() ?? '';
+		municipality =
+			tail
+				.replace(/\(\s*portugal\s*\)/i, '')
+				.replace(/^\s*concelho\s+(de\s+)?/i, '')
+				.trim() || undefined;
+		// No comma → the tail is the whole address, not a municipality.
+		if (!loc.shortAddress.includes(',')) municipality = undefined;
+	}
+	municipality ??= loc.city?.trim() || undefined;
+	const region = loc.region?.trim() || undefined;
+	if (municipality && region && municipality.toLowerCase() !== region.toLowerCase()) {
+		return `${municipality}, ${region}`;
+	}
+	return municipality || region;
+}
+
+function stripHtml(s: string | undefined): string {
+	return (s ?? '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
+}
+
+/** Engine family names as they appear in listings, mapped to canonical casing. */
+const ENGINE_FAMILIES: Record<string, string> = {
+	tce: 'TCe',
+	dci: 'dCi',
+	tdi: 'TDI',
+	tsi: 'TSI',
+	tfsi: 'TFSI',
+	hdi: 'HDi',
+	'e-hdi': 'e-HDi',
+	bluehdi: 'BlueHDi',
+	puretech: 'PureTech',
+	vti: 'VTi',
+	thp: 'THP',
+	cdti: 'CDTi',
+	crdi: 'CRDi',
+	tdci: 'TDCi',
+	ecoboost: 'EcoBoost',
+	multijet: 'Multijet',
+	jtd: 'JTD',
+	jtdm: 'JTDm',
+	'd-4d': 'D-4D',
+	'vvt-i': 'VVT-i',
+	cdi: 'CDI',
+	'i-vtec': 'i-VTEC',
+	'i-dtec': 'i-DTEC',
+	ddis: 'DDiS',
+	gdi: 'GDi',
+	't-gdi': 'T-GDi',
+	ecotec: 'Ecotec',
+	'mz-cd': 'MZ-CD',
+	sce: 'SCe',
+	'skyactiv-g': 'SkyActiv-G',
+	'skyactiv-d': 'SkyActiv-D',
+	hybrid: 'Hybrid'
+};
+const FAMILY_ALT = Object.keys(ENGINE_FAMILIES)
+	.sort((a, b) => b.length - a.length)
+	.map((f) => f.replace(/-/g, '[- ]?'))
+	.join('|');
+const DISP_FAMILY_RE = new RegExp(`\\b([0-6][.,]\\d)\\s*(${FAMILY_ALT})\\b`, 'i');
+const FAMILY_RE = new RegExp(`\\b(${FAMILY_ALT})\\b`, 'i');
+
+function canonicalFamily(raw: string): string {
+	const key = raw.toLowerCase().replace(/\s/g, '-');
+	return ENGINE_FAMILIES[key] ?? ENGINE_FAMILIES[key.replace(/-/g, '')] ?? raw;
+}
+
+/**
+ * Best-effort engine label like "1.5 dCi": an explicit "1.5 dCi" in the title/description wins;
+ * otherwise a bare family ("TCe 140") is combined with the listed displacement; otherwise just the
+ * displacement ("1.2").
+ */
+export function guessEngine(text: string, cc: number | undefined): string | undefined {
+	const disp = cc && cc >= 500 && cc <= 7000 ? (Math.round(cc / 100) / 10).toFixed(1) : undefined;
+	const full = text.match(DISP_FAMILY_RE);
+	if (full) return `${full[1].replace(',', '.')} ${canonicalFamily(full[2])}`;
+	const fam = text.match(FAMILY_RE);
+	if (fam && disp) return `${disp} ${canonicalFamily(fam[1])}`;
+	return disp;
 }
