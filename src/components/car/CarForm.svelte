@@ -98,9 +98,20 @@
 		model: 'model'
 	};
 
+	function findDuplicate(url: string | undefined): Car | undefined {
+		const u = url?.trim();
+		if (!u) return undefined;
+		return get(carsStore).find((c) => c.url && c.url.trim() === u);
+	}
+
 	async function onImport() {
 		const u = importUrl.trim();
 		if (!u || importing) return;
+		const existing = findDuplicate(u);
+		if (existing) {
+			toast.error(`URL already added: "${existing.title}"`);
+			return;
+		}
 		importing = true;
 		try {
 			const r = await apiFetch<{
@@ -109,6 +120,11 @@
 				warnings: string[];
 			}>('/api/import', { method: 'POST', body: JSON.stringify({ url: u }) });
 			const d = r.data;
+			const dupAfter = findDuplicate(d.url);
+			if (dupAfter) {
+				toast.error(`URL already added: "${dupAfter.title}"`);
+				return;
+			}
 			f.url = d.url ?? '';
 			f.title = d.title ?? '';
 			f.make = d.make ?? '';
@@ -228,9 +244,7 @@
 				toast.success('Car updated');
 			} else {
 				if (payload.url) {
-					const dup = get(carsStore).find(
-						(c) => c.url && c.url.trim() === payload.url!.trim()
-					);
+					const dup = findDuplicate(payload.url);
 					if (dup) {
 						toast.error(`URL already added: "${dup.title}"`);
 						submitting = false;
