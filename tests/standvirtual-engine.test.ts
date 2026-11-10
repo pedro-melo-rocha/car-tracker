@@ -16,3 +16,16 @@ describe('guessEngine', () => {
 		expect(guessEngine('VW Golf', undefined)).toBeUndefined();
 	});
 });
+
+import { normalizeEngine } from '../src/lib/constants';
+
+describe('normalizeEngine', () => {
+	it('canonicalises engine codes and decimal commas', () => {
+		expect(normalizeEngine('1,4 fsi')).toBe('1.4 FSI');
+		expect(normalizeEngine('1.4 d-4-d')).toBe('1.4 D-4D');
+		expect(normalizeEngine('1.5 DCI')).toBe('1.5 dCi');
+		expect(normalizeEngine('1.4 cvvt')).toBe('1.4 CVVT');
+		expect(normalizeEngine('  2.0  XSi-Automat ')).toBe('2.0 XSi-Automat');
+		expect(normalizeEngine('')).toBe('');
+	});
+});

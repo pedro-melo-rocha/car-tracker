@@ -76,7 +76,8 @@ export function metaContent($: CheerioAPI, selector: string): string | undefined
 	return v ? v.trim() : undefined;
 }
 
-const MAKE_NAMES = [...DATALIST_MAKES, ...EXTRA_MAKES]
+// Aliases ("VW", "Mercedes") included so titles like "VW Golf" resolve; normalizeMake canonicalises them.
+const MAKE_NAMES = [...DATALIST_MAKES, ...EXTRA_MAKES, 'VW', 'Mercedes']
 	.map((m) => m.replace(/[-\s]/g, '[-\\s]'))
 	.sort((a, b) => b.length - a.length);
 const MAKE_RE = new RegExp(`\\b(${MAKE_NAMES.join('|')})\\b`, 'i');
@@ -110,13 +111,14 @@ export function enrichFromTitle(data: Partial<CarCreateInput>): void {
 		else if (/\b(gasolina|gasoline|petrol)\b/i.test(title)) data.fuel = 'Gasolina';
 	}
 
-	if (!data.make) {
-		const m = title.match(MAKE_RE);
-		if (m) data.make = normalizeMakeOrUndef(m[1]);
-	}
+	const makeMatch = title.match(MAKE_RE);
+	if (!data.make && makeMatch) data.make = normalizeMakeOrUndef(makeMatch[1]);
 
 	if (data.make && !data.model) {
-		const escMake = data.make.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+		// Use the make as written in the title ("VW") when it maps to the canonical make ("Volkswagen").
+		const titleMake =
+			makeMatch && normalizeMakeOrUndef(makeMatch[1]) === data.make ? makeMatch[1] : data.make;
+		const escMake = titleMake.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 		const m = title.match(new RegExp(`${escMake}\\s+([^\\-–—|]+)`, 'i'));
 		if (m) {
 			const stop = m[1].search(

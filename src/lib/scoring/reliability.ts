@@ -14,7 +14,8 @@ export function getMakeReliability(make: string | null | undefined): number {
 }
 
 export function getEngineProfile(car: Pick<Car, 'title' | 'notes' | 'engine' | 'year' | 'fuel'>): EngineProfile | null {
-	const blob = [car.title, car.notes, car.engine].filter(Boolean).join(' ');
+	// "1,4 TSI" → "1.4 TSI" so decimal-comma listings match the profile regexes.
+	const blob = [car.title, car.notes, car.engine].filter(Boolean).join(' ').replace(/(\d),(\d)/g, '$1.$2');
 	if (!blob) return null;
 	for (const p of ENGINE_PROFILES) {
 		if (!p.re.test(blob)) continue;

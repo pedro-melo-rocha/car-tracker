@@ -29,10 +29,39 @@ export const ENGINE_CODES: Record<string, string> = {
 	tce: 'TCe',
 	dig: 'DIG',
 	jtd: 'JTD',
-	jtdm: 'JTDm'
+	jtdm: 'JTDm',
+	vti: 'VTi',
+	cvvt: 'CVVT',
+	puretech: 'PureTech',
+	thp: 'THP',
+	sce: 'SCe',
+	gdi: 'GDi',
+	tgdi: 'T-GDi',
+	ddis: 'DDiS',
+	ehdi: 'e-HDi',
+	tfsi: 'TFSI',
+	cdi: 'CDI',
+	ivtec: 'i-VTEC',
+	idtec: 'i-DTEC',
+	mzcd: 'MZ-CD'
 };
 
 export const ENGINE_CODE_RE = new RegExp('^(' + Object.keys(ENGINE_CODES).join('|') + ')$');
+
+/**
+ * Canonical engine spelling: "1,4 fsi" → "1.4 FSI", "1.4 d-4-d" → "1.4 D-4D", "1.5 DCI" → "1.5 dCi".
+ * Tokens that aren't known engine codes are left as typed.
+ */
+export function normalizeEngine(engine: string | null | undefined): string {
+	if (!engine) return '';
+	return engine
+		.replace(/(\d),(\d)/g, '$1.$2')
+		.replace(/\s+/g, ' ')
+		.trim()
+		.split(' ')
+		.map((t) => ENGINE_CODES[t.toLowerCase().replace(/-/g, '')] ?? t)
+		.join(' ');
+}
 
 /**
  * Make-name variants that differ from the canonical name by more than case — abbreviations,
@@ -241,13 +270,13 @@ export interface EngineProfile {
 export const ENGINE_PROFILES: EngineProfile[] = [
 	// --- Positive adjustments (best-known blocks) ---
 	// 2.2 D-4D pre-2010 head-gasket exception — MUST come before the broad 2.0/2.2 D-4D rule below.
-	{ re: /2\.2\s*d[- ]?4d/i, label: '2.2 D-4D', delta: -2, yearMax: 2009, fuel: 'Diesel', reason: 'Toyota 2.2 D-4D (2AD-FTV) pre-2010 — notorious head-gasket failures on 2005–2008 units; Toyota revised gasket material from 2010.' },
-	{ re: /1\.4\s*d[- ]?4d/i, label: '1.4 D-4D', delta: 10, fuel: 'Diesel', reason: 'Toyota 1.4 D-4D (1ND-TV) — aluminum block (no rebore), turbo failures documented; less bulletproof than the 2.0 D-4D legend suggests, but still above average.' },
+	{ re: /2\.2\s*d[- ]?4[- ]?d/i, label: '2.2 D-4D', delta: -2, yearMax: 2009, fuel: 'Diesel', reason: 'Toyota 2.2 D-4D (2AD-FTV) pre-2010 — notorious head-gasket failures on 2005–2008 units; Toyota revised gasket material from 2010.' },
+	{ re: /1\.4\s*d[- ]?4[- ]?d/i, label: '1.4 D-4D', delta: 10, fuel: 'Diesel', reason: 'Toyota 1.4 D-4D (1ND-TV) — aluminum block (no rebore), turbo failures documented; less bulletproof than the 2.0 D-4D legend suggests, but still above average.' },
 	{ re: /vvt[- ]?i/i, label: 'VVT-i', delta: 14, fuel: 'Gasolina', reason: 'Toyota VVT-i petrol — bulletproof to ~100k mi; post-100k oil consumption and chain stretch appear but rarely terminal.' },
 	{ re: /2zr[- ]?fxe|1\.8\s*(hsd|hybrid|h[ií]brido)|\b(hsd|hybrid|h[ií]brido)\b/i, label: '1.8 HSD', delta: 12, fuel: 'Gasolina', reason: 'Toyota/Lexus Hybrid Synergy Drive (2ZR-FXE 1.8 — Auris/Prius/CT200h) — Atkinson-cycle engine, no turbo/clutch/DMF/timing belt, regen braking spares the friction brakes. Taxi-grade longevity; the HV battery is the only real long-term cost and rarely fails before ~250k km.' },
 	{ re: /1\.9\s*tdi/i, label: '1.9 TDI', delta: 12, fuel: 'Diesel', reason: 'VAG 1.9 TDI (PD/ALH) — legendary longevity, 300k+ km documented.' },
 	{ re: /honda\b.*\b(i-vtec|vtec)/i, label: 'Honda i-VTEC', delta: 12, fuel: 'Gasolina', reason: 'Honda VTEC/i-VTEC petrol — extremely durable; R18A oil consumption after 100k the only common caveat.' },
-	{ re: /(2\.0|2\.2)\s*d[- ]?4d/i, label: '2.0 D-4D', delta: 10, fuel: 'Diesel', reason: 'Toyota 2.0 D-4D (1AD-FTV) / 2.2 D-4D post-2010 (revised head gasket) — robust bottom end.' },
+	{ re: /(2\.0|2\.2)\s*d[- ]?4[- ]?d/i, label: '2.0 D-4D', delta: 10, fuel: 'Diesel', reason: 'Toyota 2.0 D-4D (1AD-FTV) / 2.2 D-4D post-2010 (revised head gasket) — robust bottom end.' },
 	{ re: /1\.9\s*(multijet|jtd)/i, label: '1.9 Multijet', delta: 10, fuel: 'Diesel', reason: 'Fiat/Alfa 1.9 Multijet — robust, unlike the 1.3 variant. 8V preferred (water pump off aux belt).' },
 	// Mazda MZR is petrol, SkyActiv spans both (G petrol, D diesel) — leave fuel agnostic.
 	{ re: /mazda\b.*\b(mzr|skyactiv)/i, label: 'Mazda SkyActiv', delta: 8, reason: 'Mazda MZR / SkyActiv-G — near-bulletproof per owner data; MAF sensor and carbon build-up minor.' },
@@ -292,9 +321,17 @@ export const ENGINE_PROFILES: EngineProfile[] = [
 	{ re: /1\.0\s*ecoboost/i, label: '1.0 EcoBoost', delta: -6, yearMax: 2016, fuel: 'Gasolina', reason: 'Ford 1.0 EcoBoost (pre-2017) — wet timing belt degradation, coolant loss and cylinder head cracks on early units; £1000+ repair. Fixed with chain drive from 2018.' },
 	{ re: /a14net|b14net/i, label: '1.4 Turbo (A14NET)', delta: -6, fuel: 'Gasolina', reason: 'Opel 1.4 Turbo (A14NET/B14NET — Astra J, Corsa D) — timing chain stretch documented at low mileage, accelerated by soot in oil.' },
 	// 1.6 HDi: post-2011 8V SOHC rule MUST come before pre-2011 16V DOHC catch-all.
-	{ re: /1\.6\s*hdi/i, label: '1.6 HDi', delta: -2, yearMin: 2011, fuel: 'Diesel', reason: 'PSA 1.6 HDi 8V SOHC (DV6B, 2011+) — re-engineered to address the injector seal / turbo oiling issues of the 16V DOHC DV6 TED4.' },
-	{ re: /1\.6\s*hdi/i, label: '1.6 HDi', delta: -6, yearMax: 2010, fuel: 'Diesel', reason: 'PSA 1.6 HDi 16V DOHC (DV6 TED4, pre-2011) — injector carbon leakage → turbo oil starvation; most common failure path on this era.' },
+	{ re: /1\.6\s*(hdi|d\b)/i, label: '1.6 HDi', delta: -2, yearMin: 2011, fuel: 'Diesel', reason: 'PSA 1.6 HDi 8V SOHC (DV6B, 2011+) — re-engineered to address the injector seal / turbo oiling issues of the 16V DOHC DV6 TED4.' },
+	{ re: /1\.6\s*(hdi|d\b)/i, label: '1.6 HDi', delta: -6, yearMax: 2010, fuel: 'Diesel', reason: 'PSA 1.6 HDi 16V DOHC (DV6 TED4, pre-2011) — injector carbon leakage → turbo oil starvation; most common failure path on this era.' },
 	{ re: /1\.6\s*tdci/i, label: '1.6 TDCi', delta: -4, fuel: 'Diesel', reason: 'Ford 1.6 TDCi (DLD-416 / PSA DV6) — same block and failure path as 1.6 HDi; sludge-fed turbo failure, injector wear.' },
+	{ re: /1\.4\s*c[- ]?vvt/i, label: '1.4 CVVT', delta: 4, fuel: 'Gasolina', reason: 'Hyundai/Kia 1.4 CVVT (Gamma G4FA — i30, Ceed, Rio) — simple MPI with timing chain; robust when oil is changed on time, chain rattle on neglected units the main caveat.' },
+	{ re: /(1\.0|1\.2)\s*vti/i, label: '1.2 VTi', delta: -4, fuel: 'Gasolina', reason: 'PSA 1.0/1.2 VTi (EB0/EB2 naturally aspirated 3-cyl, 2012+) — wet timing belt degrades and sheds into the oil pickup; belt due ~100k/6 yrs. Otherwise simple, no turbo.' },
+	{ re: /1\.6\s*vti/i, label: '1.6 VTi', delta: -6, fuel: 'Gasolina', reason: 'PSA/BMW Prince 1.6 VTi (EP6, non-turbo) — timing-chain stretch and tensioner wear, oil consumption from valve-stem seals; less severe than the THP turbo variant.' },
+	{ re: /(1\.4|1\.6)\s*fsi/i, label: '1.4 FSI', delta: -6, fuel: 'Gasolina', reason: 'VAG 1.4/1.6 FSI (BKG/BLN/BAG/BLF, 2002–2008) — early direct injection: intake-valve carbon build-up, rough cold starts, oil consumption; high-pressure pump and timing-chain/belt costs. Unsuitable for LPG.' },
+	{ re: /1\.2\s*(12v|htp)/i, label: '1.2 12V', delta: -6, fuel: 'Gasolina', reason: 'VAG 1.2 12V 3-cyl (BME/BXV/BZG/CGPA — Polo, Ibiza, Fabia) — timing-chain stretch and tensioner failure (worst pre-2009), burnt exhaust valves, coil-pack failures; underpowered so often driven hard.' },
+	{ re: /\bz12xep\b|1\.2\s*twinport/i, label: '1.2 Twinport', delta: -4, fuel: 'Gasolina', reason: 'Opel 1.2 Twinport (Z12XEP — Corsa C/D, Agila) — timing-chain stretch, Twinport intake-flap actuator failure, EGR sticking; cheap to fix individually but common.' },
+	{ re: /2\.0\s*cdti/i, label: '2.0 CDTi', delta: -4, fuel: 'Diesel', reason: 'Opel 2.0 CDTi (A20DTH — Insignia A, Astra J) — EGR cooler and valve failures, DPF clogging on short trips, dual-mass flywheel wear; bottom end is sound.' },
+	{ re: /2\.0\s*(hdi|d\b)/i, label: '2.0 HDi', delta: 2, fuel: 'Diesel', reason: 'PSA 2.0 HDi DW10 (also Volvo 2.0D / Ford 2.0 TDCi) — tough iron block routinely past 300k; DPF, injectors and dual-mass flywheel are the wear items on 16V versions.' },
 	{ re: /1\.6\s*mz[- ]?cd/i, label: '1.6 MZ-CD', delta: -4, fuel: 'Diesel', reason: 'Mazda 1.6 MZ-CD (Mazda 3 BK/BL) — rebadged PSA DV6; injector replacements often before 130k, DPF contaminates oil.' }
 ];
 

@@ -1,6 +1,7 @@
 import { z, type ZodError } from 'zod';
 import { STATUSES } from './types';
 import { formatLocation } from './scoring/location';
+import { normalizeEngine, normalizeMake } from './constants';
 
 const emptyToUndef = (v: unknown) =>
 	v === '' || v === null || typeof v === 'undefined' ? undefined : v;
@@ -19,13 +20,19 @@ export const carCreateSchema = z
 	.object({
 		url: z.string().max(2000).optional().or(z.literal('')),
 		title: z.string().min(1).max(300),
-		make: z.string().max(100).optional().or(z.literal('')),
+		make: z.preprocess(
+			(v) => (typeof v === 'string' ? normalizeMake(v) : v),
+			z.string().max(100).optional().or(z.literal(''))
+		),
 		model: z.string().max(200).optional().or(z.literal('')),
 		year: optionalInt(1950, 2100),
 		km: optionalNonNeg(),
 		price: optionalNonNeg(),
 		fuel: z.string().max(50).optional().or(z.literal('')),
-		engine: z.string().max(200).optional().or(z.literal('')),
+		engine: z.preprocess(
+			(v) => (typeof v === 'string' ? normalizeEngine(v) : v),
+			z.string().max(200).optional().or(z.literal(''))
+		),
 		power: optionalNonNeg(),
 		source: z.string().max(100).optional().or(z.literal('')),
 		status: z.enum(STATUSES).optional(),

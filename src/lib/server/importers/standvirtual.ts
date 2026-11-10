@@ -1,5 +1,6 @@
 import { load, type CheerioAPI } from 'cheerio';
 import type { CarCreateInput } from '$lib/types';
+import { normalizeEngine } from '$lib/constants';
 import {
 	extractJsonLd,
 	findJsonLdType,
@@ -172,42 +173,13 @@ function stripHtml(s: string | undefined): string {
 	return (s ?? '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
 }
 
-/** Engine family names as they appear in listings, mapped to canonical casing. */
-const ENGINE_FAMILIES: Record<string, string> = {
-	tce: 'TCe',
-	dci: 'dCi',
-	tdi: 'TDI',
-	tsi: 'TSI',
-	tfsi: 'TFSI',
-	hdi: 'HDi',
-	'e-hdi': 'e-HDi',
-	bluehdi: 'BlueHDi',
-	puretech: 'PureTech',
-	vti: 'VTi',
-	thp: 'THP',
-	cdti: 'CDTi',
-	crdi: 'CRDi',
-	tdci: 'TDCi',
-	ecoboost: 'EcoBoost',
-	multijet: 'Multijet',
-	jtd: 'JTD',
-	jtdm: 'JTDm',
-	'd-4d': 'D-4D',
-	'vvt-i': 'VVT-i',
-	cdi: 'CDI',
-	'i-vtec': 'i-VTEC',
-	'i-dtec': 'i-DTEC',
-	ddis: 'DDiS',
-	gdi: 'GDi',
-	't-gdi': 'T-GDi',
-	ecotec: 'Ecotec',
-	'mz-cd': 'MZ-CD',
-	sce: 'SCe',
-	'skyactiv-g': 'SkyActiv-G',
-	'skyactiv-d': 'SkyActiv-D',
-	hybrid: 'Hybrid'
-};
-const FAMILY_ALT = Object.keys(ENGINE_FAMILIES)
+/** Engine family tokens as they appear in listings (hyphen-optional); canonical casing comes from ENGINE_CODES. */
+const ENGINE_FAMILIES = [
+	'tce', 'dci', 'tdi', 'tsi', 'tfsi', 'fsi', 'hdi', 'e-hdi', 'bluehdi', 'puretech', 'vti', 'thp',
+	'cdti', 'crdi', 'tdci', 'ecoboost', 'multijet', 'jtd', 'jtdm', 'd-4-d', 'd-4d', 'vvt-i', 'cvvt',
+	'cdi', 'i-vtec', 'i-dtec', 'ddis', 'gdi', 't-gdi', 'ecotec', 'mz-cd', 'sce', 'mpi', 'skyactiv'
+];
+const FAMILY_ALT = [...ENGINE_FAMILIES]
 	.sort((a, b) => b.length - a.length)
 	.map((f) => f.replace(/-/g, '[- ]?'))
 	.join('|');
@@ -215,8 +187,7 @@ const DISP_FAMILY_RE = new RegExp(`\\b([0-6][.,]\\d)\\s*(${FAMILY_ALT})\\b`, 'i'
 const FAMILY_RE = new RegExp(`\\b(${FAMILY_ALT})\\b`, 'i');
 
 function canonicalFamily(raw: string): string {
-	const key = raw.toLowerCase().replace(/\s/g, '-');
-	return ENGINE_FAMILIES[key] ?? ENGINE_FAMILIES[key.replace(/-/g, '')] ?? raw;
+	return normalizeEngine(raw.replace(/\s+/g, '-'));
 }
 
 /**
