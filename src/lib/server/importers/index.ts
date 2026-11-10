@@ -4,6 +4,7 @@ import { parseOlx } from './olx';
 import { parsePiscaPisca } from './piscapisca';
 import { parseCustoJusto } from './custojusto';
 import { enrichFromTitle } from './utils';
+import { buildTitle, isAutoTitle, normalizeListingUrl } from '$lib/listing';
 
 export interface ImportResult {
 	data: Partial<CarCreateInput>;
@@ -56,6 +57,8 @@ export async function importListing(url: string): Promise<ImportResult> {
 	const html = await res.text();
 	const data = matched.parse(html, url);
 	enrichFromTitle(data);
+	if (data.url) data.url = normalizeListingUrl(data.url);
+	if (isAutoTitle(data.title)) data.title = buildTitle(data, data.title);
 	const warnings = missingFields(data);
 
 	return { data, source: matched.source, warnings };

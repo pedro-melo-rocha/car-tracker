@@ -43,7 +43,8 @@ export const ENGINE_CODES: Record<string, string> = {
 	cdi: 'CDI',
 	ivtec: 'i-VTEC',
 	idtec: 'i-DTEC',
-	mzcd: 'MZ-CD'
+	mzcd: 'MZ-CD',
+	mjet: 'Multijet'
 };
 
 export const ENGINE_CODE_RE = new RegExp('^(' + Object.keys(ENGINE_CODES).join('|') + ')$');

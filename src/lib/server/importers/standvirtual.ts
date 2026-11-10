@@ -217,7 +217,7 @@ function stripHtml(s: string | undefined): string {
 /** Engine family tokens as they appear in listings (hyphen-optional); canonical casing comes from ENGINE_CODES. */
 const ENGINE_FAMILIES = [
 	'tce', 'dci', 'tdi', 'tsi', 'tfsi', 'fsi', 'hdi', 'e-hdi', 'bluehdi', 'puretech', 'vti', 'thp',
-	'cdti', 'crdi', 'tdci', 'ecoboost', 'multijet', 'jtd', 'jtdm', 'd-4-d', 'd-4d', 'vvt-i', 'cvvt',
+	'cdti', 'crdi', 'tdci', 'ecoboost', 'multijet', 'm-jet', 'jtd', 'jtdm', 'd-4-d', 'd-4d', 'vvt-i', 'cvvt',
 	'cdi', 'i-vtec', 'i-dtec', 'ddis', 'gdi', 't-gdi', 'ecotec', 'mz-cd', 'sce', 'mpi', 'skyactiv'
 ];
 const FAMILY_ALT = [...ENGINE_FAMILIES]

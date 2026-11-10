@@ -14,6 +14,7 @@
 	import { inferFromUrl } from '$lib/inference';
 	import { apiFetch } from '$lib/api';
 	import { get } from 'svelte/store';
+	import { normalizeListingUrl } from '$lib/listing';
 	import CustomSelect from '$components/ui/CustomSelect.svelte';
 	import CustomCombobox from '$components/ui/CustomCombobox.svelte';
 
@@ -118,9 +119,9 @@
 	};
 
 	function findDuplicate(url: string | undefined): Car | undefined {
-		const u = url?.trim();
+		const u = normalizeListingUrl(url);
 		if (!u) return undefined;
-		return get(carsStore).find((c) => c.url && c.url.trim() === u);
+		return get(carsStore).find((c) => c.url && normalizeListingUrl(c.url) === u);
 	}
 
 	async function onImport() {

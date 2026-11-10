@@ -2,6 +2,7 @@ import { z, type ZodError } from 'zod';
 import { STATUSES, SELLER_TYPES } from './types';
 import { formatLocation } from './scoring/location';
 import { normalizeEngine, normalizeMake } from './constants';
+import { normalizeListingUrl } from './listing';
 
 const emptyToUndef = (v: unknown) =>
 	v === '' || v === null || typeof v === 'undefined' ? undefined : v;
@@ -18,8 +19,14 @@ const optionalNonNeg = () => optionalInt(0, 10_000_000);
 
 export const carCreateSchema = z
 	.object({
-		url: z.string().max(2000).optional().or(z.literal('')),
-		title: z.string().min(1).max(300),
+		url: z.preprocess(
+			(v) => (typeof v === 'string' ? normalizeListingUrl(v) : v),
+			z.string().max(2000).optional().or(z.literal(''))
+		),
+		title: z.preprocess(
+			(v) => (typeof v === 'string' ? v.replace(/\s+/g, ' ').trim() : v),
+			z.string().min(1).max(300)
+		),
 		make: z.preprocess(
 			(v) => (typeof v === 'string' ? normalizeMake(v) : v),
 			z.string().max(100).optional().or(z.literal(''))

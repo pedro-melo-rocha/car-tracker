@@ -52,7 +52,7 @@ export const POST: RequestHandler = async ({ request }) => {
 	const body = parsed.data;
 	const now = new Date().toISOString();
 	const status = body.status || 'to-contact';
-	const price = body.price ?? 0;
+	const price = body.price ?? null;
 
 	const car = {
 		id: randomUUID(),
@@ -61,12 +61,12 @@ export const POST: RequestHandler = async ({ request }) => {
 		title: body.title,
 		make: body.make || '',
 		model: body.model || '',
-		year: body.year ?? 0,
-		km: body.km ?? 0,
+		year: body.year ?? null,
+		km: body.km ?? null,
 		price,
 		fuel: body.fuel || '',
 		engine: body.engine || '',
-		power: body.power ?? 0,
+		power: body.power ?? null,
 		source: body.source || '',
 		status,
 		location: body.location || '',
@@ -82,7 +82,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		imported: body.imported ?? null,
 		photoCount: body.photoCount ?? null,
 		description: body.description || null,
-		priceHistory: [{ date: now, price, note: 'Initial price' }],
+		priceHistory: price != null ? [{ date: now, price, note: 'Initial price' }] : [],
 		version: 1
 	};
 
