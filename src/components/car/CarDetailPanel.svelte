@@ -25,6 +25,18 @@
 		[car.engine, car.power ? car.power + 'cv' : ''].filter(Boolean).join(' · ')
 	);
 	const distance = $derived(locationKm(car.location));
+	const daysListed = $derived(
+		car.listedAt ? Math.max(0, Math.floor((Date.now() - Date.parse(car.listedAt)) / 86_400_000)) : null
+	);
+	const hasListingSignals = $derived(
+		car.sellerType != null ||
+			car.sellerSince != null ||
+			car.gearbox != null ||
+			car.owners != null ||
+			car.warrantyMonths != null ||
+			car.imported != null ||
+			daysListed != null
+	);
 	const priceDrop = $derived(netPriceDrop(car.priceHistory));
 
 	const scoreTone = $derived(score >= 70 ? 'good' : score >= 50 ? 'warn' : 'bad');
@@ -291,8 +303,52 @@
 					<span class="k">Distance</span>
 					<span class="v">{distance != null ? distance + ' km' : '—'}</span>
 				</div>
+				{#if car.gearbox}
+					<div class="spec"><span class="k">Gearbox</span><span class="v">{car.gearbox}</span></div>
+				{/if}
 			</div>
 		</section>
+
+		{#if hasListingSignals}
+			<section class="section">
+				<h3>Seller &amp; listing</h3>
+				<div class="specs">
+					<div class="spec">
+						<span class="k">Seller</span>
+						<span class="v"
+							>{car.sellerType === 'dealer' ? 'Dealer' : car.sellerType === 'private' ? 'Private' : '—'}</span
+						>
+					</div>
+					<div class="spec">
+						<span class="k">Account since</span><span class="v">{car.sellerSince ?? '—'}</span>
+					</div>
+					<div class="spec">
+						<span class="k">Owners</span><span class="v">{car.owners ?? '—'}</span>
+					</div>
+					<div class="spec">
+						<span class="k">Warranty</span>
+						<span class="v">{car.warrantyMonths ? car.warrantyMonths + ' months' : '—'}</span>
+					</div>
+					<div class="spec">
+						<span class="k">Imported</span>
+						<span class="v">{car.imported == null ? '—' : car.imported ? 'Yes' : 'No'}</span>
+					</div>
+					<div class="spec">
+						<span class="k">On the market</span>
+						<span class="v">{daysListed != null ? daysListed + ' days' : '—'}</span>
+					</div>
+				</div>
+			</section>
+		{/if}
+
+		{#if car.description}
+			<section class="section">
+				<details class="soft-card description">
+					<summary>Listing description</summary>
+					<p>{car.description}</p>
+				</details>
+			</section>
+		{/if}
 
 		<section class="section">
 			<h3>Price history</h3>
@@ -653,6 +709,19 @@
 		display: grid;
 		grid-template-columns: 1fr 1fr;
 		gap: 8px;
+	}
+	.description summary {
+		cursor: pointer;
+		font-size: 0.8rem;
+		font-weight: 600;
+		color: var(--ink-dim);
+	}
+	.description p {
+		margin: 0.6rem 0 0;
+		font-size: 0.82rem;
+		line-height: 1.5;
+		color: var(--ink);
+		white-space: pre-line;
 	}
 	.spec {
 		background: var(--card-2);

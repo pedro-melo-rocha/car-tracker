@@ -17,8 +17,19 @@ const EDITABLE_FIELDS = [
 	'status',
 	'location',
 	'notes',
-	'imageUrl'
+	'imageUrl',
+	'sellerType',
+	'sellerSince',
+	'listedAt',
+	'gearbox',
+	'owners',
+	'warrantyMonths',
+	'imported',
+	'photoCount',
+	'description'
 ] as const;
+
+const NULLABLE_FIELDS = new Set<string>(['sellerType', 'listedAt', 'gearbox', 'description']);
 
 function serverError(scope: string, err: unknown): Response {
 	console.error(`[cars/[id]] ${scope}:`, err);
@@ -79,7 +90,9 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 
 	for (const f of EDITABLE_FIELDS) {
 		const v = (body as Record<string, unknown>)[f];
-		if (v !== undefined) car[f] = v;
+		if (v === undefined) continue;
+		// Empty strings clear the new nullable signal columns instead of storing ''.
+		car[f] = v === '' && NULLABLE_FIELDS.has(f) ? null : v;
 	}
 
 	if (body.status === 'contacted' && existing.status !== 'contacted') {

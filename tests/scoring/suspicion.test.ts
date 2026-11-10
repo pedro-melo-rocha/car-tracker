@@ -159,3 +159,68 @@ describe('detectScamRisk', () => {
 		expect(r.level).toBe('none');
 	});
 });
+
+describe('detectScamRisk — seller and listing signals', () => {
+	const fair = { year: 2012, km: 160000, price: 4500, make: 'Renault', model: 'Clio', engine: '1.5 dCi' };
+	const ids = (r: ReturnType<typeof detectScamRisk>) => r.flags.map((f) => f.id);
+
+	it('flags a new private seller account', () => {
+		const r = detectScamRisk(fixture({ ...fair, sellerSince: 2026, sellerType: 'private' }), NOW);
+		expect(ids(r)).toContain('new-account');
+		expect(r.flags.find((f) => f.id === 'new-account')!.weight).toBe(2);
+		expect(r.level).toBe('low');
+	});
+
+	it('does not flag an established account', () => {
+		const r = detectScamRisk(fixture({ ...fair, sellerSince: 2016, sellerType: 'private' }), NOW);
+		expect(ids(r)).not.toContain('new-account');
+	});
+
+	it('escalates a new account with a suspicious price to high', () => {
+		const r = detectScamRisk(
+			fixture({ year: 2019, km: 150000, price: 2500, sellerSince: 2026, sellerType: 'private' }),
+			NOW
+		);
+		expect(ids(r)).toContain('new-account-cheap');
+		expect(r.level).toBe('high');
+	});
+
+	it('flags scam-script wording in the description', () => {
+		const r = detectScamRisk(
+			fixture({ ...fair, description: 'Estou emigrado na Suíça, envio o carro por transportadora.' }),
+			NOW
+		);
+		const flag = r.flags.find((f) => f.id === 'scam-wording')!;
+		expect(flag.weight).toBe(3);
+		expect(flag.label).toContain('seller abroad');
+		expect(flag.label).toContain('shipping by carrier');
+	});
+
+	it('treats pressure wording as a weak hint', () => {
+		const r = detectScamRisk(fixture({ ...fair, description: 'Vendo urgente, contacto só por WhatsApp' }), NOW);
+		expect(ids(r)).toContain('pressure-wording');
+		expect(r.level).toBe('low');
+	});
+
+	it('flags imported cars with low km per year', () => {
+		const r = detectScamRisk(fixture({ year: 2014, km: 90000, price: 4800, imported: true }), NOW);
+		expect(ids(r)).toContain('imported-low-km');
+	});
+
+	it('flags listings with very few photos', () => {
+		expect(ids(detectScamRisk(fixture({ ...fair, photoCount: 3 }), NOW))).toContain('few-photos');
+		expect(ids(detectScamRisk(fixture({ ...fair, photoCount: 12 }), NOW))).not.toContain('few-photos');
+	});
+
+	it('flags cheap listings missing km or year (stored as 0)', () => {
+		expect(ids(detectScamRisk(fixture({ price: 3000, km: 0, year: 2010 }), NOW))).toContain('missing-key-data');
+	});
+
+	it('sorts flags by weight, strongest first', () => {
+		const r = detectScamRisk(
+			fixture({ ...fair, photoCount: 2, description: 'emigrado, pagamento antecipado' }),
+			NOW
+		);
+		expect(r.flags[0].id).toBe('scam-wording');
+	});
+});

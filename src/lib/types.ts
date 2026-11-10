@@ -10,6 +10,9 @@ export type CarStatus = (typeof STATUSES)[number];
 
 export type Fuel = 'Diesel' | 'Gasolina';
 
+export const SELLER_TYPES = ['private', 'dealer'] as const;
+export type SellerType = (typeof SELLER_TYPES)[number];
+
 export interface PriceHistoryEntry {
 	date: string;
 	price: number;
@@ -37,6 +40,15 @@ export interface Car {
 	contactedAt?: string | null;
 	priceHistory: PriceHistoryEntry[];
 	version: number;
+	sellerType?: SellerType | null;
+	sellerSince?: number | null;
+	listedAt?: string | null;
+	gearbox?: string | null;
+	owners?: number | null;
+	warrantyMonths?: number | null;
+	imported?: boolean | null;
+	photoCount?: number | null;
+	description?: string | null;
 }
 
 export type PublicCar = Omit<Car, 'notes' | 'contactedAt' | 'status' | 'version'>;
@@ -57,6 +69,15 @@ export interface CarCreateInput {
 	location?: string;
 	notes?: string;
 	imageUrl?: string;
+	sellerType?: SellerType | '';
+	sellerSince?: number;
+	listedAt?: string;
+	gearbox?: string;
+	owners?: number;
+	warrantyMonths?: number;
+	imported?: boolean;
+	photoCount?: number;
+	description?: string;
 }
 
 export interface CarUpdateInput extends Partial<CarCreateInput> {

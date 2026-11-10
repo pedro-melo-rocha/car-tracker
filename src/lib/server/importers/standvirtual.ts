@@ -93,8 +93,15 @@ export function parseStandVirtual(html: string, url: string): Partial<CarCreateI
 type Advert = {
 	title?: string;
 	description?: string;
+	createdAt?: string;
+	originalCreatedAt?: string;
 	price?: { value?: string | number };
-	seller?: { location?: SellerLocation };
+	images?: { photos?: unknown[] };
+	seller?: {
+		type?: string;
+		featuresBadges?: Array<{ code?: string; label?: string }>;
+		location?: SellerLocation;
+	};
 	parametersDict?: Record<string, { values?: Array<{ value?: string; label?: string }> }>;
 };
 type SellerLocation = { city?: string; region?: string; shortAddress?: string };
@@ -136,11 +143,45 @@ function applyAdvert(result: Partial<CarCreateInput>, advert: Advert): void {
 	const loc = sellerLocation(advert.seller?.location);
 	if (loc) result.location = loc;
 
+	applySignals(result, advert);
+
 	if (!result.engine) {
 		const cc = parseIntSafe(param(advert, 'engine_capacity')?.value);
 		const text = [advert.title, result.title, stripHtml(advert.description)].filter(Boolean).join(' ');
 		result.engine = guessEngine(text, cc);
 	}
+}
+
+/** Seller and listing signals used by the suspicion check. */
+function applySignals(result: Partial<CarCreateInput>, advert: Advert): void {
+	const seller = advert.seller;
+	const badges = seller?.featuresBadges ?? [];
+	const type = seller?.type?.toUpperCase();
+	if (badges.some((b) => b.code === 'dealer') || (type && type !== 'PRIVATE')) {
+		result.sellerType = 'dealer';
+	} else if (type === 'PRIVATE' || badges.some((b) => b.code === 'private-seller')) {
+		result.sellerType = 'private';
+	}
+	// "No Standvirtual desde 2016"
+	const since = badges.find((b) => b.code === 'registration-date')?.label?.match(/\b(19|20)\d{2}\b/);
+	if (since) result.sellerSince = parseInt(since[0], 10);
+
+	const listed = advert.originalCreatedAt || advert.createdAt;
+	if (listed && !Number.isNaN(Date.parse(listed))) result.listedAt = new Date(listed).toISOString();
+
+	const gearbox = param(advert, 'gearbox')?.label?.trim();
+	if (gearbox) result.gearbox = gearbox;
+	const owners = parseIntSafe(param(advert, 'number_of_registrations')?.value);
+	if (owners) result.owners = owners;
+	const warranty = parseIntSafe(param(advert, 'vendors_warranty_valid_until_date')?.value);
+	if (warranty) result.warrantyMonths = warranty;
+	const imported = param(advert, 'is_imported_car')?.value;
+	if (imported === '1') result.imported = true;
+	else if (imported === '0') result.imported = false;
+
+	if (Array.isArray(advert.images?.photos)) result.photoCount = advert.images.photos.length;
+	const description = stripHtml(advert.description).trim();
+	if (description) result.description = description.slice(0, 10_000);
 }
 
 /**

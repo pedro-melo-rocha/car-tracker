@@ -73,6 +73,15 @@ export const POST: RequestHandler = async ({ request }) => {
 		contactedAt: status === 'contacted' ? now : null,
 		notes: body.notes || '',
 		imageUrl: body.imageUrl || '',
+		sellerType: body.sellerType || null,
+		sellerSince: body.sellerSince ?? null,
+		listedAt: body.listedAt || null,
+		gearbox: body.gearbox || null,
+		owners: body.owners ?? null,
+		warrantyMonths: body.warrantyMonths ?? null,
+		imported: body.imported ?? null,
+		photoCount: body.photoCount ?? null,
+		description: body.description || null,
 		priceHistory: [{ date: now, price, note: 'Initial price' }],
 		version: 1
 	};

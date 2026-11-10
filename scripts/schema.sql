@@ -24,7 +24,17 @@ create table if not exists cars (
   notes          text,
   "contactedAt"  timestamptz,
   "priceHistory" jsonb not null default '[]'::jsonb,
-  version        int not null default 1
+  version        int not null default 1,
+  "imageUrl"     text,
+  "sellerType"   text,
+  "sellerSince"  int,
+  "listedAt"     timestamptz,
+  gearbox        text,
+  owners         int check (owners is null or owners >= 0),
+  "warrantyMonths" int check ("warrantyMonths" is null or "warrantyMonths" >= 0),
+  imported       boolean,
+  "photoCount"   int check ("photoCount" is null or "photoCount" >= 0),
+  description    text
 );
 
 create index if not exists cars_status_idx on cars (status);

@@ -47,6 +47,16 @@
 		notes: string;
 		imageUrl: string;
 		priceNote: string;
+		sellerType: string;
+		sellerSince: NumField;
+		gearbox: string;
+		owners: NumField;
+		warrantyMonths: NumField;
+		imported: string;
+		// Carried from import, not editable in the form.
+		listedAt: string;
+		photoCount: NumField;
+		description: string;
 	};
 
 	function toForm(c?: Car): FormState {
@@ -66,7 +76,16 @@
 			location: c?.location ?? '',
 			notes: c?.notes ?? '',
 			imageUrl: c?.imageUrl ?? '',
-			priceNote: ''
+			priceNote: '',
+			sellerType: c?.sellerType ?? '',
+			sellerSince: c?.sellerSince?.toString() ?? '',
+			gearbox: c?.gearbox ?? '',
+			owners: c?.owners?.toString() ?? '',
+			warrantyMonths: c?.warrantyMonths?.toString() ?? '',
+			imported: c?.imported == null ? '' : c.imported ? 'yes' : 'no',
+			listedAt: c?.listedAt ?? '',
+			photoCount: c?.photoCount?.toString() ?? '',
+			description: c?.description ?? ''
 		};
 	}
 
@@ -138,6 +157,15 @@
 			f.source = d.source ?? '';
 			f.location = d.location ?? '';
 			f.imageUrl = d.imageUrl ?? '';
+			f.sellerType = d.sellerType ?? '';
+			f.sellerSince = d.sellerSince != null ? String(d.sellerSince) : '';
+			f.gearbox = d.gearbox ?? '';
+			f.owners = d.owners != null ? String(d.owners) : '';
+			f.warrantyMonths = d.warrantyMonths != null ? String(d.warrantyMonths) : '';
+			f.imported = d.imported == null ? '' : d.imported ? 'yes' : 'no';
+			f.listedAt = d.listedAt ?? '';
+			f.photoCount = d.photoCount != null ? String(d.photoCount) : '';
+			f.description = d.description ?? '';
 			if (r.warnings.length) {
 				const missing = r.warnings.map((w) => FIELD_LABELS[w] || w).join(', ');
 				toast.info(`Imported. Missing: ${missing}`);
@@ -170,6 +198,21 @@
 		{ value: 'PiscaPisca', label: 'PiscaPisca' },
 		{ value: 'CustoJusto', label: 'CustoJusto' },
 		{ value: 'Other', label: 'Other' }
+	];
+	const gearboxOptions = [
+		{ value: '', label: '—' },
+		{ value: 'Manual', label: 'Manual' },
+		{ value: 'Automática', label: 'Automática' }
+	];
+	const sellerOptions = [
+		{ value: '', label: '—' },
+		{ value: 'private', label: 'Private' },
+		{ value: 'dealer', label: 'Dealer' }
+	];
+	const importedOptions = [
+		{ value: '', label: '—' },
+		{ value: 'no', label: 'No' },
+		{ value: 'yes', label: 'Yes' }
 	];
 	const statusOptions = STATUSES.map((s) => ({ value: s, label: STATUS_LABELS[s] }));
 	const allMakes = [...DATALIST_MAKES, ...EXTRA_MAKES].sort();
@@ -232,7 +275,16 @@
 			status: (f.status as Car['status']) || 'to-contact',
 			location: f.location.trim() || undefined,
 			notes: f.notes || undefined,
-			imageUrl: f.imageUrl.trim() || undefined
+			imageUrl: f.imageUrl.trim() || undefined,
+			sellerType: (f.sellerType as CarCreateInput['sellerType']) || undefined,
+			sellerSince: toNumber(f.sellerSince),
+			gearbox: f.gearbox || undefined,
+			owners: toNumber(f.owners),
+			warrantyMonths: toNumber(f.warrantyMonths),
+			imported: f.imported === '' ? undefined : f.imported === 'yes',
+			listedAt: f.listedAt || undefined,
+			photoCount: toNumber(f.photoCount),
+			description: f.description || undefined
 		};
 
 		submitting = true;
@@ -401,6 +453,54 @@
 		<div class="form-group">
 			<label for="f-status">Status</label>
 			<CustomSelect options={statusOptions} bind:value={f.status} />
+		</div>
+	</div>
+
+	<div class="form-row">
+		<div class="form-group">
+			<label for="f-gearbox">Gearbox</label>
+			<CustomSelect options={gearboxOptions} placeholder="—" bind:value={f.gearbox} />
+		</div>
+		<div class="form-group">
+			<label for="f-seller">Seller</label>
+			<CustomSelect options={sellerOptions} placeholder="—" bind:value={f.sellerType} />
+		</div>
+	</div>
+
+	<div class="form-row">
+		<div class="form-group">
+			<label for="f-seller-since">Seller account since</label>
+			<input
+				id="f-seller-since"
+				type="number"
+				placeholder="2018"
+				min="1990"
+				max="2100"
+				step="1"
+				bind:value={f.sellerSince}
+			/>
+		</div>
+		<div class="form-group">
+			<label for="f-owners">Owners</label>
+			<input id="f-owners" type="number" placeholder="1" min="0" step="1" bind:value={f.owners} />
+		</div>
+	</div>
+
+	<div class="form-row">
+		<div class="form-group">
+			<label for="f-warranty">Warranty (months)</label>
+			<input
+				id="f-warranty"
+				type="number"
+				placeholder="18"
+				min="0"
+				step="1"
+				bind:value={f.warrantyMonths}
+			/>
+		</div>
+		<div class="form-group">
+			<label for="f-imported">Imported</label>
+			<CustomSelect options={importedOptions} placeholder="—" bind:value={f.imported} />
 		</div>
 	</div>
 

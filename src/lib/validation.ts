@@ -1,5 +1,5 @@
 import { z, type ZodError } from 'zod';
-import { STATUSES } from './types';
+import { STATUSES, SELLER_TYPES } from './types';
 import { formatLocation } from './scoring/location';
 import { normalizeEngine, normalizeMake } from './constants';
 
@@ -41,7 +41,16 @@ export const carCreateSchema = z
 			z.string().max(200).optional().or(z.literal(''))
 		),
 		notes: z.string().max(5000).optional().or(z.literal('')),
-		imageUrl: z.string().max(2000).url().optional().or(z.literal(''))
+		imageUrl: z.string().max(2000).url().optional().or(z.literal('')),
+		sellerType: z.enum(SELLER_TYPES).optional().or(z.literal('')),
+		sellerSince: optionalInt(1990, 2100),
+		listedAt: z.string().datetime({ offset: true }).optional().or(z.literal('')),
+		gearbox: z.string().max(50).optional().or(z.literal('')),
+		owners: optionalInt(0, 50),
+		warrantyMonths: optionalInt(0, 240),
+		imported: z.boolean().optional().nullable(),
+		photoCount: optionalInt(0, 1000),
+		description: z.string().max(10_000).optional().or(z.literal(''))
 	})
 	.strict();
 
