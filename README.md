@@ -1,4 +1,4 @@
-# Car Tracker
+# Achado
 
 Shared car search tracker for browsing used car listings in Portugal. Deployed to Vercel + Supabase; two people share one list via a shared password.
 

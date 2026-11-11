@@ -1,15 +1,18 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import type { ActionData } from './$types';
+	import PlateMark from '$components/ui/PlateMark.svelte';
 
 	let { form }: { form: ActionData } = $props();
 	let submitting = $state(false);
 </script>
 
-<div class="login">
-	<div class="card">
-		<h1>Car Tracker</h1>
-		<p class="msg">Sign in to continue.</p>
+<svelte:head><title>Sign in · Achado</title></svelte:head>
+
+<main class="login">
+	<div class="panel">
+		<PlateMark size="lg" />
+		<p class="msg">The shared list of used cars you’re looking at.</p>
 		<form
 			method="POST"
 			use:enhance={() => {
@@ -20,32 +23,36 @@
 				};
 			}}
 		>
+			<label for="login-email">Email</label>
 			<!-- svelte-ignore a11y_autofocus -->
 			<input
+				id="login-email"
 				type="email"
 				name="email"
-				placeholder="Email"
 				value={form?.email ?? ''}
 				required
 				autofocus
 				autocomplete="email"
+				aria-invalid={form?.error ? 'true' : undefined}
+				aria-describedby={form?.error ? 'login-error' : undefined}
 			/>
+			<label for="login-password">Password</label>
 			<input
+				id="login-password"
 				type="password"
 				name="password"
-				placeholder="Password"
 				required
 				autocomplete="current-password"
+				aria-invalid={form?.error ? 'true' : undefined}
+				aria-describedby={form?.error ? 'login-error' : undefined}
 			/>
-			{#if form?.error}
-				<p class="err">{form.error}</p>
-			{/if}
+			<p class="err" id="login-error" role="alert">{form?.error ?? ''}</p>
 			<button type="submit" disabled={submitting}>
 				{submitting ? 'Signing in…' : 'Sign in'}
 			</button>
 		</form>
 	</div>
-</div>
+</main>
 
 <style>
 	.login {
@@ -56,41 +63,39 @@
 		padding: 1.5rem;
 		background: var(--bg);
 	}
-	.card {
-		background: var(--card);
-		border: 1px solid var(--rule);
-		border-radius: var(--radius-lg);
-		padding: 2rem 1.75rem;
+	.panel {
 		width: 100%;
-		max-width: 380px;
+		max-width: 340px;
 		display: flex;
 		flex-direction: column;
-		gap: 0.85rem;
-		box-shadow: var(--shadow-lg);
-	}
-	h1 {
-		font-size: 1.25rem;
-		font-weight: 600;
-		letter-spacing: -0.01em;
-		color: var(--ink);
-		margin: 0;
+		align-items: flex-start;
+		gap: 1rem;
 	}
 	.msg {
-		margin: 0;
+		margin: 0.25rem 0 0.5rem;
 		color: var(--ink-soft);
-		font-size: 0.88rem;
+		font-size: 0.95rem;
+		line-height: 1.45;
 	}
 	form {
 		display: flex;
 		flex-direction: column;
-		gap: 0.6rem;
+		gap: 0.4rem;
+		width: 100%;
 	}
+	label {
+		font-size: 0.85rem;
+		font-weight: 500;
+		color: var(--ink-soft);
+		margin-top: 0.35rem;
+	}
+
 	input {
 		padding: 0.7rem 0.9rem;
 		border: 1px solid var(--rule);
 		border-radius: var(--radius-md);
 		font-size: 0.95rem;
-		background: var(--bg);
+		background: var(--card);
 		color: var(--ink);
 		outline: none;
 	}
@@ -106,7 +111,7 @@
 		font-size: 0.9rem;
 		font-weight: 600;
 		cursor: pointer;
-		margin-top: 0.25rem;
+		margin-top: 0.75rem;
 	}
 	button:hover:not(:disabled) {
 		background: var(--accent-hover);
@@ -115,8 +120,11 @@
 		opacity: 0.55;
 		cursor: not-allowed;
 	}
+	.err:empty {
+		display: none;
+	}
 	.err {
-		margin: 0;
+		margin: 0.25rem 0 0;
 		color: var(--bad);
 		font-size: 0.82rem;
 	}

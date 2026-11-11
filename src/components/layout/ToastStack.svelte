@@ -5,6 +5,15 @@
 <div class="toast-stack" role="status" aria-live="polite">
 	{#each $toasts as t (t.id)}
 		<div class="toast {t.variant}">
+			<span class="mark" aria-hidden="true">
+				{#if t.variant === 'success'}
+					<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 12 10 17 19 7" /></svg>
+				{:else if t.variant === 'error'}
+					<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="7" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
+				{:else}
+					<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="11" x2="12" y2="17" /><line x1="12" y1="7" x2="12.01" y2="7" /></svg>
+				{/if}
+			</span>
 			<span class="msg">{t.message}</span>
 			{#if t.action}
 				<button
@@ -47,7 +56,6 @@
 		display: flex;
 		align-items: center;
 		gap: 0.75rem;
-		justify-content: space-between;
 	}
 	.action {
 		background: transparent;
@@ -63,16 +71,24 @@
 	.action:hover {
 		background: var(--accent-bg);
 	}
-	.toast.success {
-		border-left: 3px solid var(--green);
+	.mark {
+		display: inline-flex;
+		flex-shrink: 0;
+	}
+	.toast.success .mark {
+		color: var(--good);
+	}
+	.toast.error .mark {
+		color: var(--bad);
+	}
+	.toast.info .mark {
+		color: var(--blue);
 	}
 	.toast.error {
-		border-left: 3px solid var(--red);
-	}
-	.toast.info {
-		border-left: 3px solid var(--blue);
+		border-color: var(--bad-bg);
 	}
 	.msg {
+		flex: 1;
 		color: var(--text);
 	}
 </style>

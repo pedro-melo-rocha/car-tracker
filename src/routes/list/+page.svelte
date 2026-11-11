@@ -157,6 +157,9 @@
 				}))}
 		/>
 		<span class="count">{$filteredListCars.length} of {$cars.length}</span>
+		{#if $bulkSelection.size === 0 && $filteredListCars.length > 1}
+			<span class="hint">Tick 2 to 5 cars to compare them</span>
+		{/if}
 		{#if activeCount > 0}
 			<button type="button" class="clear-btn" onclick={resetListFilters}>
 				Clear filters ({activeCount})
@@ -180,14 +183,12 @@
 		</div>
 	{:else if $cars.length === 0}
 		<div class="empty">
-			<div class="icon">+</div>
-			<p>No cars yet</p>
+			<p>No cars yet. Paste a listing link to add the first one.</p>
 			<button type="button" class="cta" onclick={addNewCar}>Add your first car</button>
 		</div>
 	{:else if $filteredListCars.length === 0}
 		<div class="empty">
-			<div class="icon">—</div>
-			<p>No cars match these filters</p>
+			<p>No cars match these filters.</p>
 			{#if activeCount > 0}
 				<button type="button" class="cta" onclick={resetListFilters}>
 					Clear filters ({activeCount})
@@ -197,7 +198,7 @@
 	{:else}
 		<div class="list-cards">
 			{#each $filteredListCars as car (car.id)}
-				<CarRowMobile {car} onopen={openDetail} onedit={openEdit} ondelete={handleDelete} />
+				<CarRowMobile {car} onopen={openDetail} onedit={openEdit} />
 			{/each}
 		</div>
 
@@ -244,7 +245,7 @@
 							</span>
 						</th>
 						<th><span class="th-inner"><span class="th-label">Model</span></span></th>
-						<th><span class="th-inner"><span class="th-label">Local</span></span></th>
+						<th><span class="th-inner"><span class="th-label">Location</span></span></th>
 						<th>
 							<span class="th-inner">
 								<SortHeader label="Year" field="year" />
@@ -497,11 +498,9 @@
 	.list-table th {
 		background: var(--bg);
 		padding: 10px 14px;
-		font-size: 0.68rem;
-		text-transform: uppercase;
-		letter-spacing: 0.06em;
-		color: var(--ink-dim);
-		font-weight: 500;
+		font-size: 0.8rem;
+		color: var(--ink-soft);
+		font-weight: 600;
 		text-align: left;
 		border: 0;
 		position: sticky;
@@ -570,9 +569,14 @@
 		align-items: center;
 		gap: 12px;
 	}
-	.empty .icon {
-		font-size: 1.75rem;
+	.hint {
+		font-size: 0.82rem;
 		color: var(--ink-soft);
+	}
+	@media (max-width: 640px) {
+		.hint {
+			display: none;
+		}
 	}
 	.empty p {
 		margin: 0;

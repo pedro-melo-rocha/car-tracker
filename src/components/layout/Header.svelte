@@ -1,13 +1,11 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
+	import PlateMark from '$components/ui/PlateMark.svelte';
 
 	const tabs = [
 		{ href: '/pipeline', label: 'Pipeline' },
-		{ href: '/list', label: 'List' },
-		{ href: '/compare', label: 'Compare' },
-		{ href: '/score-lab', label: 'Score Lab' },
-		{ href: '/docs', label: 'Docs' }
+		{ href: '/list', label: 'List' }
 	];
 
 	const userEmail = $derived(page.data?.user?.email ?? null);
@@ -33,29 +31,28 @@
 
 <header class="header">
 	<div class="inner">
-		<a href="/pipeline" class="brand">
-			<span class="brand-mark" aria-hidden="true"></span>
-			<span class="brand-name">Car Tracker</span>
+		<a href="/pipeline" class="brand" aria-label="Achado, go to pipeline">
+			<PlateMark />
 		</a>
-		<div class="spacer"></div>
-		<nav class="switcher" aria-label="Views">
+		<nav class="nav" aria-label="Views">
 			{#each tabs as tab (tab.href)}
 				<a
 					href={tab.href}
-					class="seg"
-					class:active={page.url.pathname === tab.href}
+					class="nav-link"
+					aria-current={page.url.pathname === tab.href ? 'page' : undefined}
 					data-sveltekit-preload-data="hover"
 				>
 					{tab.label}
 				</a>
 			{/each}
 		</nav>
-		<button type="button" class="add-btn" onclick={openAdd}>
+		<div class="spacer"></div>
+		<button type="button" class="add-btn" onclick={openAdd} aria-label="Add car" title="Add car (N)">
 			<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
 				<line x1="12" y1="5" x2="12" y2="19" />
 				<line x1="5" y1="12" x2="19" y2="12" />
 			</svg>
-			Add car
+			<span class="add-label">Add car</span>
 		</button>
 		{#if userEmail}
 			<div class="user-wrap" bind:this={menuRef}>
@@ -71,8 +68,9 @@
 				{#if menuOpen}
 					<div class="user-menu" role="menu">
 						<div class="menu-email">{userEmail}</div>
+						<a href="/docs" class="menu-item" role="menuitem" onclick={() => (menuOpen = false)}>How the score works</a>
 						<form method="POST" action="/auth/logout">
-							<button type="submit" class="menu-item">Sign out</button>
+							<button type="submit" class="menu-item" role="menuitem">Sign out</button>
 						</form>
 					</div>
 				{/if}
@@ -86,9 +84,7 @@
 		position: sticky;
 		top: 0;
 		z-index: 30;
-		background: rgba(255, 255, 255, 0.72);
-		backdrop-filter: saturate(160%) blur(8px);
-		-webkit-backdrop-filter: saturate(160%) blur(8px);
+		background: var(--bg);
 		border-bottom: 1px solid var(--rule);
 	}
 	.inner {
@@ -96,68 +92,54 @@
 		margin: 0 auto;
 		display: flex;
 		align-items: center;
-		gap: 12px;
-		padding: 10px 24px;
+		gap: 28px;
+		padding: 0 24px;
+		height: var(--header-h);
 	}
 	.brand {
 		display: inline-flex;
-		align-items: baseline;
-		gap: 10px;
+		align-items: center;
 		text-decoration: none;
-		color: var(--ink);
-	}
-	.brand-mark {
-		width: 10px;
-		height: 10px;
-		background: var(--accent);
-		display: inline-block;
-		transform: rotate(45deg) translateY(1px);
-		border-radius: 2px;
-	}
-	.brand-name {
-		font-size: 0.9rem;
-		font-weight: 700;
-		letter-spacing: -0.01em;
+		border-radius: 6px;
 	}
 	.spacer {
 		flex: 1;
 	}
-	.switcher {
+	.nav {
 		display: flex;
-		background: var(--card-2);
-		padding: 3px;
-		border-radius: 10px;
-		border: 1px solid var(--rule);
-		gap: 2px;
+		align-self: stretch;
+		gap: 22px;
 	}
-	.seg {
-		padding: 5px 14px;
-		border-radius: 8px;
-		font-size: 0.78rem;
+	.nav-link {
+		display: inline-flex;
+		align-items: center;
+		font-size: 0.9rem;
 		font-weight: 500;
 		color: var(--ink-soft);
 		text-decoration: none;
-		transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+		border-bottom: 2px solid transparent;
+		margin-bottom: -1px;
+		transition: color var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
 	}
-	.seg:hover {
+	.nav-link:hover {
 		color: var(--ink);
 	}
-	.seg.active {
-		background: var(--card);
+	.nav-link[aria-current='page'] {
 		color: var(--ink);
-		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+		font-weight: 600;
+		border-bottom-color: var(--ink);
 	}
 	.add-btn {
 		display: inline-flex;
 		align-items: center;
 		gap: 6px;
 		padding: 7px 14px;
-		border-radius: 10px;
+		border-radius: 8px;
 		background: var(--accent);
 		color: #fff;
 		border: 0;
-		font-size: 0.78rem;
-		font-weight: 500;
+		font-size: 0.85rem;
+		font-weight: 600;
 		transition: background var(--dur-fast) var(--ease);
 	}
 	.add-btn:hover {
@@ -190,8 +172,8 @@
 		right: 0;
 		top: calc(100% + 6px);
 		min-width: 200px;
-		background: var(--bg-card);
-		border: 1px solid var(--border);
+		background: var(--card);
+		border: 1px solid var(--rule);
 		border-radius: var(--radius-md);
 		box-shadow: var(--shadow-lg);
 		padding: 4px;
@@ -201,8 +183,8 @@
 	}
 	.menu-email {
 		padding: 6px 10px 8px;
-		font-size: 0.72rem;
-		color: var(--ink-dim);
+		font-size: 0.8rem;
+		color: var(--ink-soft);
 		border-bottom: 1px solid var(--rule);
 		margin-bottom: 2px;
 		word-break: break-all;
@@ -217,26 +199,25 @@
 		color: var(--ink);
 		cursor: pointer;
 		width: 100%;
+		display: block;
+		text-decoration: none;
 	}
 	.menu-item:hover {
 		background: var(--card-2);
 	}
 	@media (max-width: 640px) {
 		.inner {
-			flex-wrap: wrap;
-			gap: 8px;
-			padding: 10px 14px;
+			gap: 14px;
+			padding: 0 12px;
 		}
-		.spacer {
+		.nav {
+			gap: 14px;
+		}
+		.add-label {
 			display: none;
 		}
-		.switcher {
-			order: 3;
-			width: 100%;
-			overflow-x: auto;
-		}
-		.seg {
-			padding: 5px 10px;
+		.add-btn {
+			padding: 8px 10px;
 		}
 	}
 </style>

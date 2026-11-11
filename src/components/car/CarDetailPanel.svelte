@@ -7,6 +7,8 @@
 	import PriceHistoryTimeline from './PriceHistoryTimeline.svelte';
 	import { cars, deleteCar as removeCar, updateCar } from '$lib/stores/cars';
 	import { confirmDialog, toast } from '$lib/stores/ui';
+	import { compareIds, toggleCompare } from '$lib/stores/compare';
+	import { daysUntilStale } from '$lib/staleness';
 
 	let {
 		car,
@@ -40,20 +42,27 @@
 	const priceDrop = $derived(netPriceDrop(car.priceHistory));
 
 	const scoreTone = $derived(score >= 70 ? 'good' : score >= 50 ? 'warn' : 'bad');
-	const scoreColor = $derived(
-		scoreTone === 'good'
-			? 'var(--good)'
-			: scoreTone === 'warn'
-				? 'var(--warn)'
-				: 'var(--bad)'
+	const inCompare = $derived($compareIds.includes(car.id));
+
+	const staleIn = $derived(daysUntilStale(car));
+
+	// "What if" simulation: try another price or km without saving anything.
+	let simOpen = $state(false);
+	let simPrice = $state<number | null>(null);
+	let simKm = $state<number | null>(null);
+	const simCar = $derived({ ...car, price: simPrice ?? car.price, km: simKm ?? car.km });
+	const simChanged = $derived(
+		(simPrice != null && simPrice !== car.price) || (simKm != null && simKm !== car.km)
 	);
-	const scoreBgColor = $derived(
-		scoreTone === 'good'
-			? 'var(--good-bg)'
-			: scoreTone === 'warn'
-				? 'var(--warn-bg)'
-				: 'var(--bad-bg)'
-	);
+	const simScore = $derived(computeScore(simCar));
+	const shown = $derived(simOpen && simChanged ? computeScoreBreakdown(simCar) : breakdown);
+	const shownRows = $derived([
+		{ key: 'km', label: 'Km', weight: Math.round(SCORE_WEIGHTS.km * 100), value: shown.km },
+		{ key: 'price', label: 'Price', weight: Math.round(SCORE_WEIGHTS.price * 100), value: shown.price },
+		{ key: 'rel', label: 'Reliability', weight: Math.round(SCORE_WEIGHTS.reliability * 100), value: shown.rel.score },
+		{ key: 'year', label: 'Year', weight: Math.round(SCORE_WEIGHTS.year * 100), value: shown.year },
+		{ key: 'loc', label: 'Location', weight: Math.round(SCORE_WEIGHTS.location * 100), value: shown.loc }
+	]);
 
 	function barCls(v: number) {
 		return v >= 70 ? 'good' : v >= 50 ? 'warn' : 'bad';
@@ -83,12 +92,20 @@
 	let pendingStatus: CarStatus | null = $state(null);
 	let reasonOpen = $state(false);
 
-	async function setStatus(next: CarStatus) {
+	async function setStatus(next: CarStatus, undoable = true) {
 		if (car.status === next || pendingStatus !== null) return;
+		const previous = car.status;
 		pendingStatus = next;
 		try {
 			await updateCar(car.id, { status: next });
-			toast.success(`Moved to ${STATUS_LABELS[next]}`);
+			if (undoable) {
+				toast.action(
+					`Moved to ${STATUS_LABELS[next]}`,
+					{ label: 'Undo', onClick: () => void setStatus(previous, false) },
+					6000,
+					'success'
+				);
+			}
 		} catch (err) {
 			toast.error(err instanceof Error ? err.message : 'Failed to update');
 		} finally {
@@ -123,22 +140,20 @@
 </script>
 
 <div class="detail-overlay" onclick={onclose} role="presentation"></div>
-<div class="detail-panel" role="dialog" aria-modal="true" aria-label="Car details" tabindex="-1">
+<div class="detail-panel" role="dialog" aria-modal="true" aria-labelledby="detail-title" tabindex="-1">
 	<div class="content">
 		<div class="head">
-			<div class="eyebrow">
-				{#if car.source}{car.source}{/if}
-				<span class="dot-sep">·</span>
-				<span class="id">{car.id.slice(0, 8)}</span>
+			<div class="source">
+				{car.source ?? 'Unknown source'}{#if daysListed != null}<span class="dot-sep">·</span>listed {daysListed} days ago{/if}
 			</div>
 			<button type="button" class="close-btn" onclick={onclose} aria-label="Close">
-				<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8">
+				<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
 					<path d="M4 4l8 8M12 4l-8 8" />
 				</svg>
 			</button>
 		</div>
 
-		<h1 class="title">{car.title}</h1>
+		<h1 class="title" id="detail-title">{car.title}</h1>
 
 		{#if car.imageUrl}
 			<img
@@ -150,158 +165,173 @@
 			/>
 		{/if}
 
-		<div class="score-widget" style="background: {scoreBgColor}; color: {scoreColor};">
-			<div class="score-num">{score}</div>
-			<div class="score-label">SCORE</div>
+		<div class="price-block">
+			<div class="score-widget {scoreTone}" role="img" aria-label="Score {score} out of 100">
+				{score}
+			</div>
+			<div>
+				<div class="price-line">{car.price ? '€' + car.price.toLocaleString('pt-PT') : 'No price'}</div>
+				<div class="facts-line">
+					{car.km ? car.km.toLocaleString('pt-PT') + ' km' : 'km unknown'}
+					<span class="dot-sep">·</span>
+					{car.year ?? 'year unknown'}
+					<span class="dot-sep">·</span>
+					{car.fuel ?? 'fuel unknown'}
+				</div>
+				{#if priceDrop > 0}
+					<div class="drop-note">Down €{priceDrop.toLocaleString('pt-PT')} since first seen</div>
+				{/if}
+			</div>
 		</div>
 
-		<div class="price-line">{car.price ? '€' + car.price.toLocaleString('pt-PT') : '—'}</div>
-		<div class="facts-line">
-			{car.km ? car.km.toLocaleString('pt-PT') + ' km' : '—'}
-			<span class="dot-sep">·</span>
-			{car.year ?? '—'}
-			<span class="dot-sep">·</span>
-			{car.fuel ?? '—'}
-		</div>
-		{#if priceDrop > 0}
-			<div class="drop-badge">↓ dropped €{priceDrop.toLocaleString('pt-PT')} total</div>
+		{#if scam.level === 'high'}
+			<div class="scam-card high" role="note">
+				<div class="scam-head">
+					<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+						<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+						<line x1="12" y1="9" x2="12" y2="13" />
+						<line x1="12" y1="17" x2="12.01" y2="17" />
+					</svg>
+					Likely scam. Check these before you call:
+				</div>
+				<ul class="scam-list">
+					{#each scam.flags as f (f.id)}
+						<li>{f.label}</li>
+					{/each}
+				</ul>
+			</div>
+		{:else if scam.level === 'low'}
+			<div class="scam-note" role="note">
+				<strong>Worth checking:</strong>
+				{scam.flags.map((f) => f.label).join('; ')}.
+			</div>
 		{/if}
 
-		{#if car.url}
-			<a href={car.url} target="_blank" rel="noopener noreferrer" class="link-btn">
-				<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
-					<path d="M6 3H3v10h10v-3M9 1h6v6M7 9L15 1" />
-				</svg>
-				Open Listing
-			</a>
-		{/if}
+		<div class="quick-actions">
+			{#if car.url}
+				<a href={car.url} target="_blank" rel="noopener noreferrer" class="link-btn">
+					<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+						<path d="M6 3H3v10h10v-3M9 1h6v6M7 9L15 1" />
+					</svg>
+					Open listing
+				</a>
+			{/if}
+			<button
+				type="button"
+				class="btn ghost"
+				aria-pressed={inCompare}
+				onclick={() => toggleCompare(car.id)}
+			>
+				{inCompare ? 'Picked to compare' : 'Compare'}
+			</button>
+		</div>
 
 		<section class="section">
 			<h3>Status</h3>
-			<div class="status-switcher">
+			<div class="status-switcher" role="group" aria-label="Status">
 				{#each STATUSES as s (s)}
 					<button
 						type="button"
 						class="status-chip"
 						class:active={car.status === s}
 						class:pending={pendingStatus === s}
+						aria-pressed={car.status === s}
 						onclick={() => setStatus(s)}
 					>
 						{STATUS_LABELS[s]}
 					</button>
 				{/each}
 			</div>
+			{#if staleIn != null}
+				<p class="hint">
+					{staleIn <= 0
+						? 'No reply yet. This moves to Dismissed on the next refresh.'
+						: `No reply yet. Moves to Dismissed in ${staleIn} ${staleIn === 1 ? 'day' : 'days'} unless you update it.`}
+				</p>
+			{/if}
 		</section>
 
 		<section class="section">
-			<h3>Score breakdown</h3>
-			<div class="breakdown">
-				<div class="br-row">
-					<span class="br-label">Kms</span>
-					<span class="br-weight">{Math.round(SCORE_WEIGHTS.km * 100)}%</span>
-					<span class="br-value">{breakdown.km}<span class="br-div">/100</span></span>
-					<span class="br-bar"
-						><span class="br-fill {barCls(breakdown.km)}" style="width:{breakdown.km}%"></span></span
-					>
-				</div>
-				<div class="br-row">
-					<span class="br-label">Price</span>
-					<span class="br-weight">{Math.round(SCORE_WEIGHTS.price * 100)}%</span>
-					<span class="br-value">{breakdown.price}<span class="br-div">/100</span></span>
-					<span class="br-bar"
-						><span
-							class="br-fill {barCls(breakdown.price)}"
-							style="width:{breakdown.price}%"
-						></span></span
-					>
-				</div>
-				<div class="br-row">
-					<span class="br-label">
-						Reliability
-						<button
-							type="button"
-							class="reason-tip"
-							class:warn={!breakdown.rel.matched}
-							aria-expanded={reasonOpen}
-							aria-controls="reliability-reason"
-							aria-label={breakdown.rel.matched
-								? reasonOpen
-									? 'Hide reliability explanation'
-									: 'Show reliability explanation'
-								: 'Engine not recognised — show explanation'}
-							title={breakdown.rel.matched
-								? reasonOpen
-									? 'Hide explanation'
-									: 'Why this score?'
-								: 'Engine not recognised — tap for details'}
-							onclick={() => (reasonOpen = !reasonOpen)}
-						>
-							?
-						</button>
-					</span>
-					<span class="br-weight">{Math.round(SCORE_WEIGHTS.reliability * 100)}%</span>
-					<span class="br-value">{breakdown.rel.score}<span class="br-div">/100</span></span>
-					<span class="br-bar"
-						><span
-							class="br-fill {barCls(breakdown.rel.score)}"
-							style="width:{breakdown.rel.score}%"
-						></span></span
-					>
-				</div>
-				{#if reasonOpen}
-					<div
-						id="reliability-reason"
-						class="br-reason"
-						class:pos={breakdown.rel.matched && breakdown.rel.delta > 0}
-						class:neg={breakdown.rel.matched && breakdown.rel.delta < 0}
-					>
-						{#if breakdown.rel.matched && breakdown.rel.reason}
-							{breakdown.rel.delta > 0 ? '+' : ''}{breakdown.rel.delta} · {breakdown.rel.reason}
-						{:else}
-							No engine profile matched — score uses the make reliability baseline only ({breakdown.rel.base}/100). Add or refine the engine field to get a more specific score.
-						{/if}
-					</div>
-				{/if}
-				<div class="br-row">
-					<span class="br-label">Year</span>
-					<span class="br-weight">{Math.round(SCORE_WEIGHTS.year * 100)}%</span>
-					<span class="br-value">{breakdown.year}<span class="br-div">/100</span></span>
-					<span class="br-bar"
-						><span
-							class="br-fill {barCls(breakdown.year)}"
-							style="width:{breakdown.year}%"
-						></span></span
-					>
-				</div>
-				<div class="br-row">
-					<span class="br-label">Location</span>
-					<span class="br-weight">{Math.round(SCORE_WEIGHTS.location * 100)}%</span>
-					<span class="br-value">{breakdown.loc}<span class="br-div">/100</span></span>
-					<span class="br-bar"
-						><span class="br-fill {barCls(breakdown.loc)}" style="width:{breakdown.loc}%"
-						></span></span
-					>
-				</div>
+			<div class="section-head">
+				<h3>Score breakdown</h3>
+				<a href="/docs" class="text-link">How the score works</a>
 			</div>
+			<div class="breakdown">
+				{#each shownRows as r (r.key)}
+					<div class="br-row">
+						<span class="br-label">
+							{r.label}
+							{#if r.key === 'rel'}
+								<button
+									type="button"
+									class="reason-tip"
+									class:warn={!shown.rel.matched}
+									aria-expanded={reasonOpen}
+									aria-controls="reliability-reason"
+									aria-label="Why this reliability score"
+									onclick={() => (reasonOpen = !reasonOpen)}
+								>
+									?
+								</button>
+							{/if}
+						</span>
+						<span class="br-weight">weight {r.weight}%</span>
+						<span class="br-value">{r.value}<span class="br-div">/100</span></span>
+						<span class="br-bar"><span class="br-fill {barCls(r.value)}" style="width:{r.value}%"></span></span>
+					</div>
+					{#if r.key === 'rel' && reasonOpen}
+						<div
+							id="reliability-reason"
+							class="br-reason"
+							class:pos={shown.rel.matched && shown.rel.delta > 0}
+							class:neg={shown.rel.matched && shown.rel.delta < 0}
+						>
+							{#if shown.rel.matched && shown.rel.reason}
+								{shown.rel.delta > 0 ? '+' : ''}{shown.rel.delta}: {shown.rel.reason}
+							{:else}
+								No engine profile matched, so this uses the make’s baseline ({shown.rel.base}/100). A more precise engine name gives a more specific score.
+							{/if}
+						</div>
+					{/if}
+				{/each}
+			</div>
+
+			<details class="what-if" bind:open={simOpen}>
+				<summary>What if the price or km were different?</summary>
+				<div class="sim-fields">
+					<label>
+						<span>Price (€)</span>
+						<input type="number" min="0" step="100" bind:value={simPrice} placeholder={car.price ? String(car.price) : ''} />
+					</label>
+					<label>
+						<span>Km</span>
+						<input type="number" min="0" step="1000" bind:value={simKm} placeholder={car.km ? String(car.km) : ''} />
+					</label>
+				</div>
+				<p class="sim-result" aria-live="polite">
+					{#if simChanged}
+						Score would be <strong>{simScore}</strong>
+						({simScore - score >= 0 ? '+' : ''}{simScore - score} from {score}). Nothing is saved.
+					{:else}
+						Change a value to see the new score. Nothing is saved.
+					{/if}
+				</p>
+			</details>
 		</section>
 
 		<section class="section">
 			<h3>Specs</h3>
 			<div class="specs">
-				<div class="spec"><span class="k">Make</span><span class="v">{car.make ?? '—'}</span></div>
-				<div class="spec"><span class="k">Model</span><span class="v">{car.model ?? '—'}</span></div>
+				<div class="spec"><span class="k">Make</span><span class="v">{car.make ?? '–'}</span></div>
+				<div class="spec"><span class="k">Model</span><span class="v">{car.model ?? '–'}</span></div>
+				<div class="spec"><span class="k">Engine</span><span class="v">{car.engine ?? '–'}</span></div>
 				<div class="spec">
-					<span class="k">Engine</span><span class="v">{car.engine ?? '—'}</span>
+					<span class="k">Power</span><span class="v">{car.power ? car.power + ' cv' : '–'}</span>
 				</div>
+				<div class="spec"><span class="k">Location</span><span class="v">{car.location ?? '–'}</span></div>
 				<div class="spec">
-					<span class="k">Power</span><span class="v">{car.power ? car.power + ' cv' : '—'}</span>
-				</div>
-				<div class="spec">
-					<span class="k">Location</span><span class="v">{car.location ?? '—'}</span>
-				</div>
-				<div class="spec">
-					<span class="k">Distance</span>
-					<span class="v">{distance != null ? distance + ' km' : '—'}</span>
+					<span class="k">Distance from Viana</span>
+					<span class="v">{distance != null ? distance + ' km' : '–'}</span>
 				</div>
 				{#if car.gearbox}
 					<div class="spec"><span class="k">Gearbox</span><span class="v">{car.gearbox}</span></div>
@@ -311,31 +341,27 @@
 
 		{#if hasListingSignals}
 			<section class="section">
-				<h3>Seller &amp; listing</h3>
+				<h3>Seller and listing</h3>
 				<div class="specs">
 					<div class="spec">
 						<span class="k">Seller</span>
-						<span class="v"
-							>{car.sellerType === 'dealer' ? 'Dealer' : car.sellerType === 'private' ? 'Private' : '—'}</span
-						>
+						<span class="v">{car.sellerType === 'dealer' ? 'Dealer' : car.sellerType === 'private' ? 'Private' : '–'}</span>
 					</div>
 					<div class="spec">
-						<span class="k">Account since</span><span class="v">{car.sellerSince ?? '—'}</span>
+						<span class="k">Account since</span><span class="v">{car.sellerSince ?? '–'}</span>
 					</div>
-					<div class="spec">
-						<span class="k">Owners</span><span class="v">{car.owners ?? '—'}</span>
-					</div>
+					<div class="spec"><span class="k">Owners</span><span class="v">{car.owners ?? '–'}</span></div>
 					<div class="spec">
 						<span class="k">Warranty</span>
-						<span class="v">{car.warrantyMonths ? car.warrantyMonths + ' months' : '—'}</span>
+						<span class="v">{car.warrantyMonths ? car.warrantyMonths + ' months' : '–'}</span>
 					</div>
 					<div class="spec">
 						<span class="k">Imported</span>
-						<span class="v">{car.imported == null ? '—' : car.imported ? 'Yes' : 'No'}</span>
+						<span class="v">{car.imported == null ? '–' : car.imported ? 'Yes' : 'No'}</span>
 					</div>
 					<div class="spec">
 						<span class="k">On the market</span>
-						<span class="v">{daysListed != null ? daysListed + ' days' : '—'}</span>
+						<span class="v">{daysListed != null ? daysListed + ' days' : '–'}</span>
 					</div>
 				</div>
 			</section>
@@ -357,27 +383,6 @@
 			</div>
 		</section>
 
-		{#if scam.level !== 'none'}
-			<section class="section">
-				<h3>Scam risk</h3>
-				<div class="scam-card {scam.level}">
-					<div class="scam-head">
-						<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-							<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-							<line x1="12" y1="9" x2="12" y2="13" />
-							<line x1="12" y1="17" x2="12.01" y2="17" />
-						</svg>
-						<span>{scam.level === 'high' ? 'Likely scam — verify carefully' : 'Suspicious — worth a second look'}</span>
-					</div>
-					<ul class="scam-list">
-						{#each scam.flags as f (f.id)}
-							<li>{f.label}</li>
-						{/each}
-					</ul>
-				</div>
-			</section>
-		{/if}
-
 		{#if car.notes}
 			<section class="section">
 				<h3>Notes</h3>
@@ -387,7 +392,7 @@
 
 		<div class="actions">
 			<button type="button" class="btn primary" onclick={() => onedit(car.id)}>Edit</button>
-			<button type="button" class="btn ghost" onclick={onShare}>Share</button>
+			<button type="button" class="btn ghost" onclick={onShare}>Copy share link</button>
 			<button type="button" class="btn ghost-danger" onclick={onDelete}>Delete</button>
 		</div>
 	</div>
@@ -398,7 +403,6 @@
 		position: fixed;
 		inset: 0;
 		background: var(--bg-overlay);
-		backdrop-filter: blur(4px);
 		z-index: 60;
 		animation: fadeUp var(--dur) var(--ease);
 	}
@@ -425,20 +429,13 @@
 		justify-content: space-between;
 		align-items: center;
 	}
-	.eyebrow {
-		font-size: 0.68rem;
-		font-weight: 600;
-		letter-spacing: 0.1em;
-		text-transform: uppercase;
-		color: var(--ink-dim);
+	.source {
+		font-size: 0.82rem;
+		color: var(--ink-soft);
 	}
 	.dot-sep {
 		color: var(--ink-dim);
-		margin: 0 4px;
-	}
-	.id {
-		font-family: var(--mono);
-		letter-spacing: 0.05em;
+		margin: 0 6px;
 	}
 	.close-btn {
 		background: transparent;
@@ -474,29 +471,34 @@
 		line-height: 1.2;
 		margin: 0;
 	}
+	.price-block {
+		display: flex;
+		align-items: center;
+		gap: 16px;
+	}
 	.score-widget {
-		width: 72px;
-		height: 72px;
+		width: 64px;
+		height: 64px;
 		border-radius: 50%;
 		display: inline-flex;
-		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		align-self: flex-start;
-		gap: 0;
-	}
-	.score-num {
-		font-size: 1.3rem;
+		flex-shrink: 0;
+		font-size: 1.35rem;
 		font-weight: 700;
 		letter-spacing: -0.02em;
-		line-height: 1;
 	}
-	.score-label {
-		font-size: 0.55rem;
-		font-weight: 700;
-		letter-spacing: 0.12em;
-		margin-top: 2px;
-		opacity: 0.85;
+	.score-widget.good {
+		background: var(--good-bg);
+		color: var(--good);
+	}
+	.score-widget.warn {
+		background: var(--warn-bg);
+		color: var(--status-negotiating-fg);
+	}
+	.score-widget.bad {
+		background: var(--bad-bg);
+		color: var(--bad);
 	}
 	.price-line {
 		font-size: 1.75rem;
@@ -507,17 +509,99 @@
 	.facts-line {
 		font-size: 0.88rem;
 		color: var(--ink-soft);
-		margin-top: -8px;
+		margin-top: 2px;
 	}
-	.drop-badge {
-		display: inline-block;
-		background: var(--good-bg);
-		color: var(--good);
-		padding: 4px 10px;
-		border-radius: 999px;
-		font-size: 0.76rem;
+	.drop-note {
+		margin-top: 4px;
+		font-size: 0.82rem;
 		font-weight: 600;
-		align-self: flex-start;
+		color: var(--good);
+	}
+	.quick-actions {
+		display: flex;
+		gap: 8px;
+		flex-wrap: wrap;
+	}
+	.btn.ghost[aria-pressed='true'] {
+		border-color: var(--accent);
+		color: var(--accent);
+		background: var(--accent-soft);
+	}
+	.scam-note {
+		font-size: 0.85rem;
+		line-height: 1.5;
+		color: var(--ink-soft);
+		padding: 10px 12px;
+		border-radius: 10px;
+		background: var(--card-2);
+	}
+	.scam-note strong {
+		color: var(--status-negotiating-fg);
+		font-weight: 600;
+	}
+	.hint {
+		font-size: 0.82rem;
+		color: var(--ink-soft);
+		line-height: 1.45;
+	}
+	.section-head {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 8px;
+	}
+	.text-link {
+		font-size: 0.82rem;
+		color: var(--accent);
+		text-underline-offset: 3px;
+	}
+	.text-link:hover {
+		color: var(--accent-hover);
+	}
+	.what-if {
+		margin-top: 6px;
+		border-top: 1px solid var(--rule);
+		padding-top: 10px;
+	}
+	.what-if summary {
+		cursor: pointer;
+		font-size: 0.85rem;
+		font-weight: 600;
+		color: var(--ink);
+	}
+	.sim-fields {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 10px;
+		margin-top: 10px;
+	}
+	.sim-fields label {
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+		font-size: 0.8rem;
+		color: var(--ink-soft);
+	}
+	.sim-fields input {
+		padding: 8px 10px;
+		border: 1px solid var(--rule);
+		border-radius: 8px;
+		background: var(--card-2);
+		font-size: 0.88rem;
+		color: var(--ink);
+		font-variant-numeric: tabular-nums;
+	}
+	.sim-fields input:focus {
+		border-color: var(--accent);
+		background: var(--card);
+	}
+	.sim-result {
+		margin-top: 8px;
+		font-size: 0.85rem;
+		color: var(--ink-soft);
+	}
+	.sim-result strong {
+		color: var(--ink);
 	}
 	.link-btn {
 		display: inline-flex;
@@ -545,11 +629,10 @@
 		gap: 8px;
 	}
 	h3 {
-		font-size: 0.7rem;
-		font-weight: 700;
-		letter-spacing: 0.08em;
-		text-transform: uppercase;
-		color: var(--ink-dim);
+		font-size: 0.92rem;
+		font-weight: 650;
+		letter-spacing: -0.01em;
+		color: var(--ink);
 		margin: 0;
 	}
 	.status-switcher {
@@ -599,8 +682,8 @@
 		color: var(--ink);
 	}
 	.br-weight {
-		font-size: 0.7rem;
-		color: var(--ink-dim);
+		font-size: 0.78rem;
+		color: var(--ink-soft);
 		font-variant-numeric: tabular-nums;
 	}
 	.br-value {
@@ -648,9 +731,8 @@
 		background: transparent;
 		border: 1px solid var(--rule);
 		border-radius: 50%;
-		color: var(--ink-dim);
-		font-family: var(--mono);
-		font-size: 0.72rem;
+		color: var(--ink-soft);
+		font-size: 0.75rem;
 		font-weight: 700;
 		line-height: 1;
 		cursor: pointer;
@@ -691,7 +773,8 @@
 	}
 	.br-reason {
 		grid-column: 1 / -1;
-		font-size: 0.72rem;
+		font-size: 0.82rem;
+		line-height: 1.45;
 		padding: 6px 10px;
 		border-radius: 8px;
 		background: var(--card-2);
@@ -712,9 +795,9 @@
 	}
 	.description summary {
 		cursor: pointer;
-		font-size: 0.8rem;
+		font-size: 0.85rem;
 		font-weight: 600;
-		color: var(--ink-dim);
+		color: var(--ink);
 	}
 	.description p {
 		margin: 0.6rem 0 0;
@@ -732,11 +815,8 @@
 		gap: 2px;
 	}
 	.spec .k {
-		font-size: 0.66rem;
-		color: var(--ink-dim);
-		text-transform: uppercase;
-		letter-spacing: 0.08em;
-		font-weight: 600;
+		font-size: 0.78rem;
+		color: var(--ink-soft);
 	}
 	.spec .v {
 		font-size: 0.88rem;
@@ -755,10 +835,6 @@
 		flex-direction: column;
 		gap: 8px;
 	}
-	.scam-card.low {
-		background: var(--warn-bg);
-		color: var(--warn);
-	}
 	.scam-card.high {
 		background: var(--bad-bg);
 		color: var(--bad);
@@ -773,7 +849,7 @@
 	.scam-list {
 		margin: 0;
 		padding-left: 22px;
-		font-size: 0.78rem;
+		font-size: 0.85rem;
 		line-height: 1.5;
 	}
 	.scam-list li {

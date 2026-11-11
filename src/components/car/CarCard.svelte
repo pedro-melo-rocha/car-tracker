@@ -2,7 +2,7 @@
 	import type { Car } from '$lib/types';
 	import { cachedScore, detectScamRisk, locationKm } from '$lib/scoring';
 	import { netPriceDrop } from '$lib/price';
-	import { timeAgo } from '$lib/staleness';
+	import { timeAgo, daysUntilStale } from '$lib/staleness';
 	import { cars } from '$lib/stores/cars';
 	import ScoreBadge from '$components/ui/ScoreBadge.svelte';
 	import StatusPill from '$components/ui/StatusPill.svelte';
@@ -10,6 +10,7 @@
 	let {
 		car,
 		draggable = false,
+		showStatus = true,
 		onopen,
 		onedit,
 		ondragstart,
@@ -17,6 +18,8 @@
 	}: {
 		car: Car;
 		draggable?: boolean;
+		/** Hide the status pill where the surrounding column already names the status. */
+		showStatus?: boolean;
 		onopen?: (id: string) => void;
 		onedit?: (id: string) => void;
 		ondragstart?: (id: string) => void;
@@ -27,21 +30,15 @@
 	const scam = $derived(detectScamRisk(car, { peers: $cars }));
 	const dropAmount = $derived(netPriceDrop(car.priceHistory));
 	const distance = $derived(locationKm(car.location));
-	const kmLabel = $derived(car.km != null ? Math.round(car.km / 1000) + 'k\u00A0km' : '—');
+	const staleIn = $derived(daysUntilStale(car));
+	const kmLabel = $derived(car.km != null && car.km > 0 ? Math.round(car.km / 1000) + 'k\u00A0km' : 'km unknown');
 </script>
 
 <div
 	class="car-card"
-	role="button"
-	tabindex="0"
+	class:high-risk={scam.level === 'high'}
 	{draggable}
-	onclick={() => onopen?.(car.id)}
-	onkeydown={(e) => {
-		if (e.key === 'Enter' || e.key === ' ') {
-			e.preventDefault();
-			onopen?.(car.id);
-		}
-	}}
+	role="listitem"
 	ondragstart={(e) => {
 		e.dataTransfer?.setData('carId', car.id);
 		e.stopPropagation();
@@ -49,49 +46,57 @@
 	}}
 	ondragend={() => ondragend?.()}
 >
-	{#if scam.level !== 'none'}
-		<div
-			class="scam-strip {scam.level}"
-			title={scam.flags.map((f) => `• ${f.label}`).join('\n')}
-		>
-			<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+	{#if scam.level === 'high'}
+		<div class="scam-strip">
+			<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
 				<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
 				<line x1="12" y1="9" x2="12" y2="13" />
 				<line x1="12" y1="17" x2="12.01" y2="17" />
 			</svg>
-			<span>{scam.level === 'high' ? 'Likely scam' : 'Suspicious'}</span>
+			<span>Likely scam: {scam.flags[0]?.label}</span>
 		</div>
 	{/if}
 	<div class="head">
 		<ScoreBadge {score} size="md" />
 		<div class="head-text">
-			<div class="meta">
-				{car.source ?? '—'} · {timeAgo(car.addedAt)}
-			</div>
-			<h3 class="title">{car.title}</h3>
+			<h3 class="title">
+				<button type="button" class="open-btn" onclick={() => onopen?.(car.id)}>{car.title}</button>
+			</h3>
+			<div class="meta">{car.source ?? 'Unknown source'} · added {timeAgo(car.addedAt)}</div>
 		</div>
+		{#if car.imageUrl}
+			<img
+				class="thumb"
+				src={car.imageUrl}
+				alt=""
+				loading="lazy"
+				onerror={(e) => ((e.currentTarget as HTMLImageElement).style.display = 'none')}
+			/>
+		{/if}
 	</div>
 
 	<div class="price-row">
-		<span class="price">{car.price ? '€' + car.price.toLocaleString('pt-PT') : '—'}</span>
+		<span class="price">{car.price ? '€' + car.price.toLocaleString('pt-PT') : 'No price'}</span>
 		{#if dropAmount > 0}
-			<span class="drop">
-				<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-					<polyline points="22 17 13.5 8.5 8.5 13.5 2 7" />
-					<polyline points="16 17 22 17 22 11" />
-				</svg>
-				€{dropAmount.toLocaleString('pt-PT')} off
-			</span>
+			<span class="drop">−€{dropAmount.toLocaleString('pt-PT')}</span>
 		{/if}
 	</div>
 
 	<div class="facts">
-		<span>{kmLabel}</span>
-		<span class="dot">·</span>
-		<span>{car.year ?? '—'}</span>
-		<span class="dot">·</span>
-		<span>{car.fuel ?? '—'}</span>
+		{kmLabel} · {car.year ?? 'year unknown'} · {car.fuel ?? 'fuel unknown'}
 	</div>
+
+	{#if scam.level === 'low'}
+		<p class="flag-note">Check: {scam.flags[0]?.label}{scam.flags.length > 1 ? ` (+${scam.flags.length - 1} more)` : ''}</p>
+	{/if}
+
+	{#if staleIn != null}
+		<p class="stale-note" class:soon={staleIn <= 1}>
+			{staleIn === 0
+				? 'No reply for 3 days. Moves to Dismissed now.'
+				: `No reply yet. Moves to Dismissed in ${staleIn} ${staleIn === 1 ? 'day' : 'days'}.`}
+		</p>
+	{/if}
 
 	<div class="foot">
 		<span class="loc">
@@ -100,37 +105,33 @@
 				<circle cx="12" cy="9" r="2.5" />
 			</svg>
 			<span class="loc-text">
-				{car.location ?? '—'}
-				{#if distance != null}<span class="dim"> · {distance}km</span>{/if}
+				{car.location ?? 'No location'}{#if distance != null}<span class="dim">, {distance} km away</span>{/if}
 			</span>
 		</span>
 		<div class="foot-right">
 			<button
 				type="button"
 				class="edit-btn"
-				aria-label="Edit car"
-				onclick={(e) => {
-					e.stopPropagation();
-					onedit?.(car.id);
-				}}
+				aria-label="Edit {car.title}"
+				onclick={() => onedit?.(car.id)}
 			>
-				<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+				<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
 					<path d="M4 20h4L20 8l-4-4L4 16v4z" />
 					<line x1="14" y1="6" x2="18" y2="10" />
 				</svg>
 			</button>
-			<StatusPill status={car.status} />
+			{#if showStatus}<StatusPill status={car.status} />{/if}
 		</div>
 	</div>
 </div>
 
 <style>
 	.car-card {
+		position: relative;
 		background: var(--card);
 		border: 1px solid var(--rule);
 		border-radius: var(--radius-lg);
 		padding: 16px;
-		cursor: pointer;
 		box-shadow: var(--shadow-sm);
 		transition:
 			transform 160ms var(--ease),
@@ -138,12 +139,51 @@
 			border-color 160ms var(--ease);
 	}
 	.car-card:hover {
-		transform: translateY(-1px);
-		box-shadow: var(--shadow-lg);
+		border-color: var(--border-strong);
+		box-shadow: var(--shadow);
 	}
-	.car-card:focus-visible {
+	.car-card.high-risk {
+		border-color: var(--bad-bg);
+	}
+	/* The title button stretches over the whole card so any click opens it. */
+	.open-btn {
+		all: unset;
+		cursor: pointer;
+	}
+	.open-btn::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+		border-radius: inherit;
+	}
+	.open-btn:focus-visible {
+		outline: none;
+	}
+	.open-btn:focus-visible::after {
 		outline: 2px solid var(--accent);
 		outline-offset: 2px;
+	}
+	.thumb {
+		width: 56px;
+		height: 42px;
+		border-radius: 6px;
+		object-fit: cover;
+		flex-shrink: 0;
+		background: var(--card-2);
+	}
+	.flag-note,
+	.stale-note {
+		margin-top: 8px;
+		font-size: 0.8rem;
+		line-height: 1.4;
+		color: var(--ink-soft);
+	}
+	.flag-note {
+		color: var(--status-negotiating-fg);
+	}
+	.stale-note.soon {
+		color: var(--bad);
+		font-weight: 600;
 	}
 	.head {
 		display: flex;
@@ -155,9 +195,9 @@
 		min-width: 0;
 	}
 	.meta {
-		font-size: 0.68rem;
-		color: var(--ink-dim);
-		margin-bottom: 2px;
+		font-size: 0.78rem;
+		color: var(--ink-soft);
+		margin-top: 3px;
 	}
 	.title {
 		font-size: 0.94rem;
@@ -165,6 +205,7 @@
 		letter-spacing: -0.015em;
 		line-height: 1.25;
 		color: var(--ink);
+		text-wrap: pretty;
 	}
 	.price-row {
 		display: flex;
@@ -179,29 +220,20 @@
 		color: var(--ink);
 	}
 	.drop {
-		font-size: 0.68rem;
+		font-size: 0.82rem;
+		font-weight: 600;
 		color: var(--good);
-		display: inline-flex;
-		align-items: center;
-		gap: 3px;
 	}
 	.scam-strip {
 		display: flex;
 		align-items: center;
 		gap: 6px;
 		margin: -16px -16px 12px;
-		padding: 6px 14px;
+		padding: 7px 14px;
 		border-top-left-radius: var(--radius-lg);
 		border-top-right-radius: var(--radius-lg);
-		font-size: 0.7rem;
+		font-size: 0.8rem;
 		font-weight: 600;
-		letter-spacing: 0.01em;
-	}
-	.scam-strip.low {
-		background: var(--warn-bg);
-		color: var(--warn);
-	}
-	.scam-strip.high {
 		background: var(--bad-bg);
 		color: var(--bad);
 	}
@@ -210,11 +242,9 @@
 		flex-wrap: wrap;
 		gap: 6px;
 		margin-top: 8px;
-		font-size: 0.76rem;
+		font-size: 0.82rem;
 		color: var(--ink-soft);
-	}
-	.facts .dot {
-		color: var(--ink-dim);
+		font-variant-numeric: tabular-nums;
 	}
 	.foot {
 		margin-top: 12px;
@@ -229,7 +259,7 @@
 		display: inline-flex;
 		align-items: center;
 		gap: 4px;
-		font-size: 0.76rem;
+		font-size: 0.8rem;
 		color: var(--ink-soft);
 		min-width: 0;
 		overflow: hidden;
@@ -243,6 +273,8 @@
 		color: var(--ink-dim);
 	}
 	.foot-right {
+		position: relative;
+		z-index: 1;
 		display: inline-flex;
 		align-items: center;
 		gap: 6px;
@@ -251,8 +283,8 @@
 	.edit-btn {
 		background: transparent;
 		border: 0;
-		width: 22px;
-		height: 22px;
+		width: 28px;
+		height: 28px;
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;

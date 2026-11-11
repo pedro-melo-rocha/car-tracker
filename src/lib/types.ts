@@ -2,8 +2,8 @@ export const STATUSES = [
 	'to-contact',
 	'contacted',
 	'negotiating',
-	'dismissed',
-	'final-offer'
+	'final-offer',
+	'dismissed'
 ] as const;
 
 export type CarStatus = (typeof STATUSES)[number];
@@ -86,9 +86,9 @@ export interface CarUpdateInput extends Partial<CarCreateInput> {
 }
 
 export const STATUS_LABELS: Record<CarStatus, string> = {
-	'to-contact': 'To Contact',
+	'to-contact': 'To contact',
 	contacted: 'Contacted',
 	negotiating: 'Negotiating',
 	dismissed: 'Dismissed',
-	'final-offer': 'Final Offer'
+	'final-offer': 'Final offer'
 };

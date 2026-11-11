@@ -88,7 +88,7 @@ export function deleteCar(id: string): Promise<void> {
 				next.splice(Math.min(index, next.length), 0, snapshot);
 				return next;
 			});
-			toast.error('Failed to delete — restored');
+			toast.error("Couldn't delete it. The car is back in the list.");
 		}
 	}, UNDO_WINDOW_MS);
 

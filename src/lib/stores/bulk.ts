@@ -131,7 +131,7 @@ export function bulkDelete(ids: string[]): void {
 			}
 			return next;
 		});
-		toast.error(`Failed to delete ${failed.length} — restored`);
+		toast.error(`Couldn't delete ${failed.length} ${failed.length === 1 ? 'car' : 'cars'}. They're back in the list.`);
 	}, UNDO_WINDOW_MS);
 }
 

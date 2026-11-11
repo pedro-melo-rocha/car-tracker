@@ -17,6 +17,8 @@
 	import { normalizeListingUrl } from '$lib/listing';
 	import CustomSelect from '$components/ui/CustomSelect.svelte';
 	import CustomCombobox from '$components/ui/CustomCombobox.svelte';
+	import ScoreBadge from '$components/ui/ScoreBadge.svelte';
+	import { computeScore } from '$lib/scoring';
 
 	let {
 		car,
@@ -129,7 +131,7 @@
 		if (!u || importing) return;
 		const existing = findDuplicate(u);
 		if (existing) {
-			toast.error(`URL already added: "${existing.title}"`);
+			toast.error(`Already in your list: "${existing.title}"`);
 			return;
 		}
 		importing = true;
@@ -142,7 +144,7 @@
 			const d = r.data;
 			const dupAfter = findDuplicate(d.url);
 			if (dupAfter) {
-				toast.error(`URL already added: "${dupAfter.title}"`);
+				toast.error(`Already in your list: "${dupAfter.title}"`);
 				return;
 			}
 			f.url = d.url ?? '';
@@ -169,9 +171,9 @@
 			f.description = d.description ?? '';
 			if (r.warnings.length) {
 				const missing = r.warnings.map((w) => FIELD_LABELS[w] || w).join(', ');
-				toast.info(`Imported. Missing: ${missing}`);
+				toast.info(`Imported. Still missing: ${missing}`);
 			} else {
-				toast.success('Imported.');
+				toast.success('Imported from the listing');
 			}
 		} catch {
 			/* apiFetch already toasted */
@@ -186,12 +188,12 @@
 	);
 
 	const fuelOptions = [
-		{ value: '', label: '—' },
+		{ value: '', label: 'Not set' },
 		{ value: 'Diesel', label: 'Diesel' },
 		{ value: 'Gasolina', label: 'Gasolina' }
 	];
 	const sourceOptions = [
-		{ value: '', label: '—' },
+		{ value: '', label: 'Not set' },
 		{ value: 'StandVirtual', label: 'StandVirtual' },
 		{ value: 'AutoScout24', label: 'AutoScout24' },
 		{ value: 'OLX', label: 'OLX' },
@@ -201,17 +203,17 @@
 		{ value: 'Other', label: 'Other' }
 	];
 	const gearboxOptions = [
-		{ value: '', label: '—' },
+		{ value: '', label: 'Not set' },
 		{ value: 'Manual', label: 'Manual' },
 		{ value: 'Automática', label: 'Automática' }
 	];
 	const sellerOptions = [
-		{ value: '', label: '—' },
+		{ value: '', label: 'Not set' },
 		{ value: 'private', label: 'Private' },
 		{ value: 'dealer', label: 'Dealer' }
 	];
 	const importedOptions = [
-		{ value: '', label: '—' },
+		{ value: '', label: 'Not set' },
 		{ value: 'no', label: 'No' },
 		{ value: 'yes', label: 'Yes' }
 	];
@@ -251,13 +253,32 @@
 		return isNaN(n) ? undefined : n;
 	}
 
+	// Live score while typing; needs at least one scoring input to be meaningful.
+	const liveScore = $derived.by(() => {
+		const km = toNumber(f.km);
+		const price = toNumber(f.price);
+		const year = toNumber(f.year);
+		if (km == null && price == null && year == null && !f.make && !f.location) return null;
+		return computeScore({
+			km: km ?? null,
+			price: price ?? null,
+			year: year ?? null,
+			fuel: f.fuel || null,
+			location: f.location || null,
+			make: f.make || null,
+			engine: f.engine || null,
+			title: f.title,
+			notes: f.notes || null
+		});
+	});
+
 	async function onSubmit(e: Event) {
 		e.preventDefault();
 		if (submitting) return;
 
 		const title = f.title.trim();
 		if (!title) {
-			toast.error('Title is required');
+			toast.error('Add a title before saving');
 			return;
 		}
 
@@ -299,7 +320,7 @@
 				if (payload.url) {
 					const dup = findDuplicate(payload.url);
 					if (dup) {
-						toast.error(`URL already added: "${dup.title}"`);
+						toast.error(`Already in your list: "${dup.title}"`);
 						submitting = false;
 						return;
 					}
@@ -318,12 +339,12 @@
 <form onsubmit={onSubmit}>
 	{#if !isEdit}
 		<div class="form-group import-row">
-			<label for="f-import">Import from listing URL</label>
+			<label for="f-import">Import from the listing link</label>
 			<div class="import-input-row">
 				<input
 					id="f-import"
 					type="url"
-					placeholder="Paste StandVirtual / OLX / PiscaPisca / CustoJusto URL"
+					placeholder="StandVirtual, OLX, PiscaPisca or CustoJusto link"
 					bind:value={importUrl}
 					disabled={importing}
 				/>
@@ -334,36 +355,14 @@
 					disabled={importing || !importUrl.trim()}
 				>
 					{#if importing}
-						<span class="btn-spinner" aria-hidden="true"></span>
+						<span class="btn-spinner dark" aria-hidden="true"></span>
 						<span>Importing…</span>
 					{:else}
 						<span>Import</span>
 					{/if}
 				</button>
 			</div>
-		</div>
-	{/if}
-
-	{#if isEdit}
-		<div class="form-group">
-			<label for="f-url">URL</label>
-			<input
-				id="f-url"
-				type="url"
-				placeholder="Listing URL"
-				bind:value={f.url}
-				onblur={handleUrlBlur}
-			/>
-		</div>
-
-		<div class="form-group">
-			<label for="f-image-url">Image URL</label>
-			<input
-				id="f-image-url"
-				type="url"
-				placeholder="Paste image URL from listing"
-				bind:value={f.imageUrl}
-			/>
+			<p class="field-hint">Fills in what it can. You can fix anything below.</p>
 		</div>
 	{/if}
 
@@ -378,154 +377,162 @@
 		/>
 	{/if}
 
-	<div class="form-group">
-		<label for="f-title">Title</label>
-		<input
-			id="f-title"
-			type="text"
-			placeholder="e.g. Renault Clio III 1.5 dCi 2008"
-			required
-			bind:value={f.title}
-		/>
-	</div>
-
-	<div class="form-row">
+	<fieldset>
+		<legend>The car</legend>
 		<div class="form-group">
-			<label for="f-make">Make</label>
-			<CustomCombobox id="f-make" options={allMakes} placeholder="e.g. Renault" bind:value={f.make} />
-		</div>
-		<div class="form-group">
-			<label for="f-model">Model</label>
-			<input id="f-model" type="text" placeholder="e.g. Clio" bind:value={f.model} autocomplete="off" />
-		</div>
-	</div>
-
-	<div class="form-row">
-		<div class="form-group">
-			<label for="f-year">Year</label>
+			<label for="f-title">Title</label>
 			<input
-				id="f-year"
-				type="number"
-				placeholder="2008"
-				min="1950"
-				max="2100"
-				step="1"
-				bind:value={f.year}
+				id="f-title"
+				type="text"
+				placeholder="e.g. Renault Clio III 1.5 dCi 2008"
+				required
+				bind:value={f.title}
 			/>
 		</div>
-		<div class="form-group">
-			<label for="f-km">Km</label>
-			<input id="f-km" type="number" placeholder="120000" min="0" step="1" bind:value={f.km} />
-		</div>
-	</div>
 
-	<div class="form-row">
-		<div class="form-group">
-			<label for="f-price">Price (EUR)</label>
-			<input id="f-price" type="number" placeholder="5500" min="0" step="1" bind:value={f.price} />
+		<div class="form-row">
+			<div class="form-group">
+				<label for="f-make">Make</label>
+				<CustomCombobox id="f-make" options={allMakes} placeholder="e.g. Renault" bind:value={f.make} />
+			</div>
+			<div class="form-group">
+				<label for="f-model">Model</label>
+				<input id="f-model" type="text" placeholder="e.g. Clio" bind:value={f.model} autocomplete="off" />
+			</div>
 		</div>
-		<div class="form-group">
-			<label for="f-fuel">Fuel</label>
-			<CustomSelect options={fuelOptions} placeholder="—" bind:value={f.fuel} />
-		</div>
-	</div>
 
-	<div class="form-row">
-		<div class="form-group">
-			<label for="f-engine">Engine</label>
-			<CustomCombobox
-				id="f-engine"
-				options={rankedEngineOptions}
-				placeholder="e.g. 1.5 dCi, 1.4 D-4D"
-				bind:value={f.engine}
-			/>
+		<div class="form-row">
+			<div class="form-group">
+				<label for="f-price">Price (€)</label>
+				<input id="f-price" type="number" inputmode="numeric" min="0" step="1" bind:value={f.price} />
+			</div>
+			<div class="form-group">
+				<label for="f-km">Km</label>
+				<input id="f-km" type="number" inputmode="numeric" min="0" step="1" bind:value={f.km} />
+			</div>
 		</div>
-		<div class="form-group">
-			<label for="f-power">Power (cv)</label>
-			<input id="f-power" type="number" placeholder="90" min="0" step="1" bind:value={f.power} />
-		</div>
-	</div>
 
-	<div class="form-row">
-		<div class="form-group">
-			<label for="f-source">Source</label>
-			<CustomSelect options={sourceOptions} placeholder="—" bind:value={f.source} />
+		<div class="form-row">
+			<div class="form-group">
+				<label for="f-year">Year</label>
+				<input id="f-year" type="number" inputmode="numeric" min="1950" max="2100" step="1" bind:value={f.year} />
+			</div>
+			<div class="form-group">
+				<label for="f-fuel">Fuel</label>
+				<CustomSelect id="f-fuel" options={fuelOptions} placeholder="Not set" bind:value={f.fuel} />
+			</div>
 		</div>
-		<div class="form-group">
-			<label for="f-status">Status</label>
-			<CustomSelect options={statusOptions} bind:value={f.status} />
-		</div>
-	</div>
 
-	<div class="form-row">
-		<div class="form-group">
-			<label for="f-gearbox">Gearbox</label>
-			<CustomSelect options={gearboxOptions} placeholder="—" bind:value={f.gearbox} />
+		<div class="form-row">
+			<div class="form-group">
+				<label for="f-engine">Engine</label>
+				<CustomCombobox
+					id="f-engine"
+					options={rankedEngineOptions}
+					placeholder="e.g. 1.5 dCi"
+					bind:value={f.engine}
+				/>
+			</div>
+			<div class="form-group">
+				<label for="f-power">Power (cv)</label>
+				<input id="f-power" type="number" inputmode="numeric" min="0" step="1" bind:value={f.power} />
+			</div>
 		</div>
-		<div class="form-group">
-			<label for="f-seller">Seller</label>
-			<CustomSelect options={sellerOptions} placeholder="—" bind:value={f.sellerType} />
-		</div>
-	</div>
 
-	<div class="form-row">
-		<div class="form-group">
-			<label for="f-seller-since">Seller account since</label>
-			<input
-				id="f-seller-since"
-				type="number"
-				placeholder="2018"
-				min="1990"
-				max="2100"
-				step="1"
-				bind:value={f.sellerSince}
-			/>
+		<div class="form-row">
+			<div class="form-group">
+				<label for="f-location">Location</label>
+				<input id="f-location" type="text" placeholder="e.g. Braga" bind:value={f.location} />
+			</div>
+			<div class="form-group">
+				<label for="f-gearbox">Gearbox</label>
+				<CustomSelect id="f-gearbox" options={gearboxOptions} placeholder="Not set" bind:value={f.gearbox} />
+			</div>
 		</div>
-		<div class="form-group">
-			<label for="f-owners">Owners</label>
-			<input id="f-owners" type="number" placeholder="1" min="0" step="1" bind:value={f.owners} />
-		</div>
-	</div>
 
-	<div class="form-row">
+		<div class="live-score" aria-live="polite">
+			{#if liveScore != null}
+				<ScoreBadge score={liveScore} size="sm" />
+				<span>Score with what’s filled in so far</span>
+			{:else}
+				<span class="muted">Fill in price, km or year to see the score.</span>
+			{/if}
+		</div>
+	</fieldset>
+
+	<fieldset>
+		<legend>Tracking</legend>
+		<div class="form-row">
+			<div class="form-group">
+				<label for="f-status">Status</label>
+				<CustomSelect id="f-status" options={statusOptions} bind:value={f.status} />
+			</div>
+			<div class="form-group">
+				<label for="f-source">Source</label>
+				<CustomSelect id="f-source" options={sourceOptions} placeholder="Not set" bind:value={f.source} />
+			</div>
+		</div>
+
+		{#if isEdit}
+			<div class="form-group">
+				<label for="f-url">Listing link</label>
+				<input id="f-url" type="url" bind:value={f.url} onblur={handleUrlBlur} />
+			</div>
+			<div class="form-group">
+				<label for="f-image-url">Photo link</label>
+				<input id="f-image-url" type="url" bind:value={f.imageUrl} />
+			</div>
+		{/if}
+
 		<div class="form-group">
-			<label for="f-warranty">Warranty (months)</label>
-			<input
-				id="f-warranty"
-				type="number"
-				placeholder="18"
-				min="0"
-				step="1"
-				bind:value={f.warrantyMonths}
-			/>
+			<label for="f-notes">Notes</label>
+			<textarea id="f-notes" placeholder="What the seller said, when to call back…" bind:value={f.notes}></textarea>
 		</div>
-		<div class="form-group">
-			<label for="f-imported">Imported</label>
-			<CustomSelect options={importedOptions} placeholder="—" bind:value={f.imported} />
+
+		{#if priceChanged}
+			<div class="form-group price-change">
+				<label for="f-pn">Why did the price change?</label>
+				<textarea
+					id="f-pn"
+					rows="2"
+					placeholder="e.g. Seller dropped it after we called"
+					bind:value={f.priceNote}
+				></textarea>
+			</div>
+		{/if}
+	</fieldset>
+
+	<details class="signals">
+		<summary>Seller and listing details <span class="muted">(used by the scam check)</span></summary>
+		<div class="signals-body">
+			<div class="form-row">
+				<div class="form-group">
+					<label for="f-seller">Seller</label>
+					<CustomSelect id="f-seller" options={sellerOptions} placeholder="Not set" bind:value={f.sellerType} />
+				</div>
+				<div class="form-group">
+					<label for="f-seller-since">Seller account since (year)</label>
+					<input id="f-seller-since" type="number" inputmode="numeric" min="1990" max="2100" step="1" bind:value={f.sellerSince} />
+				</div>
+			</div>
+			<div class="form-row">
+				<div class="form-group">
+					<label for="f-owners">Owners</label>
+					<input id="f-owners" type="number" inputmode="numeric" min="0" step="1" bind:value={f.owners} />
+				</div>
+				<div class="form-group">
+					<label for="f-warranty">Warranty (months)</label>
+					<input id="f-warranty" type="number" inputmode="numeric" min="0" step="1" bind:value={f.warrantyMonths} />
+				</div>
+			</div>
+			<div class="form-row">
+				<div class="form-group">
+					<label for="f-imported">Imported</label>
+					<CustomSelect id="f-imported" options={importedOptions} placeholder="Not set" bind:value={f.imported} />
+				</div>
+			</div>
 		</div>
-	</div>
-
-	<div class="form-group">
-		<label for="f-location">Localização</label>
-		<input id="f-location" type="text" placeholder="e.g. Lisboa, Porto" bind:value={f.location} />
-	</div>
-
-	<div class="form-group">
-		<label for="f-notes">Notes</label>
-		<textarea id="f-notes" placeholder="Free text notes..." bind:value={f.notes}></textarea>
-	</div>
-
-	{#if priceChanged}
-		<div class="form-group price-change">
-			<label for="f-pn">Reason for price change</label>
-			<textarea
-				id="f-pn"
-				rows="2"
-				placeholder="e.g. Seller lowered asking price"
-				bind:value={f.priceNote}
-			></textarea>
-		</div>
-	{/if}
+	</details>
 
 	<div class="form-actions">
 		<button type="button" class="btn secondary" onclick={onclose} disabled={submitting}>Cancel</button>
@@ -534,7 +541,7 @@
 				<span class="btn-spinner" aria-hidden="true"></span>
 				<span>{isEdit ? 'Saving…' : 'Adding…'}</span>
 			{:else}
-				<span>{isEdit ? 'Save Changes' : 'Add Car'}</span>
+				<span>{isEdit ? 'Save changes' : 'Add car'}</span>
 			{/if}
 		</button>
 	</div>
@@ -557,11 +564,56 @@
 		gap: 4px;
 	}
 	label {
-		font-size: 0.7rem;
-		color: var(--ink-dim);
-		text-transform: uppercase;
-		letter-spacing: 0.08em;
-		font-weight: 600;
+		font-size: 0.82rem;
+		color: var(--ink-soft);
+		font-weight: 500;
+	}
+	fieldset {
+		border: 0;
+		padding: 0;
+		margin: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 0.85rem;
+	}
+	legend {
+		font-size: 0.95rem;
+		font-weight: 650;
+		letter-spacing: -0.01em;
+		color: var(--ink);
+		margin-bottom: 0.6rem;
+		padding: 0;
+	}
+	fieldset + fieldset,
+	.signals {
+		border-top: 1px solid var(--rule);
+		padding-top: 1rem;
+	}
+	.field-hint,
+	.muted {
+		font-size: 0.8rem;
+		color: var(--ink-soft);
+		font-weight: 400;
+	}
+	.live-score {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		min-height: 36px;
+		font-size: 0.85rem;
+		color: var(--ink);
+	}
+	.signals summary {
+		cursor: pointer;
+		font-size: 0.95rem;
+		font-weight: 650;
+		color: var(--ink);
+	}
+	.signals-body {
+		display: flex;
+		flex-direction: column;
+		gap: 0.85rem;
+		margin-top: 0.85rem;
 	}
 	input,
 	textarea {
@@ -569,7 +621,7 @@
 		border: 1px solid var(--rule);
 		border-radius: 10px;
 		font-size: 0.85rem;
-		background: var(--card-2);
+		background: var(--card);
 		color: var(--ink);
 		font-family: inherit;
 		transition: border-color var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease);
@@ -646,6 +698,10 @@
 	.btn.secondary:disabled {
 		opacity: 0.5;
 		cursor: not-allowed;
+	}
+	.btn-spinner.dark {
+		border-color: var(--rule);
+		border-top-color: var(--ink-soft);
 	}
 	.btn-spinner {
 		width: 14px;

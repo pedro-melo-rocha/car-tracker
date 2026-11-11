@@ -1,4 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-	<rect width="32" height="32" rx="7" fill="#FBFAF7"/>
-	<rect x="9" y="9" width="14" height="14" rx="2.5" fill="#2E7D6B" transform="rotate(45 16 16)"/>
+	<rect x="1" y="5" width="30" height="22" rx="3.5" fill="#FFFFFF" stroke="#16171A" stroke-width="2"/>
+	<path d="M4.5 6h6v20h-6a2.5 2.5 0 0 1-2.5-2.5v-15A2.5 2.5 0 0 1 4.5 6z" fill="#1F4AA8"/>
+	<text x="7.25" y="23" text-anchor="middle" font-family="Arial Narrow, Arial, sans-serif" font-weight="700" font-size="7" fill="#FFFFFF">P</text>
+	<text x="20.5" y="21.5" text-anchor="middle" font-family="Arial Narrow, Arial, sans-serif" font-weight="700" font-size="12" letter-spacing="0.3" fill="#16171A">AC</text>
 </svg>

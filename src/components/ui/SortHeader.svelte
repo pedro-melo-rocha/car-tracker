@@ -29,9 +29,7 @@
 		border: 0;
 		color: var(--text-secondary);
 		font-weight: 600;
-		font-size: 0.78rem;
-		text-transform: uppercase;
-		letter-spacing: 0.03em;
+		font-size: 0.8rem;
 		cursor: pointer;
 		padding: 0;
 		white-space: nowrap;

@@ -14,6 +14,8 @@
 	import CarCard from '$components/car/CarCard.svelte';
 	import CustomSelect from '$components/ui/CustomSelect.svelte';
 	import SkeletonCard from '$components/ui/SkeletonCard.svelte';
+	import { cachedScore } from '$lib/scoring';
+	import { daysUntilStale } from '$lib/staleness';
 
 	function addNewCar() {
 		const url = new URL(page.url);
@@ -26,6 +28,7 @@
 	let movingIds = $state<Set<string>>(new Set());
 	let dismissedCollapsed = $state(true);
 	let hydrated = $state(false);
+	let mobileStatus = $state<CarStatus>('to-contact');
 
 	$effect(() => {
 		if (hydrated) return;
@@ -75,9 +78,24 @@
 		{ value: 'Gasolina', label: 'Gasolina' }
 	];
 
+	// Best score first; in Contacted, the car closest to auto-dismiss comes first.
 	function carsFor(status: CarStatus) {
-		return $filteredPipelineCars.filter((c) => c.status === status);
+		const list = $filteredPipelineCars.filter((c) => c.status === status);
+		if (status === 'contacted') {
+			return list.sort(
+				(a, b) =>
+					(daysUntilStale(a) ?? 99) - (daysUntilStale(b) ?? 99) || cachedScore(b) - cachedScore(a)
+			);
+		}
+		return list.sort((a, b) => cachedScore(b) - cachedScore(a));
 	}
+
+	const counts = $derived.by(() => {
+		const out = {} as Record<CarStatus, number>;
+		for (const s of STATUSES) out[s] = 0;
+		for (const c of $filteredPipelineCars) out[c.status] = (out[c.status] ?? 0) + 1;
+		return out;
+	});
 
 	function openDetail(id: string) {
 		const url = new URL(page.url);
@@ -91,7 +109,7 @@
 		goto(url.pathname + url.search, { keepFocus: true, noScroll: true });
 	}
 
-	async function moveCar(id: string, nextStatus: CarStatus) {
+	async function moveCar(id: string, nextStatus: CarStatus, undoable = true) {
 		const car = $cars.find((c) => c.id === id);
 		if (!car || car.status === nextStatus) return;
 		if (movingIds.has(id)) return;
@@ -104,7 +122,14 @@
 
 		try {
 			await updateCar(id, { status: nextStatus });
-			toast.success(`Moved to ${STATUS_LABELS[nextStatus]}`);
+			if (undoable) {
+				toast.action(
+					`Moved to ${STATUS_LABELS[nextStatus]}`,
+					{ label: 'Undo', onClick: () => void moveCar(id, previousStatus, false) },
+					6000,
+					'success'
+				);
+			}
 		} catch (err) {
 			cars.update((list) =>
 				list.map((c) => (c.id === id ? { ...c, status: previousStatus } : c))
@@ -125,9 +150,6 @@
 		await moveCar(id, status);
 	}
 
-	function handleStatusChange(id: string, next: string) {
-		void moveCar(id, next as CarStatus);
-	}
 </script>
 
 <div class="pipeline-view">
@@ -137,6 +159,7 @@
 			class="search"
 			placeholder="Search title, make, model…"
 			value={$pipelineFilter.search}
+			aria-label="Search cars"
 			oninput={(e) =>
 				pipelineFilter.update((f) => ({
 					...f,
@@ -146,6 +169,7 @@
 		<div class="select-slot">
 			<CustomSelect
 				options={sourceOptions}
+				ariaLabel="Filter by source"
 				placeholder="All sources"
 				value={$pipelineFilter.source}
 				onchange={(v) => pipelineFilter.update((f) => ({ ...f, source: v }))}
@@ -154,6 +178,7 @@
 		<div class="select-slot">
 			<CustomSelect
 				options={fuelOptions}
+				ariaLabel="Filter by fuel"
 				placeholder="All fuels"
 				value={$pipelineFilter.fuel}
 				onchange={(v) => pipelineFilter.update((f) => ({ ...f, fuel: v }))}
@@ -161,11 +186,27 @@
 		</div>
 	</div>
 
+	{#if isMobile}
+		<div class="status-tabs" role="tablist" aria-label="Status">
+			{#each STATUSES as s (s)}
+				<button
+					type="button"
+					role="tab"
+					class="status-tab"
+					aria-selected={mobileStatus === s}
+					onclick={() => (mobileStatus = s)}
+				>
+					{STATUS_LABELS[s]} <span class="tab-count">{counts[s]}</span>
+				</button>
+			{/each}
+		</div>
+	{/if}
+
 	<div class="columns" class:dismissed-collapsed={dismissedCollapsed}>
-		{#each STATUSES as status (status)}
+		{#each isMobile ? [mobileStatus] : STATUSES as status (status)}
 			{@const list = carsFor(status)}
 			{@const isDismissed = status === 'dismissed'}
-			{@const collapsed = isDismissed && dismissedCollapsed}
+			{@const collapsed = isDismissed && dismissedCollapsed && !isMobile}
 			<div
 				class="col"
 				class:drag-over={draggingOver === status}
@@ -178,8 +219,9 @@
 				ondragleave={() => (draggingOver = null)}
 				ondrop={(e) => handleDrop(e, status)}
 				role="list"
+				aria-label={STATUS_LABELS[status]}
 			>
-				<div class="col-head">
+				<div class="col-head" class:mobile-hidden={isMobile}>
 					<span class="col-label">{STATUS_LABELS[status]}</span>
 					<span class="count">{list.length}</span>
 					{#if isDismissed}
@@ -228,6 +270,7 @@
 							<div class="card-shell">
 								<CarCard
 									{car}
+									showStatus={false}
 									draggable={!isMobile && !moving}
 									onopen={openDetail}
 									onedit={openEdit}
@@ -239,19 +282,9 @@
 									</div>
 								{/if}
 							</div>
-							{#if isMobile}
-								<div class="mobile-status">
-									<CustomSelect
-										options={STATUSES.map((s) => ({ value: s, label: STATUS_LABELS[s] }))}
-										value={car.status}
-										ariaLabel="Move status"
-										onchange={(v) => handleStatusChange(car.id, v)}
-									/>
-								</div>
-							{/if}
 						</div>
 					{:else}
-						<div class="empty">No cars</div>
+						<div class="empty">Nothing here{$pipelineFilter.search || $pipelineFilter.source || $pipelineFilter.fuel ? ' with these filters' : ''}.</div>
 					{/each}
 				</div>
 				{/if}
@@ -299,8 +332,7 @@
 		align-items: flex-start;
 	}
 	.columns.dismissed-collapsed {
-		grid-template-columns:
-			minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) 56px minmax(0, 1fr);
+		grid-template-columns: repeat(4, minmax(0, 1fr)) 56px;
 	}
 	.col {
 		background: var(--card-2);
@@ -378,7 +410,7 @@
 		background: var(--card);
 		padding: 2px 8px;
 		border-radius: 999px;
-		font-size: 0.72rem;
+		font-size: 0.75rem;
 		color: var(--ink-dim);
 		flex-shrink: 0;
 	}
@@ -474,14 +506,41 @@
 			opacity: 1;
 		}
 	}
-	.mobile-status {
-		width: 100%;
+	.status-tabs {
+		display: flex;
+		gap: 4px;
+		overflow-x: auto;
+		margin: 0 -12px 12px;
+		padding: 0 12px;
+		border-bottom: 1px solid var(--rule);
+		scrollbar-width: none;
+	}
+	.status-tab {
+		flex-shrink: 0;
+		background: transparent;
+		border: 0;
+		border-bottom: 2px solid transparent;
+		margin-bottom: -1px;
+		padding: 10px 8px;
+		font-size: 0.88rem;
+		font-weight: 500;
+		color: var(--ink-soft);
+	}
+	.status-tab[aria-selected='true'] {
+		color: var(--ink);
+		font-weight: 600;
+		border-bottom-color: var(--ink);
+	}
+	.tab-count {
+		color: var(--ink-dim);
+		font-weight: 500;
+		margin-left: 2px;
 	}
 	.empty {
 		text-align: center;
 		padding: 16px 8px;
-		color: var(--ink-dim);
-		font-size: 0.78rem;
+		color: var(--ink-soft);
+		font-size: 0.82rem;
 	}
 	@media (max-width: 1200px) {
 		.columns,
@@ -507,8 +566,25 @@
 		.columns.dismissed-collapsed {
 			grid-template-columns: 1fr;
 		}
+		.filter-bar {
+			position: static;
+			padding-bottom: 10px;
+		}
+		.search {
+			flex-basis: 100%;
+		}
 		.select-slot {
-			width: 100%;
+			flex: 1;
+			width: auto;
+			min-width: 0;
+		}
+		.col {
+			background: transparent;
+			padding: 0;
+			min-height: 0;
+		}
+		.col-head.mobile-hidden {
+			display: none;
 		}
 	}
 </style>

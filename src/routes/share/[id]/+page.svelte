@@ -4,6 +4,8 @@
 	import { netPriceDrop } from '$lib/price';
 	import { SCORE_WEIGHTS } from '$lib/constants';
 	import PriceHistoryTimeline from '$components/car/PriceHistoryTimeline.svelte';
+	import ScoreBadge from '$components/ui/ScoreBadge.svelte';
+	import PlateMark from '$components/ui/PlateMark.svelte';
 
 	let { data }: { data: PageData } = $props();
 	const car = $derived(data.car);
@@ -13,18 +15,6 @@
 	const scam = $derived(detectScamRisk(car, { peers: [] }));
 	const distance = $derived(locationKm(car.location));
 	const priceDrop = $derived(netPriceDrop(car.priceHistory));
-
-	const scoreTone = $derived(score >= 70 ? 'good' : score >= 50 ? 'warn' : 'bad');
-	const scoreColor = $derived(
-		scoreTone === 'good' ? 'var(--good)' : scoreTone === 'warn' ? 'var(--warn)' : 'var(--bad)'
-	);
-	const scoreBgColor = $derived(
-		scoreTone === 'good'
-			? 'var(--good-bg)'
-			: scoreTone === 'warn'
-				? 'var(--warn-bg)'
-				: 'var(--bad-bg)'
-	);
 
 	function barCls(v: number) {
 		return v >= 70 ? 'good' : v >= 50 ? 'warn' : 'bad';
@@ -42,7 +32,7 @@
 			<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
 				<path d="M10 13L5 8l5-5" stroke-linecap="round" stroke-linejoin="round" />
 			</svg>
-			Back to Car Tracker
+			Back to Achado
 		</a>
 	</div>
 	<article class="content">
@@ -55,35 +45,43 @@
 				onerror={(e) => ((e.currentTarget as HTMLImageElement).style.display = 'none')}
 			/>
 		{/if}
-		<div class="eyebrow">
-			{#if car.source}{car.source}{/if}
-			<span class="dot-sep">·</span>
-			<span class="id">{car.id.slice(0, 8)}</span>
-		</div>
+		<div class="source">{car.source ?? 'Unknown source'}</div>
 
 		<h1 class="title">{car.title}</h1>
 
 		<div class="hero">
-			<div class="score-widget" style="background: {scoreBgColor}; color: {scoreColor};">
-				<div class="score-num">{score}</div>
-				<div class="score-label">SCORE</div>
-			</div>
+			<ScoreBadge {score} size="lg" />
 			<div class="hero-text">
 				<div class="price-line">
-					{car.price ? '€' + car.price.toLocaleString('pt-PT') : '—'}
+					{car.price ? '€' + car.price.toLocaleString('pt-PT') : '–'}
 				</div>
 				<div class="facts-line">
-					{car.km ? car.km.toLocaleString('pt-PT') + ' km' : '—'}
+					{car.km ? car.km.toLocaleString('pt-PT') + ' km' : '–'}
 					<span class="dot-sep">·</span>
-					{car.year ?? '—'}
+					{car.year ?? '–'}
 					<span class="dot-sep">·</span>
-					{car.fuel ?? '—'}
+					{car.fuel ?? '–'}
 				</div>
 				{#if priceDrop > 0}
-					<div class="drop-badge">↓ dropped €{priceDrop.toLocaleString('pt-PT')} total</div>
+					<div class="drop-note">Down €{priceDrop.toLocaleString('pt-PT')} since first seen</div>
 				{/if}
 			</div>
 		</div>
+
+		{#if scam.level === 'high'}
+			<div class="scam-card high" role="note">
+				<div class="scam-head">Likely scam. Check these before calling:</div>
+				<ul class="scam-list">
+					{#each scam.flags as f (f.id)}
+						<li>{f.label}</li>
+					{/each}
+				</ul>
+			</div>
+		{:else if scam.level === 'low'}
+			<p class="scam-note" role="note">
+				<strong>Worth checking:</strong> {scam.flags.map((f) => f.label).join('; ')}.
+			</p>
+		{/if}
 
 		{#if car.url}
 			<a href={car.url} target="_blank" rel="noopener noreferrer" class="link-btn">
@@ -98,8 +96,8 @@
 			<h3>Score breakdown</h3>
 			<div class="breakdown">
 				<div class="br-row">
-					<span class="br-label">Kms</span>
-					<span class="br-weight">{Math.round(SCORE_WEIGHTS.km * 100)}%</span>
+					<span class="br-label">Km</span>
+					<span class="br-weight">weight {Math.round(SCORE_WEIGHTS.km * 100)}%</span>
 					<span class="br-value">{breakdown.km}<span class="br-div">/100</span></span>
 					<span class="br-bar"
 						><span class="br-fill {barCls(breakdown.km)}" style="width:{breakdown.km}%"
@@ -108,7 +106,7 @@
 				</div>
 				<div class="br-row">
 					<span class="br-label">Price</span>
-					<span class="br-weight">{Math.round(SCORE_WEIGHTS.price * 100)}%</span>
+					<span class="br-weight">weight {Math.round(SCORE_WEIGHTS.price * 100)}%</span>
 					<span class="br-value">{breakdown.price}<span class="br-div">/100</span></span>
 					<span class="br-bar"
 						><span class="br-fill {barCls(breakdown.price)}" style="width:{breakdown.price}%"
@@ -117,7 +115,7 @@
 				</div>
 				<div class="br-row">
 					<span class="br-label">Reliability</span>
-					<span class="br-weight">{Math.round(SCORE_WEIGHTS.reliability * 100)}%</span>
+					<span class="br-weight">weight {Math.round(SCORE_WEIGHTS.reliability * 100)}%</span>
 					<span class="br-value">{breakdown.rel.score}<span class="br-div">/100</span></span>
 					<span class="br-bar"
 						><span
@@ -132,12 +130,12 @@
 						class:pos={breakdown.rel.delta > 0}
 						class:neg={breakdown.rel.delta < 0}
 					>
-						{breakdown.rel.delta > 0 ? '+' : ''}{breakdown.rel.delta} · {breakdown.rel.reason}
+						{breakdown.rel.delta > 0 ? '+' : ''}{breakdown.rel.delta}: {breakdown.rel.reason}
 					</div>
 				{/if}
 				<div class="br-row">
 					<span class="br-label">Year</span>
-					<span class="br-weight">{Math.round(SCORE_WEIGHTS.year * 100)}%</span>
+					<span class="br-weight">weight {Math.round(SCORE_WEIGHTS.year * 100)}%</span>
 					<span class="br-value">{breakdown.year}<span class="br-div">/100</span></span>
 					<span class="br-bar"
 						><span class="br-fill {barCls(breakdown.year)}" style="width:{breakdown.year}%"
@@ -146,7 +144,7 @@
 				</div>
 				<div class="br-row">
 					<span class="br-label">Location</span>
-					<span class="br-weight">{Math.round(SCORE_WEIGHTS.location * 100)}%</span>
+					<span class="br-weight">weight {Math.round(SCORE_WEIGHTS.location * 100)}%</span>
 					<span class="br-value">{breakdown.loc}<span class="br-div">/100</span></span>
 					<span class="br-bar"
 						><span class="br-fill {barCls(breakdown.loc)}" style="width:{breakdown.loc}%"
@@ -159,22 +157,22 @@
 		<section class="section">
 			<h3>Specs</h3>
 			<div class="specs">
-				<div class="spec"><span class="k">Make</span><span class="v">{car.make ?? '—'}</span></div>
+				<div class="spec"><span class="k">Make</span><span class="v">{car.make ?? '–'}</span></div>
 				<div class="spec">
-					<span class="k">Model</span><span class="v">{car.model ?? '—'}</span>
+					<span class="k">Model</span><span class="v">{car.model ?? '–'}</span>
 				</div>
 				<div class="spec">
-					<span class="k">Engine</span><span class="v">{car.engine ?? '—'}</span>
+					<span class="k">Engine</span><span class="v">{car.engine ?? '–'}</span>
 				</div>
 				<div class="spec">
-					<span class="k">Power</span><span class="v">{car.power ? car.power + ' cv' : '—'}</span>
+					<span class="k">Power</span><span class="v">{car.power ? car.power + ' cv' : '–'}</span>
 				</div>
 				<div class="spec">
-					<span class="k">Location</span><span class="v">{car.location ?? '—'}</span>
+					<span class="k">Location</span><span class="v">{car.location ?? '–'}</span>
 				</div>
 				<div class="spec">
-					<span class="k">Distance</span>
-					<span class="v">{distance != null ? distance + ' km' : '—'}</span>
+					<span class="k">Distance from Viana</span>
+					<span class="v">{distance != null ? distance + ' km' : '–'}</span>
 				</div>
 			</div>
 		</section>
@@ -186,44 +184,7 @@
 			</div>
 		</section>
 
-		{#if scam.level !== 'none'}
-			<section class="section">
-				<h3>Scam risk</h3>
-				<div class="scam-card {scam.level}">
-					<div class="scam-head">
-						<svg
-							viewBox="0 0 24 24"
-							width="14"
-							height="14"
-							fill="none"
-							stroke="currentColor"
-							stroke-width="2"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							aria-hidden="true"
-						>
-							<path
-								d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
-							/>
-							<line x1="12" y1="9" x2="12" y2="13" />
-							<line x1="12" y1="17" x2="12.01" y2="17" />
-						</svg>
-						<span
-							>{scam.level === 'high'
-								? 'Likely scam — verify carefully'
-								: 'Suspicious — worth a second look'}</span
-						>
-					</div>
-					<ul class="scam-list">
-						{#each scam.flags as f (f.id)}
-							<li>{f.label}</li>
-						{/each}
-					</ul>
-				</div>
-			</section>
-		{/if}
-
-		<footer class="foot">Shared from Car Tracker</footer>
+		<footer class="foot">Shared from <PlateMark size="sm" /></footer>
 	</article>
 </div>
 
@@ -273,20 +234,13 @@
 		background: var(--card-2);
 		margin-bottom: 4px;
 	}
-	.eyebrow {
-		font-size: 0.68rem;
-		font-weight: 600;
-		letter-spacing: 0.1em;
-		text-transform: uppercase;
-		color: var(--ink-dim);
+	.source {
+		font-size: 0.85rem;
+		color: var(--ink-soft);
 	}
 	.dot-sep {
 		color: var(--ink-dim);
 		margin: 0 4px;
-	}
-	.id {
-		font-family: var(--mono);
-		letter-spacing: 0.05em;
 	}
 	.title {
 		font-size: 1.75rem;
@@ -307,29 +261,6 @@
 		flex-direction: column;
 		gap: 4px;
 	}
-	.score-widget {
-		width: 84px;
-		height: 84px;
-		border-radius: 50%;
-		display: inline-flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		flex-shrink: 0;
-	}
-	.score-num {
-		font-size: 1.5rem;
-		font-weight: 700;
-		letter-spacing: -0.02em;
-		line-height: 1;
-	}
-	.score-label {
-		font-size: 0.58rem;
-		font-weight: 700;
-		letter-spacing: 0.12em;
-		margin-top: 2px;
-		opacity: 0.85;
-	}
 	.price-line {
 		font-size: 1.75rem;
 		font-weight: 700;
@@ -340,16 +271,22 @@
 		font-size: 0.88rem;
 		color: var(--ink-soft);
 	}
-	.drop-badge {
-		display: inline-block;
-		background: var(--good-bg);
-		color: var(--good);
-		padding: 4px 10px;
-		border-radius: 999px;
-		font-size: 0.76rem;
-		font-weight: 600;
-		align-self: flex-start;
+	.drop-note {
 		margin-top: 4px;
+		font-size: 0.85rem;
+		font-weight: 600;
+		color: var(--good);
+	}
+	.scam-note {
+		font-size: 0.88rem;
+		line-height: 1.5;
+		color: var(--ink-soft);
+		padding: 10px 12px;
+		border-radius: 10px;
+		background: var(--card-2);
+	}
+	.scam-note strong {
+		color: var(--status-negotiating-fg);
 	}
 	.link-btn {
 		display: inline-flex;
@@ -377,11 +314,10 @@
 		gap: 8px;
 	}
 	h3 {
-		font-size: 0.7rem;
-		font-weight: 700;
-		letter-spacing: 0.08em;
-		text-transform: uppercase;
-		color: var(--ink-dim);
+		font-size: 0.95rem;
+		font-weight: 650;
+		letter-spacing: -0.01em;
+		color: var(--ink);
 		margin: 0;
 	}
 	.breakdown {
@@ -402,8 +338,8 @@
 		color: var(--ink);
 	}
 	.br-weight {
-		font-size: 0.7rem;
-		color: var(--ink-dim);
+		font-size: 0.8rem;
+		color: var(--ink-soft);
 		font-variant-numeric: tabular-nums;
 	}
 	.br-value {
@@ -440,7 +376,7 @@
 		background: var(--bad);
 	}
 	.br-reason {
-		font-size: 0.72rem;
+		font-size: 0.75rem;
 		padding: 6px 10px;
 		border-radius: 8px;
 		background: var(--card-2);
@@ -468,11 +404,8 @@
 		gap: 2px;
 	}
 	.spec .k {
-		font-size: 0.66rem;
-		color: var(--ink-dim);
-		text-transform: uppercase;
-		letter-spacing: 0.08em;
-		font-weight: 600;
+		font-size: 0.8rem;
+		color: var(--ink-soft);
 	}
 	.spec .v {
 		font-size: 0.88rem;
@@ -490,10 +423,6 @@
 		display: flex;
 		flex-direction: column;
 		gap: 8px;
-	}
-	.scam-card.low {
-		background: var(--warn-bg);
-		color: var(--warn);
 	}
 	.scam-card.high {
 		background: var(--bad-bg);
@@ -516,12 +445,13 @@
 		margin: 2px 0;
 	}
 	.foot {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 8px;
 		margin-top: 8px;
-		font-size: 0.7rem;
-		color: var(--ink-dim);
-		text-align: center;
-		letter-spacing: 0.08em;
-		text-transform: uppercase;
+		font-size: 0.82rem;
+		color: var(--ink-soft);
 	}
 	@media (max-width: 560px) {
 		.page {

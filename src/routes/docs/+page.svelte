@@ -2,9 +2,9 @@
 	import { MAKE_RELIABILITY, MAKE_RELIABILITY_NOTES, ENGINE_PROFILES } from '$lib/constants';
 
 	const weights = [
-		{ label: 'Kms', pct: 22, hint: 'Fuel-aware sweet spot: diesel 0–130k ⇒ 100, 280k ⇒ 0. Petrol 0–90k ⇒ 100, 200k ⇒ 0.' },
+		{ label: 'Km', pct: 22, hint: 'Fuel-aware sweet spot: diesel 0–130k ⇒ 100, 280k ⇒ 0. Petrol 0–90k ⇒ 100, 200k ⇒ 0.' },
 		{ label: 'Price', pct: 22, hint: '€0–€2500 ⇒ 100 (bargain plateau), €5000 ⇒ 50 (budget), €7500 ⇒ 0. Doesn\u2019t reward suspiciously cheap listings.' },
-		{ label: 'Reliability', pct: 30, hint: 'Make baseline (60–90) ± engine adjustment. The dominant subscore — bad engines sink a cheap car.' },
+		{ label: 'Reliability', pct: 30, hint: 'Make baseline (60–90) ± engine adjustment. The biggest weight, so a bad engine sinks a cheap car.' },
 		{ label: 'Year', pct: 13, hint: '2005 ⇒ 0, 2020 ⇒ 100. Rewards newer electronics & DPF maturity.' },
 		{ label: 'Location', pct: 13, hint: 'Driving distance from Viana do Castelo, dampened: max 30-point penalty at 600km.' }
 	];
@@ -35,19 +35,10 @@
 	}
 
 	const allEngines = ENGINE_PROFILES.map((p) => {
-		const pattern = p.re.source
-			.replace(/\\s\*/g, ' ')
-			.replace(/\\\./g, '.')
-			.replace(/\[- ?\]\??/g, '-')
-			.replace(/\(\?!.*?\)/g, '')
-			.replace(/\\b/g, '')
-			.replace(/\(.*?\)/g, (m) =>
-				m.replace(/[()|]/g, ' ').trim().split(/\s+/).join('/')
-			)
-			.replace(/\s+/g, ' ')
-			.trim();
+		const pattern = p.label;
 		// Year boundary that disambiguates same-engine year splits (e.g. 1.5 dCi pre/post-2011).
-		const year = p.yearMin != null ? `${p.yearMin}+` : p.yearMax != null ? `≤${p.yearMax}` : null;
+		const year =
+			p.yearMin != null ? `from ${p.yearMin}` : p.yearMax != null ? `up to ${p.yearMax}` : null;
 		return {
 			pattern,
 			year,
@@ -94,7 +85,7 @@
 
 <div class="docs-view">
 	<aside class="docs-toc" aria-label="On this page">
-		<div class="toc-title">On this page</div>
+		<div class="toc-title">Sections</div>
 		<nav>
 			{#each sections as s (s.id)}
 				<a
@@ -111,19 +102,15 @@
 
 	<main class="docs-main">
 		<header class="docs-header">
-			<h2>Scoring Methodology</h2>
+			<h1>How the score works</h1>
 			<p class="docs-sub">
-				Every car gets a 0–100 score designed to surface the most promising leads in the ≤5k€
-				Portuguese used-car segment. Higher is better. The score blends objective facts (km, price,
-				year, distance) with market reliability signals.
+				Each car gets a score from 0 to 100, tuned for used cars up to about €5000 in Portugal.
+				It mixes km, price, year and distance from Viana with how reliable the make and engine are.
 			</p>
 		</header>
 
 		<section id="weights" class="docs-section">
-			<div class="weights-head">
-				<h3>Weights</h3>
-				<span class="weights-total">sums to 100%</span>
-			</div>
+			<h3>Weights</h3>
 			<div class="docs-weights">
 				{#each weights as w (w.label)}
 					<div class="docs-weight-card">
@@ -143,7 +130,7 @@
 		<section id="subscores" class="docs-section">
 			<h3>How each subscore works</h3>
 			<details open>
-				<summary><strong>Kms</strong> <span class="summary-tag">fuel-aware curve</span></summary>
+				<summary><strong>Km</strong> <span class="summary-tag">fuel-aware curve</span></summary>
 				<div class="details-body">
 					<svg class="curve" viewBox="0 0 320 180" role="img" aria-label="Km subscore curve">
 						<!-- grid + axes -->
@@ -184,7 +171,7 @@
 					<p>
 						Diesels plateau at 100 between <code>0–130 000 km</code> and decay linearly to 0 at
 						<code>280 000 km</code>. Petrol ages faster: plateau <code>0–90 000 km</code>, decay
-						to 0 at <code>200 000 km</code>. Below the plateau the score stays flat — we don't
+						to 0 at <code>200 000 km</code>. Below the plateau the score stays flat: we don't
 						reward suspiciously low km on an old car, since odometer rollback is a common fraud
 						pattern in this segment.
 					</p>
@@ -257,7 +244,7 @@
 				<p>
 					Straight-line driving distance from <strong>Viana do Castelo</strong>. Cars in Minho,
 					Porto, Braga score near 100; the curve is dampened so the Algarve max penalty is around
-					30 points — distance shouldn't bury an otherwise excellent car.
+					30 points, so distance shouldn't bury an otherwise excellent car.
 				</p>
 			</details>
 		</section>
@@ -281,9 +268,9 @@
 						href="https://www.reliabilityindex.com/"
 						target="_blank"
 						rel="noreferrer noopener">Reliability Index</a
-					>) skew young — they tell you how a 2-year-old car is behaving, not a 12-year-old one.
+					>) skew young: they tell you how a 2-year-old car is behaving, not a 12-year-old one.
 					For the cars we actually look at, long-term durability signals matter more:
-					<strong>German inspection reports</strong> —
+					<strong>German inspection reports</strong> (
 					<a
 						href="https://www.tuev-verband.de/pruefungen/tuev-report"
 						target="_blank"
@@ -293,7 +280,7 @@
 						href="https://www.dekra.com/en/used-car-report/"
 						target="_blank"
 						rel="noreferrer noopener">Dekra Used Car Report</a
-					> — plus long-term ownership data from
+					>), plus long-term ownership data from
 					<a
 						href="https://www.consumerreports.org/cars/"
 						target="_blank"
@@ -388,7 +375,7 @@
 				<input
 					type="search"
 					class="engine-search"
-					placeholder="Filter engines (e.g. tdi, honda, chain)…"
+					placeholder="Find an engine, e.g. tdi or chain"
 					bind:value={engineQuery}
 				/>
 			</div>
@@ -404,7 +391,7 @@
 							{#if e.fuel}
 								<span class="fuel-pill fuel-{e.fuel.toLowerCase()}">{e.fuel}</span>
 							{:else}
-								<span class="fuel-pill fuel-any">any</span>
+								<span class="fuel-pill fuel-any">any fuel</span>
 							{/if}
 						</span>
 						<span class="docs-engine-delta">{e.sign}{e.delta}</span>
@@ -419,17 +406,17 @@
 		<section id="not-scored" class="docs-section">
 			<h3>What isn't scored</h3>
 			<ul>
-				<li><strong>Seller behaviour</strong> — note it in the Notes field; not a numeric input.</li>
+				<li><strong>Seller behaviour.</strong> Write it in Notes; it isn't a number.</li>
 				<li>
-					<strong>Accident history / rust</strong> — impossible to assess remotely. Inspect on visit.
+					<strong>Accident history and rust.</strong> Can't be judged from a listing. Check on the visit.
 				</li>
 				<li>
-					<strong>Options/trim level</strong> — irrelevant for this budget; most listings are base/mid
-					trim.
+					<strong>Options and trim.</strong> Barely matters at this budget; most listings are base or
+					mid trim.
 				</li>
 				<li>
-					<strong>FAP/DPF removal</strong> — technically adds torque and reduces failure risk, but it's
-					illegal for IPO. The model ignores it.
+					<strong>FAP/DPF removal.</strong> Fewer failures, but it fails the IPO inspection. The model
+					ignores it.
 				</li>
 			</ul>
 		</section>
@@ -437,11 +424,11 @@
 		<section id="thresholds" class="docs-section">
 			<h3>Colour thresholds</h3>
 			<div class="threshold-pills">
-				<span class="threshold-pill green">≥ 75 green</span>
-				<span class="threshold-pill yellow">50–74 yellow</span>
-				<span class="threshold-pill red">&lt; 50 red</span>
+				<span class="threshold-pill green">70 and up: green</span>
+				<span class="threshold-pill yellow">50 to 69: amber</span>
+				<span class="threshold-pill red">below 50: red</span>
 			</div>
-			<p>Don't overthink a single-point gap — the model is a ranking aid, not an oracle.</p>
+			<p>A gap of a point or two means nothing. The score is for ranking, not a verdict.</p>
 		</section>
 
 		<section id="sources" class="docs-section">
@@ -482,11 +469,9 @@
 		align-self: start;
 	}
 	.docs-toc .toc-title {
-		font-size: 0.72rem;
-		text-transform: uppercase;
-		letter-spacing: 0.08em;
-		color: var(--text-muted);
-		font-weight: 600;
+		font-size: 0.85rem;
+		color: var(--ink);
+		font-weight: 650;
 		margin-bottom: 10px;
 		padding-left: 12px;
 	}
@@ -524,7 +509,7 @@
 		border-bottom: 1px solid var(--border);
 		margin-bottom: 24px;
 	}
-	.docs-header h2 {
+	.docs-header h1 {
 		font-size: 1.75rem;
 		font-weight: 700;
 		letter-spacing: -0.02em;
@@ -535,6 +520,7 @@
 		color: var(--text-secondary);
 		font-size: var(--fs-md);
 		line-height: 1.6;
+		max-width: 68ch;
 	}
 
 	.docs-section {
@@ -589,26 +575,6 @@
 		color: var(--text);
 	}
 
-	.weights-head {
-		display: flex;
-		align-items: baseline;
-		justify-content: space-between;
-		gap: 12px;
-		margin-bottom: 10px;
-	}
-	.weights-head h3 {
-		margin-bottom: 0;
-	}
-	.weights-total {
-		font-family: var(--mono);
-		font-size: 0.72rem;
-		font-weight: 600;
-		letter-spacing: 0.04em;
-		color: var(--accent);
-		background: var(--accent-soft);
-		padding: 3px 10px;
-		border-radius: 999px;
-	}
 	.docs-weights {
 		display: grid;
 		grid-template-columns: repeat(5, 1fr);
@@ -693,7 +659,7 @@
 		font-weight: 700;
 	}
 	.summary-tag {
-		font-size: 0.72rem;
+		font-size: 0.75rem;
 		color: var(--text-muted);
 		background: var(--bg-warm);
 		padding: 2px 8px;
@@ -824,7 +790,7 @@
 	}
 	.engine-tabs .count {
 		font-family: var(--mono);
-		font-size: 0.72rem;
+		font-size: 0.75rem;
 		background: var(--bg-warm);
 		padding: 1px 6px;
 		border-radius: 999px;
@@ -870,8 +836,9 @@
 		background: var(--red-bg);
 	}
 	.docs-engine-label {
-		font-family: var(--mono);
 		font-weight: 600;
+		min-width: 0;
+		overflow-wrap: anywhere;
 		color: var(--text);
 		font-size: 0.82rem;
 		display: inline-flex;
@@ -880,12 +847,9 @@
 		flex-wrap: wrap;
 	}
 	.fuel-pill {
-		font-family: var(--mono);
-		font-size: 0.65rem;
+		font-size: 0.75rem;
 		font-weight: 600;
-		text-transform: uppercase;
-		letter-spacing: 0.04em;
-		padding: 1px 6px;
+		padding: 1px 7px;
 		border-radius: 999px;
 		background: var(--bg-warm);
 		color: var(--text-muted);
@@ -904,7 +868,7 @@
 	}
 	.year-pill {
 		font-family: var(--mono);
-		font-size: 0.65rem;
+		font-size: 0.75rem;
 		font-weight: 600;
 		letter-spacing: 0.02em;
 		padding: 1px 6px;

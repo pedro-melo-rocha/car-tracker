@@ -8,6 +8,7 @@
 
 	let {
 		value = $bindable(''),
+		id,
 		options,
 		placeholder = 'Select…',
 		ariaLabel,
@@ -16,6 +17,7 @@
 		filterPlaceholder = 'Search…'
 	}: {
 		value?: string;
+		id?: string;
 		options: Option[];
 		placeholder?: string;
 		ariaLabel?: string;
@@ -98,6 +100,7 @@
 <div class="custom-select-wrap" class:open bind:this={wrap}>
 	<button
 		bind:this={trigger}
+		{id}
 		type="button"
 		class="custom-select-trigger"
 		class:open

@@ -9,40 +9,25 @@
 		car,
 		onopen,
 		onedit,
-		ondelete
 	}: {
 		car: Car;
 		onopen?: (id: string) => void;
 		onedit?: (id: string) => void;
-		ondelete?: (id: string) => void;
 	} = $props();
 
 	const score = $derived(cachedScore(car));
 	const selected = $derived($bulkSelection.has(car.id));
-	const anySelected = $derived($bulkSelection.size > 0);
 </script>
 
-<div
-	class="list-card"
-	class:selected
-	role="button"
-	tabindex="0"
-	onclick={() => onopen?.(car.id)}
-	onkeydown={(e) => {
-		if (e.key === 'Enter' || e.key === ' ') {
-			e.preventDefault();
-			onopen?.(car.id);
-		}
-	}}
->
+<div class="list-card" class:selected>
 	<!-- svelte-ignore a11y_click_events_have_key_events -->
 	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-	<label class="select-wrap" class:visible={anySelected || selected} onclick={(e) => e.stopPropagation()}>
+	<label class="select-wrap" onclick={(e) => e.stopPropagation()}>
 		<input
 			type="checkbox"
 			checked={selected}
 			onchange={() => toggleSelection(car.id)}
-			aria-label={selected ? 'Deselect' : 'Select'}
+			aria-label="Select {car.title}"
 		/>
 	</label>
 	<div class="lc-top">
@@ -57,8 +42,8 @@
 			/>
 		{/if}
 		<div class="lc-title-block">
-			<div class="lc-meta">{car.source ?? '—'}</div>
-			<div class="lc-title">{car.title}</div>
+			<div class="lc-meta">{car.source ?? 'Unknown source'}</div>
+			<button type="button" class="lc-title" onclick={() => onopen?.(car.id)}>{car.title}</button>
 		</div>
 	</div>
 	<div class="lc-price-row">
@@ -90,11 +75,6 @@
 					<path d="M11 2l3 3-8 8H3v-3L11 2z" />
 				</svg>
 			</button>
-			<button type="button" class="icon-btn" onclick={() => ondelete?.(car.id)} title="Delete" aria-label="Delete">
-				<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8">
-					<path d="M3 4h10M6 4V2h4v2M5 4v9h6V4" />
-				</svg>
-			</button>
 		</div>
 	</div>
 </div>
@@ -115,6 +95,20 @@
 		background: var(--accent-soft);
 		border-color: var(--accent);
 	}
+	.lc-title::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+		border-radius: inherit;
+	}
+	.lc-title:focus-visible::after {
+		outline: 2px solid var(--accent);
+		outline-offset: 2px;
+	}
+	.lc-actions {
+		position: relative;
+		z-index: 1;
+	}
 	.select-wrap {
 		position: absolute;
 		top: 8px;
@@ -124,24 +118,14 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		opacity: 0;
-		transition: opacity var(--dur-fast) var(--ease);
 		cursor: pointer;
 		z-index: 1;
-	}
-	.select-wrap.visible {
-		opacity: 1;
 	}
 	.select-wrap input {
 		width: 18px;
 		height: 18px;
 		accent-color: var(--accent);
 		cursor: pointer;
-	}
-	@media (hover: hover) {
-		.list-card:hover .select-wrap {
-			opacity: 1;
-		}
 	}
 	.lc-top {
 		display: flex;
@@ -161,11 +145,14 @@
 		background: var(--card-2);
 	}
 	.lc-meta {
-		font-size: 0.68rem;
-		color: var(--ink-dim);
+		font-size: 0.78rem;
+		color: var(--ink-soft);
 		margin-bottom: 2px;
 	}
 	.lc-title {
+		all: unset;
+		cursor: pointer;
+		display: block;
 		font-weight: 600;
 		color: var(--ink);
 		font-size: 0.9rem;

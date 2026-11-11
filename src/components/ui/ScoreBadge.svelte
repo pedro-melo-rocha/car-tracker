@@ -10,10 +10,12 @@
 </script>
 
 <span
+	role="img"
+	aria-label="Score {score} out of 100"
 	class="score-chip {tone} size-{size}"
 	style="width:{px}px;height:{px}px;font-size:{fontSize}px;"
 >
-	<svg width={px} height={px} class="ring">
+	<svg width={px} height={px} class="ring" aria-hidden="true">
 		<circle cx={px / 2} cy={px / 2} r={radius} class="track" stroke-width="2" fill="none" />
 		<circle
 			cx={px / 2}

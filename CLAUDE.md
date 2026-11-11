@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Car Tracker is a hosted car search tracker for browsing used car listings in Portugal. SvelteKit + TypeScript frontend, SvelteKit endpoints for the API, Supabase Postgres for persistence, deployed on Vercel (Node 22, Fluid Compute).
+Achado (formerly Car Tracker; repo and Vercel project still use the old name) is a hosted car search tracker for browsing used car listings in Portugal. SvelteKit + TypeScript frontend, SvelteKit endpoints for the API, Supabase Postgres for persistence, deployed on Vercel (Node 22, Fluid Compute).
 
 ## Commands
 
@@ -18,9 +18,9 @@ Car Tracker is a hosted car search tracker for browsing used car listings in Por
 
 ## Architecture
 
-- **`src/routes/+layout.svelte`** — Mounts Header, overlays (`?car=<id>`, `?edit=new|<id>`), toasts, dialogs. Skips chrome on `/login` and `/share/*`.
+- **`src/routes/+layout.svelte`** — Mounts Header, overlays (`?car=<id>`, `?edit=new|<id>`, `?compare=<id>,<id>`), the compare tray, toasts, dialogs. Locks body scroll while an overlay is open. Skips chrome on `/login` and `/share/*`.
 - **`src/routes/+layout.server.ts`** — Auth guard: redirects unauthenticated users to `/login` (except `/login`, `/share/*`, `/share-target`, `/auth/*`). Returns `user` in layout data.
-- **`src/routes/{pipeline,list,compare,docs}/+page.svelte`** — One URL per view.
+- **`src/routes/{pipeline,list}/+page.svelte`** — The two views in the header nav. `/docs` ("How the score works") is linked from the score breakdown and the account menu, not the nav. `/compare` and `/score-lab` only redirect: compare is the `CompareOverlay` (opened from the List bulk bar or "Compare" on a car's panel, via `CompareTray`), and the score sandbox is the "What if" box in `CarDetailPanel` plus the live score in `CarForm`.
 - **`src/routes/login/+page.svelte`** — Email + password form. Server action calls `supabase.auth.signInWithPassword`. Users are pre-provisioned via the Supabase dashboard (no signup flow exposed).
 - **`src/routes/auth/logout/+server.ts`** — POST endpoint, signs out and redirects to `/login`.
 - **`src/routes/api/cars/+server.ts`** — `GET` (list + staleness flip) and `POST` (create).
@@ -52,7 +52,7 @@ Use Supabase's new "Publishable and secret API keys" (Settings → API). The leg
 ## Key Domain Concepts
 
 - **Car Score (0-100):** Computed client-side from km (22%), price (22%), reliability (30%), year (13%), location (13%). `kmSubscore` uses a fuel-aware sweet-spot curve (petrol plateau 0–90k → 0 at 200k; diesel plateau 0–130k → 0 at 280k) and deliberately does not reward suspiciously low km (rollback fraud). `priceSubscore` is a three-zone piecewise curve anchored on the €5000 budget: plateau at 100 from €0–€2500, linear decay to 50 at €5000, second decay to 0 at €7500. Soft tail past budget lets over-budget unicorns still rank. `locationScore` uses a dampened curve (max 30-point penalty across 600km from Viana do Castelo). `reliabilitySubscore` combines a make baseline with an engine-specific delta. Cars with missing km, price, or location return a neutral 50.
-- **Status pipeline:** `to-contact → contacted → negotiating → final-offer`, with `dismissed` as a parallel terminal state. Auto-generated: `contacted` cars with no update for 3+ days flip to `dismissed` (see `src/lib/staleness.ts`, `STALE_AFTER_DAYS`). `dismissed` cars are hidden from List and Compare views (visible only in Pipeline, where the column is collapsible).
+- **Status pipeline:** `to-contact → contacted → negotiating → final-offer`, with `dismissed` as a parallel terminal state (last in `STATUSES`, so it renders last). Pipeline columns sort by score; Contacted sorts by days left before auto-dismiss. Auto-generated: `contacted` cars with no update for 3+ days flip to `dismissed` (see `src/lib/staleness.ts`, `STALE_AFTER_DAYS`). `dismissed` cars are hidden from List and Compare views (visible only in Pipeline, where the column is collapsible).
 - **Suspicion check (`src/lib/scoring/suspicion.ts`):** Each flag has a weight (1 weak, 2 meaningful, 3 strong). Total ≥ `HIGH_RISK_WEIGHT` (4) = "Likely scam", >0 = "Suspicious". Seller/listing flags (new account, imported + low km, scam-script wording, few photos) need the listing-signal columns, which only the StandVirtual importer fills today (OLX blocks server-side fetches from dev machines, so its page structure is unverified).
 - **Listing-signal columns (migration 005):** `sellerType`, `sellerSince`, `listedAt`, `gearbox`, `owners`, `warrantyMonths`, `imported`, `photoCount`, `description`. All optional; run the migration before deploying code that writes them.
 - **Price history:** Appended on PUT when price changes. The `priceNote` field is accepted in requests but stripped from the stored object.
@@ -63,7 +63,7 @@ Use Supabase's new "Publishable and secret API keys" (Settings → API). The leg
 
 ## Design Notes
 
-- Warm light "atelier" theme (cream backgrounds, ink text, muted green accent) defined as CSS variables in `src/app.css`. There is no dark mode yet.
+- Warm light "atelier" theme (cream backgrounds, ink text, muted green accent) defined as CSS variables in `src/app.css`. There is no dark mode yet. Brand mark is a Portuguese number plate (`PlateMark.svelte`); rules in `DESIGN.md`.
 - Component styles live in scoped `<style>` blocks inside each `.svelte` file. `:global(...)` only where necessary.
 - Portuguese-market context: prices in euros, Portuguese car listing sources. All status labels are in English.
 - No Tailwind, no CSS framework, no UI library.

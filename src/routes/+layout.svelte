@@ -8,7 +8,10 @@
 	import GlobalSpinner from '$components/layout/GlobalSpinner.svelte';
 	import CarDetailPanel from '$components/car/CarDetailPanel.svelte';
 	import CarForm from '$components/car/CarForm.svelte';
+	import CompareOverlay from '$components/car/CompareOverlay.svelte';
+	import CompareTray from '$components/ui/CompareTray.svelte';
 	import { cars } from '$lib/stores/cars';
+	import { compareIds, parseCompareParam, removeFromCompare } from '$lib/stores/compare';
 
 	let { children } = $props();
 
@@ -24,6 +27,45 @@
 		editId && editId !== 'new' ? $cars.find((c) => c.id === editId) : undefined
 	);
 	const isEditing = $derived(editId != null);
+	const compareParam = $derived(page.url.searchParams.get('compare'));
+	const compareList = $derived(parseCompareParam(compareParam));
+	const isComparing = $derived(compareParam != null);
+
+	// Opening the overlay from a URL also seeds the tray, so closing it keeps the picks.
+	$effect(() => {
+		if (compareList.length) compareIds.set(compareList);
+	});
+
+	// Lock page scroll while any overlay is up, so the board doesn't scroll underneath.
+	$effect(() => {
+		const locked = isChrome && (!!detailCar || isEditing || isComparing);
+		document.body.style.overflow = locked ? 'hidden' : '';
+		return () => {
+			document.body.style.overflow = '';
+		};
+	});
+
+	function closeCompare() {
+		const url = new URL(page.url);
+		url.searchParams.delete('compare');
+		goto(url.pathname + url.search, { keepFocus: true, noScroll: true, replaceState: true });
+	}
+
+	function removeCompared(id: string) {
+		removeFromCompare(id);
+		const next = compareList.filter((x) => x !== id);
+		const url = new URL(page.url);
+		if (next.length) url.searchParams.set('compare', next.join(','));
+		else url.searchParams.delete('compare');
+		goto(url.pathname + url.search, { keepFocus: true, noScroll: true, replaceState: true });
+	}
+
+	function openFromCompare(id: string) {
+		const url = new URL(page.url);
+		url.searchParams.delete('compare');
+		url.searchParams.set('car', id);
+		goto(url.pathname + url.search, { keepFocus: true, noScroll: true });
+	}
 
 	function closeOverlay(param: 'car' | 'edit') {
 		const url = new URL(page.url);
@@ -52,7 +94,7 @@
 	function onGlobalKeydown(e: KeyboardEvent) {
 		if (e.metaKey || e.ctrlKey || e.altKey) return;
 		if (isTypingTarget(e.target)) return;
-		if (isEditing || detailId || isShare) return;
+		if (isEditing || detailId || isComparing || isShare) return;
 
 		if (e.key === 'n' || e.key === 'N') {
 			e.preventDefault();
@@ -82,6 +124,7 @@
 		{@render children()}
 	</main>
 
+	{#if !isComparing}<CompareTray />{/if}
 	<ToastStack />
 	<DialogHost />
 	<GlobalSpinner />
@@ -94,6 +137,15 @@
 		car={detailCar}
 		onclose={() => closeOverlay('car')}
 		onedit={(id) => switchToEdit(id)}
+	/>
+{/if}
+
+{#if isChrome && isComparing}
+	<CompareOverlay
+		ids={compareList}
+		onclose={closeCompare}
+		onremove={removeCompared}
+		onopen={openFromCompare}
 	/>
 {/if}
 
@@ -110,12 +162,12 @@
 			}}
 		>
 			<div class="modal-head">
-				<h2>{editCar ? 'Edit Car' : 'Add Car'}</h2>
+				<h2>{editCar ? 'Edit car' : 'Add a car'}</h2>
 				<button
 					type="button"
 					class="close-btn"
 					onclick={() => closeOverlay('edit')}
-					aria-label="Close">×</button
+					aria-label="Close"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="6" y1="6" x2="18" y2="18" /><line x1="18" y1="6" x2="6" y2="18" /></svg></button
 				>
 			</div>
 			<CarForm

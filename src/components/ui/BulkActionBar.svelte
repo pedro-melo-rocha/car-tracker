@@ -10,6 +10,9 @@
 		downloadCsv
 	} from '$lib/stores/bulk';
 	import { confirmDialog } from '$lib/stores/ui';
+	import { page } from '$app/state';
+	import { goto } from '$app/navigation';
+	import { compareIds, compareHref, MAX_COMPARE_CARS } from '$lib/stores/compare';
 
 	let menuOpen = $state(false);
 	let menuRef: HTMLDivElement | undefined = $state();
@@ -37,6 +40,16 @@
 		bulkDelete(selectedIds);
 	}
 
+	const canCompare = $derived(selectedCount >= 2 && selectedCount <= MAX_COMPARE_CARS);
+
+	function handleCompare() {
+		// Copy first: clearing the selection empties the derived list.
+		const ids = [...selectedIds];
+		compareIds.set(ids);
+		clearSelection();
+		goto(compareHref(page.url, ids), { keepFocus: true, noScroll: true });
+	}
+
 	function handleExport() {
 		const csv = exportCarsToCsv(selectedCars());
 		const stamp = new Date().toISOString().slice(0, 10);
@@ -60,9 +73,19 @@
 			<strong>{selectedCount}</strong> selected
 		</span>
 		<div class="actions">
+			<button
+				type="button"
+				class="btn primary"
+				onclick={handleCompare}
+				disabled={!canCompare}
+				title={canCompare ? undefined : `Select 2 to ${MAX_COMPARE_CARS} cars to compare`}
+			>
+				Compare
+			</button>
 			<div class="menu-wrap" bind:this={menuRef}>
-				<button type="button" class="btn" onclick={() => (menuOpen = !menuOpen)}>
-					Status ▾
+				<button type="button" class="btn" aria-haspopup="menu" aria-expanded={menuOpen} onclick={() => (menuOpen = !menuOpen)}>
+					Status
+					<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9" /></svg>
 				</button>
 				{#if menuOpen}
 					<div class="menu" role="menu">
@@ -109,6 +132,7 @@
 	}
 	.actions {
 		display: flex;
+		flex-wrap: wrap;
 		gap: 0.4rem;
 	}
 	.btn {
@@ -122,8 +146,26 @@
 		cursor: pointer;
 		white-space: nowrap;
 	}
+	.btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 4px;
+	}
 	.btn:hover {
 		background: var(--rule);
+	}
+	.btn.primary {
+		background: var(--accent);
+		border-color: var(--accent);
+		color: #fff;
+		font-weight: 600;
+	}
+	.btn.primary:hover:not(:disabled) {
+		background: var(--accent-hover);
+	}
+	.btn.primary:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
 	}
 	.btn.danger {
 		color: var(--bad);
@@ -135,7 +177,7 @@
 	.btn.ghost {
 		background: transparent;
 		border-color: transparent;
-		color: var(--ink-dim);
+		color: var(--ink-soft);
 	}
 	.btn.ghost:hover {
 		background: var(--card-2);
@@ -173,6 +215,8 @@
 	}
 	@media (max-width: 640px) {
 		.bulk-bar {
+			flex-wrap: wrap;
+			gap: 0.5rem;
 			left: 0.5rem;
 			right: 0.5rem;
 			bottom: 0.75rem;

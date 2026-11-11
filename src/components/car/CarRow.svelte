@@ -33,7 +33,7 @@
 			class:visible={anySelected}
 			checked={selected}
 			onchange={() => toggleSelection(car.id)}
-			aria-label={selected ? 'Deselect' : 'Select'}
+			aria-label="Select {car.title}"
 		/>
 	</td>
 	<td class="title-cell">
@@ -48,7 +48,7 @@
 				/>
 			{/if}
 			<div class="title-stack">
-				<span class="title">{car.title}</span>
+				<button type="button" class="title" onclick={(e) => { e.stopPropagation(); onopen?.(car.id); }}>{car.title}</button>
 				{#if scam.level !== 'none'}
 					<div class="badge-line">
 						<ScamBadge {scam} size="sm" />
@@ -57,7 +57,7 @@
 			</div>
 		</div>
 	</td>
-	<td class="soft">{car.make ?? '—'}</td>
+	<td class="soft">{car.make ?? '–'}</td>
 	<td class="soft">{car.model ?? '—'}</td>
 	<td class="soft">{car.location ?? '—'}</td>
 	<td class="num">{car.year ?? '—'}</td>
@@ -116,11 +116,12 @@
 		height: 16px;
 		cursor: pointer;
 		accent-color: var(--accent);
-		opacity: 0;
+		opacity: 0.55;
 		transition: opacity var(--dur-fast) var(--ease);
 	}
 	.select-cb.visible,
 	.select-cb:checked,
+	.select-cb:focus-visible,
 	tr:hover .select-cb {
 		opacity: 1;
 	}
@@ -157,10 +158,21 @@
 		background: var(--card-2);
 	}
 	.title {
+		all: unset;
+		cursor: pointer;
 		font-size: 0.88rem;
 		font-weight: 600;
 		color: var(--ink);
 		letter-spacing: -0.01em;
+	}
+	.title:hover {
+		text-decoration: underline;
+		text-underline-offset: 3px;
+	}
+	.title:focus-visible {
+		outline: 2px solid var(--accent);
+		outline-offset: 2px;
+		border-radius: 2px;
 	}
 	.badge-line {
 		display: flex;

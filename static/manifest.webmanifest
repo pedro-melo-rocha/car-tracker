@@ -1,7 +1,7 @@
 {
-	"name": "Car Tracker",
-	"short_name": "Cars",
-	"description": "Track used car listings in Portugal",
+	"name": "Achado",
+	"short_name": "Achado",
+	"description": "Our shortlist of used cars for sale in Portugal",
 	"start_url": "/",
 	"scope": "/",
 	"display": "standalone",

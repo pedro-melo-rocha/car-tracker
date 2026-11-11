@@ -62,3 +62,13 @@ export function timeAgo(iso: string | null | undefined, now: number = Date.now()
 	if (diff < 86400 * 7) return Math.floor(diff / 86400) + 'd ago';
 	return Math.floor(diff / 86400 / 7) + 'w ago';
 }
+
+/** Whole days left before a `contacted` car flips to `dismissed`; null when not applicable. */
+export function daysUntilStale(
+	car: { status: string; contactedAt?: string | null },
+	now: number = Date.now()
+): number | null {
+	if (car.status !== 'contacted' || !car.contactedAt) return null;
+	const days = (now - new Date(car.contactedAt).getTime()) / MS_PER_DAY;
+	return Math.max(0, Math.ceil(STALE_AFTER_DAYS - days));
+}

@@ -139,16 +139,14 @@
 		margin-bottom: 0.5rem;
 	}
 	.title {
-		font-size: 0.78rem;
-		font-weight: 700;
+		font-size: 0.85rem;
+		font-weight: 650;
 		color: var(--text);
-		text-transform: uppercase;
-		letter-spacing: 0.03em;
 	}
 	.clear {
 		background: transparent;
 		border: 0;
-		font-size: 0.72rem;
+		font-size: 0.75rem;
 		color: var(--accent);
 		cursor: pointer;
 	}

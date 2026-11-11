@@ -8,10 +8,13 @@ Reference for building new components that match the existing visual language.
 ## Principles
 
 - **Warm + minimal.** Off-white paper background, white cards, soft rules. No hard blacks.
+- **Number-plate signature.** The brand mark is a Portuguese plate: blue `P` band, the name as plate pairs `AC-HA-DO`, yellow year band `26`, in Barlow Semi Condensed (`<PlateMark />`). Use it for the brand only (header, login, share footer, favicon). Don't spread plate styling into the UI.
 - **Score-forward.** The score circle is the visual anchor on car surfaces.
-- **Pastel status.** Statuses are communicated with subtle filled pills, never strong colors.
-- **Subtle motion.** 120–200ms transitions on hover and state; nothing bouncy.
-- **Calm typography.** Plus Jakarta Sans. Tight letter-spacing on large numbers and titles (`-0.02em`).
+- **Quiet status.** Status pills appear only where the context doesn't already name the status (never inside a pipeline column).
+- **Subtle motion.** 120–200ms transitions on hover and state; nothing bouncy. No hover lift.
+- **Calm typography.** Plus Jakarta Sans. Sentence case everywhere: no uppercase tracked eyebrows or labels. Minimum text size 0.75rem.
+- **Contrast floor.** All text ≥ 4.5:1. `--ink-dim` is the lightest text colour allowed and passes on `--card-2`.
+- **Plain copy.** Name the action or the fact. No marketing intros, no decorative stamps, no stars or "Top pick" badges, few em-dashes.
 
 ---
 
@@ -26,8 +29,11 @@ Reference for building new components that match the existing visual language.
 | `--card-2` | `#F5F3ED` | Secondary / recessed fill (inputs, soft cards, spec cells) |
 | `--rule` | `#ECE8DE` | Borders, dividers |
 | `--ink` | `#1C1A17` | Primary text |
-| `--ink-soft` | `#6B6760` | Secondary text |
-| `--ink-dim` | `#A09B93` | Labels, captions, muted meta |
+| `--ink-soft` | `#57534C` | Secondary text, labels |
+| `--ink-dim` | `#736E66` | Muted meta (lightest allowed text) |
+| `--plate-blue` | `#1F4AA8` | Brand mark band only |
+| `--plate-ink` | `#16171A` | Brand mark text and border only |
+| `--plate-yellow` | `#F2C230` | Brand mark year band only |
 
 ### Accent
 
@@ -42,7 +48,7 @@ Reference for building new components that match the existing visual language.
 | Token | Fg | Bg | Threshold |
 | --- | --- | --- | --- |
 | good | `--good` `#3A7A4F` | `--good-bg` `#DEECE1` | score ≥ 70 |
-| warn | `--warn` `#B4772A` | `--warn-bg` `#F6EBD6` | score ≥ 50 |
+| warn | `--warn` `#8F5F1F` | `--warn-bg` `#F6EBD6` | score ≥ 50 |
 | bad  | `--bad`  `#B04930` | `--bad-bg`  `#F4DDD5` | score < 50 |
 
 Thresholds are set in `scoreClass()` (`src/lib/scoring/index.ts`). `ScoreBadge` also uses these tones directly — keep them aligned.
@@ -100,7 +106,8 @@ Family: `var(--font)` = Plus Jakarta Sans. Mono: `var(--mono)` = DM Mono (used o
 | Card title | `0.9–0.95rem` | 600 | `-0.01em` |
 | Body | `0.85rem` | 500 | |
 | Small / meta | `0.76–0.82rem` | 500 | `--ink-soft` |
-| Eyebrow / label | `0.68–0.72rem` | 600–700 | uppercase, `letter-spacing: 0.08–0.1em`, `--ink-dim` |
+| Section heading | `0.92–0.95rem` | 650 | sentence case, `--ink` |
+| Label | `0.78–0.85rem` | 500 | sentence case, `--ink-soft` |
 
 Numbers use `font-variant-numeric: tabular-nums` when they sit in columns.
 
@@ -114,7 +121,7 @@ Numbers use `font-variant-numeric: tabular-nums` when they sit in columns.
 --dur:       200ms   enter/exit, width/opacity
 ```
 
-Hover states always `transition: all var(--dur-fast) var(--ease)`. Cards lift on hover with `translateY(-1px)` + stronger shadow. Pre-baked keyframes in `app.css`: `fadeUp`, `slideIn`, `slideInUp`, `slideInDown`, `slideOutRight`, `scaleIn`, `spin`, `sheetUp`.
+Hover states always `transition: all var(--dur-fast) var(--ease)`. Cards darken their border and take `--shadow` on hover; they don't move. Pre-baked keyframes in `app.css`: `fadeUp`, `slideIn`, `slideInUp`, `slideInDown`, `slideOutRight`, `scaleIn`, `spin`, `sheetUp`.
 
 ---
 
@@ -136,9 +143,8 @@ Hover states always `transition: all var(--dur-fast) var(--ease)`. Cards lift on
   transition: all var(--dur-fast) var(--ease);
 }
 .card:hover {
-  border-color: var(--ink-dim);
+  border-color: var(--border-strong);
   box-shadow: var(--shadow);
-  transform: translateY(-1px);
 }
 </style>
 ```
@@ -239,7 +245,7 @@ input:focus, textarea:focus {
 }
 ```
 
-Form label: `0.7rem`, uppercase, `letter-spacing: 0.08em`, `--ink-dim`.
+Form label: `0.82rem`, weight 500, `--ink-soft`, sentence case. Group long forms with `<fieldset>`/`<legend>`; collapse rarely used fields in `<details>`.
 
 ### Chip / pill (selectable)
 
@@ -300,11 +306,10 @@ Label + weight + value, then a 4px progress bar spanning full width.
 
 ```css
 h3.section-title {
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--ink-dim);
+  font-size: 0.92rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  color: var(--ink);
 }
 ```
 
