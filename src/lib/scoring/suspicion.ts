@@ -127,7 +127,7 @@ export function detectScamRisk(
 		if (car.km / age <= 5500) {
 			flags.push({
 				id: 'low-km-per-year',
-				label: 'Very low km per year — possible odometer rollback',
+				label: 'Very low km per year (possible odometer rollback)',
 				weight: 2
 			});
 		}
@@ -222,7 +222,7 @@ export function detectScamRisk(
 		if (car.km / age <= 10_000) {
 			flags.push({
 				id: 'imported-low-km',
-				label: 'Imported with low km — imports are the most common rollback source',
+				label: 'Imported with low km, the most common source of rollbacks',
 				weight: 2
 			});
 		}
