@@ -36,6 +36,10 @@ describe('buildTitle', () => {
 		);
 	});
 
+	it('does not repeat the make when the model starts with it', () => {
+		expect(buildTitle({ make: 'DS', model: 'DS 4', engine: '1.2', year: 2025 })).toBe('DS 4 1.2 2025');
+	});
+
 	it('falls back to the title without price/km when make/model are missing', () => {
 		expect(buildTitle({}, 'Opel 1204 2010 - 3 800 EUR, 124 000 km')).toBe('Opel 1204 2010');
 	});

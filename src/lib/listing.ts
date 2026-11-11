@@ -48,7 +48,9 @@ export function buildTitle(
 	if (!car.make || !car.model) return base;
 	// Some engine labels carry the make ("Honda i-VTEC"); don't repeat it.
 	const engine = (car.engine ?? '').replace(new RegExp(`^${escapeRe(car.make)}\\s+`, 'i'), '');
-	const parts = [car.make, car.model, engine, car.year ? String(car.year) : '']
+	// Models like "DS 4" already start with the make.
+	const make = car.model.toLowerCase().startsWith(car.make.toLowerCase() + ' ') ? '' : car.make;
+	const parts = [make, car.model, engine, car.year ? String(car.year) : '']
 		.map((p) => (p ?? '').trim())
 		.filter(Boolean);
 	return parts.join(' ').replace(/\s+/g, ' ');
